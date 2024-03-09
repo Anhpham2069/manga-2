@@ -1,0 +1,83 @@
+.text2:hover {
+  /* Tạo một đường kẻ dưới chữ */
+  position: relative;
+  text-decoration: none;
+  /* Dùng ::after để tạo một phần tử mới bên dưới chữ */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: -1.2rem;
+    width: 100%;
+    height: 1px;
+    border-bottom: 2px solid white;
+    animation: moveUnderline 0.3s linear;
+  }
+  /* Di chuyển đường kẻ từ trái sang phải */
+  &::after {
+    left: 0;
+    transform: translateX(0);
+    transition: width 2s linear;
+  }
+}
+@keyframes moveUnderline {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+.text2:hover {
+  /* Tạo một đường kẻ dưới chữ */
+  position: relative;
+  text-decoration: none;
+  /* Dùng ::after để tạo một phần tử mới bên dưới chữ */
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 1px;
+    border-bottom: 2px solid black;
+    animation: moveUnderline 0.3s linear;
+  }
+  /* Di chuyển đường kẻ từ trái sang phải */
+  &::after {
+    left: 0;
+    transform: translateX(0);
+    transition: width 2s linear;
+  }
+}
+@keyframes moveUnderline {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 100%;
+  }
+}
+.container-trendStrories{
+  overflow: hidden;
+
+}
+
+.custom-dropdown select {
+  appearance: none;
+  background-color: #E6F4FF;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.custom-dropdown select:hover {
+  background-color: #DDEEFB;
+}
+
+.custom-dropdown select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
