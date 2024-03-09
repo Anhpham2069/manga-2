@@ -51,7 +51,7 @@ const authController = {
         admin: user.admin
       },
       process.env.JWT_ACCESS_KEY,
-      { expiresIn: "60s" },
+      { expiresIn: "10d" },
 
       );
   },
@@ -82,17 +82,17 @@ const authController = {
         return res.status(401).json({ message: "mật khẩu không chính xác" });
       }
       if (user && passwordMatch) {
-       const accesToken =  authController.generateAccessToken(user)
-       const refeshToken =  authController.generateRefeshToken(user)
-       refreshTokens.push(refeshToken)
-       res.cookie("refeshToken",refeshToken,{
+       const accessToken =  authController.generateAccessToken(user)
+       const refreshToken =  authController.generateRefeshToken(user)
+       refreshTokens.push(refreshToken)
+       res.cookie("refreshToken",refreshToken,{
         httpOnly: true,
         secure: false,
         path: "/",
         sameSite: "strict"
        })
           const {password,...others} = user._doc
-          res.status(200).json({ ...others, accesToken });
+          res.status(200).json({ ...others, accessToken });
           // res.status(200).json(user);
         }
     } catch (error) {
@@ -102,37 +102,36 @@ const authController = {
   requestRefreshToken: async (req, res) => {
     //Take refresh token from user
     const refreshToken = req.cookies.refreshToken;
-    //Send error if token is not valid
     if (!refreshToken) return res.status(401).json("You're not authenticated");
     if (!refreshTokens.includes(refreshToken)) {
       return res.status(403).json("Refresh token is not valid");
     }
-    jwt.verify(refreshToken, process.env.JWT_REFRESH_KEY, (err, user) => {
+    jwt.verify(refreshToken, process.env.JWT_REFESH_KEY, (err, user) => {
       if (err) {
         console.log(err);
       }
       refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-      //create new access token, refresh token and send to user
+      //Create new accesstoken, refresh token
       const newAccessToken = authController.generateAccessToken(user);
       const newRefreshToken = authController.generateRefreshToken(user);
       refreshTokens.push(newRefreshToken);
-      res.cookie("refreshToken", refreshToken, {
+      res.cookie("refreshToken", newRefreshToken, {
         httpOnly: true,
-        secure:false,
+        secure: false,
         path: "/",
         sameSite: "strict",
       });
-      res.status(200).json({
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      });
+      res.status(200).json({ accessToken: newAccessToken });
     });
   },
+
   logOut: async (req, res) => {
     //Clear cookies when user logs out
-    refreshTokens = refreshTokens.filter((token) => token !== req.body.token);
     res.clearCookie("refreshToken");
-    res.status(200).json("Logged out successfully!");
+    // refreshTokens = refreshTokens.filter(
+    //   (token) => token !== req.cookies.refreshToken
+    // );
+    res.status(200).json("Logged out !");
   },
 
 

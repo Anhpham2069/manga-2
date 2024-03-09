@@ -90,7 +90,8 @@ const DetailStories = () => {
     // If updated_time is not available, provide a default value or handle it gracefully
     timeUpdate = "N/A";
   }
-  console.log(timeUpdate)
+  const chapterLength = story.item?.chapters[0]?.server_data.length
+  console.log(chapterLength)
 
 
   // if (!truyen) {
@@ -127,16 +128,17 @@ const DetailStories = () => {
                 <span>******</span>
                 <p>9.3/10 (12)</p>
               </div> */}
-              {/* <Link to={`/detail/${id}/1`}> */}
-              <button
-                className={`${
-                  isDarkModeEnable
-                    ? "bg-[#3963C0] text-text_darkMode"
-                    : "bg-primary-color text-white "
-                }   p-2 mb-5 my-5 w-full rounded-md uppercase`}
-              >
-                Đọc ngay
-              </button>
+              <Link to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data?.split("/").pop()}`}>
+                <button
+                  className={`${
+                    isDarkModeEnable
+                      ? "bg-[#3963C0] text-text_darkMode"
+                      : "bg-primary-color text-white "
+                  }   p-2 mb-5 my-5 w-full rounded-md uppercase`}
+                >
+                  Đọc ngay
+                </button>
+              </Link>
               {/* </Link> */}
               <aside
                 className={`${
@@ -210,28 +212,32 @@ const DetailStories = () => {
                 </div>
                 <div className="text-white w-full flex justify-center mt-5">
                   {/* <Link to={`/detail/${id}/1`}> */}
-                  <button
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-[#719331] hover:bg-[#576D2C] text-text_darkMode"
-                        : " bg-[#8BC34A] hover:bg-[#B2D786]"
-                    } w-52 rounded-md h-10  `}
-                  >
-                    {" "}
-                    <FontAwesomeIcon icon={faBook} /> Bắt đầu đọc
-                  </button>
+                  <Link to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data?.split("/").pop()}`}>
+                    <button
+                      className={`${
+                        isDarkModeEnable
+                          ? "bg-[#719331] hover:bg-[#576D2C] text-text_darkMode"
+                          : " bg-[#8BC34A] hover:bg-[#B2D786]"
+                      } w-52 rounded-md h-10  `}
+                    >
+                      {" "}
+                      <FontAwesomeIcon icon={faBook} /> Bắt đầu đọc
+                    </button>
+                  </Link>
                   {/* </Link> */}
                   {/* <Link to={`/detail/${id}/${latestChapter.chapter_id}`}> */}
-                  <button
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
-                        : " bg-[#BD10E0] hover:bg-[#D360EA]"
-                    } w-52 rounded-md h-10   mx-4`}
-                  >
-                    {" "}
-                    <FontAwesomeIcon icon={faBookTanakh} /> Chương mới nhất
-                  </button>
+                  <Link to={`view/${story.item?.chapters[0]?.server_data[chapterLength-1]?.chapter_api_data?.split("/").pop()}`}>  
+                    <button
+                      className={`${
+                        isDarkModeEnable
+                          ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
+                          : " bg-[#BD10E0] hover:bg-[#D360EA]"
+                      } w-52 rounded-md h-10   mx-4`}
+                    >
+                      {" "}
+                      <FontAwesomeIcon icon={faBookTanakh} /> Chương mới nhất
+                    </button>
+                  </Link>
                   {/* </Link> */}
                   <button
                     className={`${

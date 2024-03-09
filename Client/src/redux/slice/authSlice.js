@@ -13,10 +13,7 @@ const authSlice = createSlice({
       error: false,
       success: false,
     },
-    logout: {
-      isFetching: false,
-      error: false,
-    },
+
   },
   reducers: {
     loginStart: (state) => {
@@ -56,27 +53,18 @@ const authSlice = createSlice({
     },
     //logout
     logoutStart: (state) => {
-      state.logout = {
-        ...state.logout,
-        isFetching: true,
-      };
+      state.login.isFetching = true;
     },
     logoutSuccess: (state) => {
-      state.logout = {
-        ...state.logout,
-        isFetching: false,
-        success: true,
-        error: false,
-      };
+      state.login.isFetching = false;
+      state.login.currentUser = null;
+      state.login.error = false;
     },
     logoutFail: (state) => {
-      state.logout = {
-        ...state.logout,
-        isFetching: false,
-        success: false,
-        error: true,
-      };
+      state.login.isFetching = false;
+      state.login.error = true;
     },
+    
   },
 });
 

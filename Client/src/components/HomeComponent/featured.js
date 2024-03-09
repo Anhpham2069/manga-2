@@ -23,8 +23,6 @@ const Featured = ({ dark }) => {
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("truyen-moi");
 
-
-
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -50,71 +48,53 @@ const Featured = ({ dark }) => {
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
   };
-  console.log(storiesData);
   const [selectedButton, setSelectedButton] = useState("homnay");
-  const [stories] = useState([
-    {
-      id: 1,
-      imageUrl:
-        "https://doctruyen5s.top/uploads/covers/ngay-tan-the-ta-nhan-duoc-ty-le-rot-do-gap-100-lan.jpg",
-      title: "Truyện 1",
-      genre: "Kinh dị",
-      saves: 50,
-      views: 1000,
-      dateAdded: "2023-10-10",
-    },
-    {
-      id: 2,
-      imageUrl:
-        "https://doctruyen5s.top/uploads/covers/nhan-vat-phan-dien-dai-su-huynh-tat-ca-cac-su-muoi-deu-la-benh-kieu.jpg",
-      title: "Truyện 2",
-      genre: "Hài hước",
-      saves: 30,
-      views: 800,
-      dateAdded: "2023-10-09",
-    },
-    {
-      id: 3,
-      imageUrl:
-        "https://doctruyen5s.top/uploads/covers/ngay-tan-the-ta-nhan-duoc-ty-le-rot-do-gap-100-lan.jpg",
-      title: "Truyện 3",
-      genre: "Tình cảm",
-      saves: 20,
-      views: 1200,
-      dateAdded: "2023-10-08",
-    },
-    // Thêm các truyện khác tương tự
-  ]);
-  const truyenData = useSelector((state) => state.stories.truyenData);
 
   const handleClick = (button) => {
     setSelectedButton(button);
   };
-  console.log(Data);
   const renderList = () => {
+    const today = new Date();
+    const currentDate = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    ); // Lấy ngày hiện tại mà không có giờ, phút, giây
     switch (selectedButton) {
       case "homnay":
-        return Data.filter((story) => story.date_added === "2023-10-10");
+        return storiesData.items?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.updatedAt);
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1); // Lấy ngày hôm qua
+
+          return (
+            storyDate.getFullYear() === yesterday.getFullYear() &&
+            storyDate.getMonth() === yesterday.getMonth() &&
+            storyDate.getDate() === yesterday.getDate()
+          );
+        });
+
       case "tuannay":
-        return Data.filter(
-          (story) => new Date(story.date_added) >= new Date("2023-10-04")
-        );
+        const lastWeek = new Date(currentDate);
+        lastWeek.setDate(lastWeek.getDate() - 7); // Ngày của tuần trước
+        return storiesData.items?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.updatedAt);
+          return storyDate >= lastWeek && storyDate <= currentDate;
+        });
       case "thangnay":
-        return Data.filter(
-          (story) =>
-            new Date(story.date_added).getMonth() === new Date().getMonth()
-        );
+        const firstDayOfMonth = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1
+        ); // Ngày đầu tiên của tháng
+        return storiesData.items?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.updatedAt);
+          return storyDate >= firstDayOfMonth && storyDate <= currentDate;
+        });
       default:
         return [];
     }
   };
-  console.log(renderList());
-
-  // function layChapterMoiNhat(tuaTruyen) {
-  //   return tuaTruyen.chapters.reduce((newestChapter, chapter) => (
-  //     chapter.chapter_id > (newestChapter ? newestChapter.chapter_id : -1) ? chapter : newestChapter
-  //   ), null);
-  // }
 
   return (
     <div className="phone:flex-row lg:flex tablet:mx-6 lg:mx-14  mt-4 ">
@@ -161,10 +141,8 @@ const Featured = ({ dark }) => {
               locale: vi,
             });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
-            console.log(item.chaptersLatest.chapter_name);
             return (
-              <>
-                <div className="flex flex-col justify-center items-center gap-2">
+                <div className="flex flex-col justify-center items-center gap-2 "  key={item._id}>
                   <CardStories
                     key={item._id}
                     id={item._id}
@@ -177,7 +155,6 @@ const Featured = ({ dark }) => {
                   />
                   {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
                 </div>
-              </>
             );
           })}
         </div>
@@ -229,31 +206,45 @@ const Featured = ({ dark }) => {
               />
             </div>
             <div>
-              {renderList().map((item) => {
+              {renderList()?.map((item, index) => {
                 return (
                   <div
-                    key={item.id}
+                    key={index}
                     className="flex p-3 justify-start cursor-pointer border-b-2 border-gray-200"
                   >
-                    <img src={item.image} alt="anh" className="h-20" />
+                    <img
+                      src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                      alt="anh"
+                      className="h-20"
+                    />
                     <div className="ml-4 h-20 flex flex-col justify-around">
                       <div className="flex-1">
-                        <p>{item.title}</p>
-                        <div className="flex justify-between text-xs">
+                        <p>{item.name}</p>
+                        <div className="flex justify-between gap-1 items-center text-xs">
                           <p className="font-semibold text-[#888888] mr-1 ">
                             Thể loại:
-                          </p>{" "}
-                          <p className=""> {item.genres}</p>
+                          </p>
+                          <div className="flex flex-1">
+                            {item?.category?.slice(0, 3).map((cate,index) => {
+                              return (
+                                <p key={index}
+                                  className={`mr-1 rounded-xl bg-[#E6F4FF] text-primary-color text-sm hover:text-blue-400`}
+                                >
+                                  {cate.name}
+                                </p>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                       <div className="flex font-light text-sm">
-                        <p className="mr-2">
+                        {/* <p className="mr-2">
                           <FontAwesomeIcon icon={faBookmark} /> {item.saves}
                         </p>
                         <p>
                           <FontAwesomeIcon icon={faEye} />{" "}
                           {item.views.toLocaleString()}{" "}
-                        </p>
+                        </p> */}
                       </div>
                     </div>
                   </div>
@@ -274,22 +265,30 @@ const Featured = ({ dark }) => {
             <FontAwesomeIcon icon={faCalendarDay} className="mr-2" />
             Truyện mới
           </div>
-          {stories.map((item) => {
-            const timeAgo = formatDistanceToNow(new Date(item.dateAdded), {
+          {storiesData.items?.slice(0, 10).map((item, index) => {
+            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), {
               addSuffix: true,
+              locale: vi,
             });
+            const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-              <div className="flex p-3 justify-start  border-b-2 border-gray-200">
-                <img src={item.imageUrl} alt="anh" className="h-20" />
+              <div key={item._id} className="flex p-3 justify-start  border-b-2 border-gray-200">
+                <img
+                  src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                  alt="anh"
+                  className="h-20"
+                />
                 <div className="ml-4 w-full h-20 flex flex-col justify-around">
                   <div className="flex-1">
-                    <p className="text-lg">{item.title}</p>
+                    <p className="text-lg">{item.name}</p>
                     <div className="flex text-base italic">
-                      <p>Chapter 2 - con rối giấy</p>
+                      <p>Chapter {item.chaptersLatest[0].chapter_name}</p>
                     </div>
                   </div>
                   <div className="flex justify-end text-sm">
-                    <p className="mr-2 text-gray-400 italic">{timeAgo}</p>
+                    <p className="mr-2 text-gray-400 italic">
+                      {trimmedTimeAgo}
+                    </p>
                   </div>
                 </div>
               </div>

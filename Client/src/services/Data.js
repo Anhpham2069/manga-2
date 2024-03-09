@@ -1,4 +1,3 @@
-import {Anh} from "../assets/art/Đại lão tru tiên bắt đầu bằng tâm trí 2.png"
 export const Data = [
   {
     "id": 1,

@@ -84,7 +84,6 @@ import { Skeleton, Tooltip } from 'antd';
 
 const CardStories = ({loading, slug, id, title, img, time, views = 1000, saves = 100, nomarl, hot, chapter }) => {
     const isDarkModeEnable = useSelector(selectDarkMode);
-    console.log(chapter)
     return (
         <Link to={`/detail/${slug}`}>
 
@@ -101,9 +100,9 @@ const CardStories = ({loading, slug, id, title, img, time, views = 1000, saves =
                         </div> */}
                     </div>
                     <div>
-                        <Tooltip placement='top' title={title}>
-                            <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{title.slice(0, 20)} ...</p>
-                        </Tooltip>
+                        {/* <Tooltip placement='top' title={title}> */}
+                            <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{title}</p>
+                        {/* </Tooltip> */}
                     </div>
                     {nomarl ?
                         <>

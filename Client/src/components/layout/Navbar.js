@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CaretDownOutlined } from "@ant-design/icons";
 import { Popover, Modal, Drawer } from "antd";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 // import {faSun,} from "@fortawesome/free-regular-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -27,15 +27,26 @@ import { selectDarkMode, toggleDarkMode } from "../layout/DarkModeSlice";
 import { setSearchTerm, selectSearchTerm } from "../../redux/slice/searchSlice";
 import SearchResultItem from "../components/searchResult";
 import axios from "axios";
-import { loginUser } from "../../services/apiRequest";
+import { logOut, loginUser } from "../../services/apiRequest";
+import { createAxios } from "../../createInstance";
+import { logoutSuccess } from "../../redux/slice/authSlice";
 
 const NavBar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate()
+
+
   const searchTerm = useSelector(selectSearchTerm);
   const isDarkModeEnable = useSelector(selectDarkMode);
-  const user = useSelector((state) => state.auth.login?.currentUser);
+  const user = useSelector((state) => state?.auth.login.currentUser);
 
+  
+  const accessToken = user?.accessToken
+  const id = user?._id
+
+  
   console.log(user);
-  const dispatch = useDispatch();
+
   // const [isOpen,setIsOpen] = useState(false)
   const [openCategory, setOpenCategory] = useState(false);
   const [openRating, setOpenRating] = useState(false);
@@ -46,7 +57,6 @@ const NavBar = () => {
   const [open, setOpen] = useState(false);
   const [placement, setPlacement] = useState("left");
 
-  const alo = true;
 
   const [genres, setGenres] = useState();
   const [keyword, setKeyword] = useState("");
@@ -54,6 +64,7 @@ const NavBar = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [resultsMobile, setResultsMobile] = useState(false);
 
   // Thêm hàm để xử lý khi input bị focus và blur
   const handleInputFocus = () => {
@@ -82,6 +93,7 @@ const NavBar = () => {
             }
           );
           setSearchResults(response.data.data);
+          setResultsMobile(response.data.data)
         } catch (error) {
           console.error("Error fetching search results:", error);
           setError(
@@ -91,7 +103,8 @@ const NavBar = () => {
           setIsLoading(false);
         }
       } else {
-        setSearchResults([]); // Nếu từ khóa tìm kiếm là rỗng, đặt kết quả tìm kiếm thành rỗng
+        setSearchResults([]);
+        setResultsMobile([]) // Nếu từ khóa tìm kiếm là rỗng, đặt kết quả tìm kiếm thành rỗng
       }
     };
 
@@ -113,7 +126,9 @@ const NavBar = () => {
         }
       );
 
-      setSearchResults(response.data.data); // Assuming data is in the response body
+      setSearchResults(response.data.data); 
+      setResultsMobile(response.data.data)
+      // Assuming data is in the response body
     } catch (error) {
       console.error("Error fetching search results:", error);
       setError("An error occurred while searching. Please try again later.");
@@ -126,6 +141,7 @@ const NavBar = () => {
   const clearInput = () => {
     setKeyword("");
     setSearchResults([]);
+    setResultsMobile()
     setShowResults(true);
   };
 
@@ -181,9 +197,10 @@ const NavBar = () => {
     setPlacement(e.target.value);
   };
   // logout
-const handleLogout = (e) =>{
-  e.preventDefault()
+let axiosJWT = createAxios(user,dispatch,logoutSuccess)
 
+const handleLogout = () =>{
+  logOut(dispatch,id,navigate, accessToken,axiosJWT);
 }
 
   return (
@@ -211,6 +228,80 @@ const handleLogout = (e) =>{
               open={open}
               key={placement}
             >
+              <div className="relative pb-5">
+              <form onSubmit={handleSubmit}>
+                <div className=" relative">
+                  {isLoading ? (
+                    <button className="absolute text-black top-4 left-2">
+                      <FontAwesomeIcon
+                        color="grey"
+                        size="lg"
+                        icon={faSpinner}
+                      />
+                    </button>
+                  ) : (
+                    <Link to={`/search/${keyword}`}>
+                      <button
+                        type="submit"
+                        className="absolute text-black top-4 left-2"
+                      >
+                        <FontAwesomeIcon
+                          color="grey"
+                          size="lg"
+                          icon={faMagnifyingGlass}
+                        />
+                      </button>
+                    </Link>
+                  )}
+
+                  <input
+                    className="w-full h-12 rounded-full outline-none text-base font-bold text-black bg-[#E6F4FF] pl-9"
+                    type="text"
+                    id="keyword"
+                    name="keyword"
+                    value={keyword}
+                    onChange={handleInputChange}
+                    placeholder="Tìm truyện..."
+                    required
+                    onFocus={handleInputFocus}
+                    onBlur={handleInputBlur}
+                  />
+                  {keyword && ( // Hiển thị nút "X" chỉ khi ô input không trống
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 px-3 py-2  text-black rounded-r flex items-center justify-center"
+                      onClick={clearInput} // Sử dụng sự kiện onClick để xóa nội dung ô input
+                    >
+                      <FontAwesomeIcon color="grey" size="lg" icon={faClose} />
+                    </button>
+                  )}
+                </div>
+              </form>
+              {error && <p className="error-message">{error}</p>}
+              {showResults && searchResults?.items?.length > 0 && (
+                <div className=" absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg">
+                  {searchResults.items?.slice(0,10).map((rs, index) => {
+                    return (
+                      <Link to={`/detail/${rs.slug}`} key={rs._id}>
+                        <div className="flex h-20 w-full p-2 hover:bg-[#F1F1F2] hover:border-r-4 border-indigo-500">
+                          <img
+                            className="h-full"
+                            src={`https://img.otruyenapi.com//uploads/${searchResults.seoOnPage.og_image?.[index]}`}
+                            alt="anh"
+                          />
+                          <p
+                            className="flex-1 text-black font-bold px-4 py-2 cursor-pointer "
+                            
+                          >
+                            {rs.name}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+              </div>
               <ul className="flex flex-col gap-6 text-base font-bold pb-4">
                 <Popover
                   content={<TooltipComponent sx />}
@@ -244,19 +335,7 @@ const handleLogout = (e) =>{
                 </li>
                 <li className="border-b-[1px] border-gray-200 pb-2">Lịch sử</li>
               </ul>
-              <div className=" relative mx-4">
-                <span className="absolute text-black top-2 left-2">
-                  <FontAwesomeIcon
-                    color="grey"
-                    size="lg"
-                    icon={faMagnifyingGlass}
-                  />
-                </span>
-                <input
-                  className="w-64 h-9 rounded-full outline-none text-sm text-black bg-[#F5F8FA] pl-9"
-                  placeholder="Tìm truyện..."
-                />
-              </div>
+              
               <div className="flex justify-center items-center h-full">
                 <img src="https://doctruyen5s.top/uploads/images/logo.png"></img>
               </div>
@@ -348,7 +427,7 @@ const handleLogout = (e) =>{
                     name="keyword"
                     value={keyword}
                     onChange={handleInputChange}
-                    placeholder="Nhập từ khóa..."
+                    placeholder="Tìm truyện..."
                     required
                     onFocus={handleInputFocus}
                     onBlur={handleInputBlur}
@@ -370,19 +449,19 @@ const handleLogout = (e) =>{
                   Không có kết quả.</div>
                 )} */}
               {showResults && searchResults?.items?.length > 0 && (
-                <div className=" absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg">
-                  {searchResults?.items.map((rs, index) => {
+                <div className=" absolute z-50 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg">
+                  {searchResults.items?.slice(0,10).map((rs, index) => {
                     return (
-                      <Link to={`/detail/${rs.slug}`}>
-                        <div className="flex h-20 w-full p-2">
+                      <Link to={`/detail/${rs.slug}`} key={rs._id}>
+                        <div className="flex h-20 w-full p-2 hover:bg-[#F1F1F2] hover:border-r-4 border-indigo-500">
                           <img
                             className="h-full"
                             src={`https://img.otruyenapi.com//uploads/${searchResults.seoOnPage.og_image?.[index]}`}
                             alt="anh"
                           />
                           <p
-                            className="text-black font-bold px-4 py-2 cursor-pointer hover:bg-[#F1F1F2]"
-                            key={rs._id}
+                            className="flex-1 text-black font-bold px-4 py-2 cursor-pointer "
+                            
                           >
                             {rs.name}
                           </p>
@@ -419,10 +498,11 @@ const handleLogout = (e) =>{
               placement="bottomLeft"
               trigger="click"
               content={
-                <div className=" font-semibold flex flex-col justify-start items-start">
+                <div className=" text-emerald-950 font-bold flex  flex-col justify-start items-start text-base">
                   {user ? (
                     <>
-                      <p>Hi: {user?.username}</p>
+                        
+                      <button className="text-red-950">Hi: {user?.username}</button>
                       <button
                         className="text2 mt-3 hover:text-gray-500"
                       >
@@ -441,7 +521,7 @@ const handleLogout = (e) =>{
                       </button>
                       <button
                         className="text2 mt-3 hover:text-gray-500"
-                        onClick={()=>handleLogout()}
+                        onClick={handleLogout}
                       >
                         <FontAwesomeIcon icon={faRightFromBracket} /> Đăng xuất
                       </button>
@@ -465,6 +545,14 @@ const handleLogout = (e) =>{
                 </div>
               }
             >
+              {user? 
+                <div className="flex justify-center items-center bg-orange-400 shadow-lg  px-3 rounded-full">
+                  <p className=" phone:text-sm font-bold text-white tablet:text-lg  p-1 cursor-pointer hover:text-slate-200">
+A
+                  </p>
+                </div>
+              :
+              
               <span className="cursor-pointer border-solid border-2 rounded-full w-10 h-10 flex items-center justify-center bg-white">
                 <FontAwesomeIcon
                   icon={faUser}
@@ -472,6 +560,7 @@ const handleLogout = (e) =>{
                   className="text-regal-blue bg-re"
                 />
               </span>
+              }
             </Popover>
 
             <Modal

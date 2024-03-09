@@ -97,12 +97,12 @@ const AllStories = () => {
             `}
       >
         <div className="laptop:h-screen col-span-1  font-medium text-base text-black  bg-white ">
-          <div className="grid phone:grid-cols-2 tablet:grid-cols-4 laptop:grid-cols-1 laptop:h-[40%] phone:p-1">
+          <div className="grid phone:grid-cols-2 tablet:grid-cols-4 laptop:grid-cols-1 laptop:h-[40%]">
             <div
               className={`${
-                slug == "truyen-moi" ? "bg-[#E6F4FF] text-[#1677FF]" : ""
-              } hover:bg-[#F0F0F0] rounded-xl w-[90%] m-auto p-3 cursor-pointer 
-              flex gap-2 items-center laptop:mt-5 phone:mx-3 laptop:mx-2`}
+                slug == "truyen-moi" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+              } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
+              flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("truyen-moi")}
             >
               <svg
@@ -121,9 +121,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "sap-ra-mat" ? "bg-[#E6F4FF] text-[#1677FF]" : ""
-              } hover:bg-[#F0F0F0] rounded-xl w-[90%] m-auto p-3 cursor-pointer 
-              flex gap-2 items-center laptop:mt-5 phone:mx-3 laptop:mx-2`}
+                slug == "sap-ra-mat" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+              } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
+              flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("sap-ra-mat")}
             >
               <svg
@@ -142,9 +142,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "dang-phat-hanh" ? "bg-[#E6F4FF] text-[#1677FF]" : ""
-              }  hover:bg-[#F0F0F0] rounded-xl w-[90%] m-auto p-3 cursor-pointer 
-              flex gap-2 items-center laptop:mt-5 phone:mx-3 laptop:mx-2`}
+                slug == "dang-phat-hanh" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+              } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
+              flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("dang-phat-hanh")}
             >
               <svg
@@ -164,9 +164,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "hoan-thanh" ? "bg-[#E6F4FF] text-[#1677FF]" : ""
-              }  hover:bg-[#F0F0F0] rounded-xl w-[90%] m-auto p-3 cursor-pointer 
-              flex gap-2 items-center laptop:mt-5 phone:mx-3 laptop:mx-2`}
+                slug == "hoan-thanh" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+              } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
+              flex gap-2 items-center border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("hoan-thanh")}
             >
               <svg

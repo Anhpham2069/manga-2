@@ -34,7 +34,6 @@ const TrendStoriesCpn = () => {
     };
     fetchData();
   }, [slug]);
-  console.log(storiesData);
 
   const containerRef = useRef(null);
 
@@ -94,7 +93,7 @@ const TrendStoriesCpn = () => {
           const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
           // const newestChapter = layChapterMoiNhat(item);
           return (
-            <div className="">
+            <div className="" key={item._id}>
               <div className="flex flex-col justify-center items-center gap-2">
                 <CardStories
                   key={item._id}

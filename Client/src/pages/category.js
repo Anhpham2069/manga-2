@@ -139,7 +139,7 @@ const Category = () => {
           <div
             className={`${
               darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-            } w-full mt-10  grid  phone:grid-cols-1 phone:gap-2 tablet:grid-cols-3 laptop:grid-cols-${gridCols} desktop:grid-cols-${gridCols} lg:gap-1 place-items-center`}
+            } w-full mt-10  grid  phone:grid-cols-1 phone:gap-2 tablet:grid-cols-3 laptop:grid-cols-${gridCols} desktop:grid-cols-6 lg:gap-1 place-items-center`}
           >
             {loading && <Skeleton avatar active />}
 

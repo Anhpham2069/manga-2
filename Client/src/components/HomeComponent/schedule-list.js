@@ -3,56 +3,7 @@ import { useSelector } from 'react-redux';
 import { selectDarkMode } from '../layout/DarkModeSlice';
 import axios from 'axios';
 
-const timeData = [
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-    {
-        time: "[00:00]",
-        value: "LINH KHÍ KHÔI PHỤC: TA MỖI NGÀY THU ĐƯỢC MỘT CÁI KỸ NĂNG MỚI - Chapter 152"
-    },
-];
+
 
 const ScheduleList = () => {
     const [storiesData, setStoriesData] = useState([]);
@@ -83,7 +34,6 @@ const ScheduleList = () => {
         fetchData();
       }, [slug]);
       
-      console.log(storiesData);
     const isDarkModeEnable = useSelector(selectDarkMode)
 
     const currentDate = new Date();
@@ -102,7 +52,7 @@ const ScheduleList = () => {
                     const minute = dateObject.getMinutes();
                     const second = dateObject.getSeconds();
                     return(
-                        <div className='flex phone:text-xs laptop:text-base tablet:gap-10 tablet:text-base  py-2'>
+                        <div key={item._id} className='flex phone:text-xs laptop:text-base tablet:gap-10 tablet:text-base  py-2'>
                             <p className='text-green-400'>[{hour}:{minute}]</p>
                             <div className='flex'>
                                 <p  className={`${isDarkModeEnable?"text-text_darkMode":"text-[#73868C]"} font-semibold pl-1`}>{(item.chaptersLatest[0].filename).slice(0, (item.chaptersLatest[0].filename).indexOf("[")).trim()}</p>
