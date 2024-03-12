@@ -86,7 +86,6 @@ const CardStories = ({loading, slug, id, title, img, time, views = 1000, saves =
     const isDarkModeEnable = useSelector(selectDarkMode);
     return (
         <Link to={`/detail/${slug}`}>
-
                 <figure className='h-72 mr-4 relative cursor-pointer'>
                     <div className='relative h-52 w-44 overflow-hidden'>
                         <img

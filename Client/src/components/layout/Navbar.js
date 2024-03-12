@@ -27,7 +27,7 @@ import { selectDarkMode, toggleDarkMode } from "../layout/DarkModeSlice";
 import { setSearchTerm, selectSearchTerm } from "../../redux/slice/searchSlice";
 import SearchResultItem from "../components/searchResult";
 import axios from "axios";
-import { logOut, loginUser } from "../../services/apiRequest";
+import { logOut, loginUser } from "../../services/apiLoginRequest";
 import { createAxios } from "../../createInstance";
 import { logoutSuccess } from "../../redux/slice/authSlice";
 
@@ -501,24 +501,31 @@ const handleLogout = () =>{
                 <div className=" text-emerald-950 font-bold flex  flex-col justify-start items-start text-base">
                   {user ? (
                     <>
-                        
-                      <button className="text-red-950">Hi: {user?.username}</button>
-                      <button
-                        className="text2 mt-3 hover:text-gray-500"
-                      >
-                        {" "}
-                        <FontAwesomeIcon icon={faCircleUser} /> Tài khoản
-                      </button>
-                      <button
-                        className="text2 mt-3 hover:text-gray-500"
-                      >
-                        <FontAwesomeIcon icon={faBookmark} /> Theo dõi
-                      </button>
-                      <button
-                        className="text2 mt-3 hover:text-gray-500"
-                      >
-                        <FontAwesomeIcon icon={faClockRotateLeft} /> Lịch sử
-                      </button>
+                        <Link to={'/user'}>
+                          <button className="text-red-950">Hi: {user?.username}</button>
+                        </Link>
+                        <Link to={'/user'}>  
+                        <button
+                          className="text2 mt-3 hover:text-gray-500"
+                        >
+                          {" "}
+                          <FontAwesomeIcon icon={faCircleUser} /> Tài khoản
+                        </button>
+                        </Link>
+                        <Link to={"/favorites"}>
+                          <button
+                            className="text2 mt-3 hover:text-gray-500"
+                          >
+                            <FontAwesomeIcon icon={faBookmark} /> Theo dõi
+                          </button>
+                        </Link>
+                      <Link to={'/history'}>
+                        <button
+                          className="text2 mt-3 hover:text-gray-500"
+                        >
+                          <FontAwesomeIcon icon={faClockRotateLeft} /> Lịch sử
+                        </button>
+                      </Link>
                       <button
                         className="text2 mt-3 hover:text-gray-500"
                         onClick={handleLogout}

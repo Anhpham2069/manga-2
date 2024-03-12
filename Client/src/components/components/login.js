@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faFacebook,faGoogle } from '@fortawesome/free-brands-svg-icons'
 import axios from 'axios';
-import { loginUser } from '../../services/apiRequest';
+import { loginUser } from '../../services/apiLoginRequest';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 

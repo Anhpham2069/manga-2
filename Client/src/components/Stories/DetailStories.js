@@ -31,6 +31,7 @@ import { selectDarkMode } from "../layout/DarkModeSlice";
 
 import { Data } from "../../services/Data";
 import axios from "axios";
+import { message } from "antd";
 
 const DetailStories = () => {
   const { slug } = useParams();
@@ -54,6 +55,7 @@ const DetailStories = () => {
         );
         if (res.data) {
           setStory(res.data.data);
+          saveToHistory(res.data.data)
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -93,11 +95,33 @@ const DetailStories = () => {
   const chapterLength = story.item?.chapters[0]?.server_data.length
   console.log(chapterLength)
 
-
+  const saveToHistory = (storyData) => {
+    const timestamp = new Date().getTime();
+    const currentSlug = storyData?.item?.slug;
+    const existingHistory = localStorage.getItem("history");
+    const history = existingHistory ? JSON.parse(existingHistory) : [];
+    history.push({ slug: currentSlug, timestamp });
+    localStorage.setItem("history", JSON.stringify(history));
+  };
   // if (!truyen) {
   //   return <div>Truyện không tồn tại</div>;
   // }
   // const latestChapter = stories.chapters[stories.chapters.length - 1];
+  const saveToFavorites = (storyData) => {
+    // Lưu truyện vào Local Storage với key là "favorites"
+    
+    const existingFavorites = localStorage.getItem("favorites");
+    const favorites = existingFavorites ? JSON.parse(existingFavorites) : [];
+    favorites.push(storyData);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+  };
+
+  const addToFavorites = () => {
+    // Gọi hàm saveToFavorites khi người dùng nhấn vào nút "Theo dõi"
+    saveToFavorites(story);
+    // Thêm logic khác nếu cần
+    message.success("thêm vào yêu thích thành công")
+  };
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
       <NavBar />
@@ -245,6 +269,7 @@ const DetailStories = () => {
                         ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
                         : " bg-[#FF3860] hover:bg-[#FF7A95]"
                     } w-52 rounded-md h-10  `}
+                    onClick={addToFavorites}
                   >
                     {" "}
                     <FontAwesomeIcon icon={faHeart} /> Theo Dõi

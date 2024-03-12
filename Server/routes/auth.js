@@ -15,6 +15,6 @@ router.post("/logout",middlewareController.verifyToken, authController.logOut);
 router.put('/edit-profile', authController.editUser);
 
 // // Đổi mật khẩu (yêu cầu xác thực)
-router.put('/change-password', authController.changePassword);
+router.post('/change-password', authController.changePassword);
 
 module.exports = router;

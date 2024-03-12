@@ -15,11 +15,13 @@ import { Data } from "../../services/Data";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 import axios from "axios";
+import { storiesDataft } from "../../services/apiStoriesRequest";
 
 const Featured = ({ dark }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
   // sate
   const [storiesData, setStoriesData] = useState([]);
+  const [storiesFT, setStoriesFT] = useState([]);
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("truyen-moi");
 
@@ -30,14 +32,11 @@ const Featured = ({ dark }) => {
         const res = await axios.get(
           `https://otruyenapi.com/v1/api/danh-sach/${slug}`
         );
-
         if (res.data) {
           setStoriesData(res.data.data);
         }
       } catch (error) {
-        // Xử lý lỗi ở đây, ví dụ:
         console.error("Error fetching data:", error);
-        // Có thể hiển thị thông báo lỗi cho người dùng hoặc xử lý theo cách phù hợp khác
       } finally {
         setLoading(false);
       }
@@ -45,6 +44,18 @@ const Featured = ({ dark }) => {
     fetchData();
   }, [slug]);
 
+  useEffect(()=>{
+    const fetchData = async ()=>{
+      try {
+          const res = await storiesDataft()
+          setStoriesFT(res.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    fetchData()
+  },[])
+  console.log(storiesFT)
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
   };
@@ -142,19 +153,32 @@ const Featured = ({ dark }) => {
             });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-                <div className="flex flex-col justify-center items-center gap-2 "  key={item._id}>
-                  <CardStories
-                    key={item._id}
-                    id={item._id}
-                    title={item.name}
-                    img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
-                    slug={item.slug}
-                    time={trimmedTimeAgo}
-                    chapter={item.chaptersLatest[0].chapter_name}
-                    nomarl
-                  />
-                  {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
-                </div>
+              <div
+                className="flex flex-col justify-center items-center gap-2 "
+                key={item._id}
+              >
+                     <Link to={`/detail/${item.slug}`}>
+                <figure className='h-72 mr-4 relative cursor-pointer'>
+                    <div className='relative h-52 w-44 overflow-hidden'>
+                        <img
+                            src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                            alt='anh'
+                            className='w-full h-full object-cover transition-all duration-500 transform hover:scale-125'
+                        />
+                        {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
+                            <p className='mr-2'><FontAwesomeIcon icon={faBookmark} /> {saves}</p>
+                            <p><FontAwesomeIcon icon={faEye} />{views} </p>
+                        </div> */}
+                    </div>
+                    <div>
+                            <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{item.name}</p>
+                    </div>
+                            <button className="promotion-button w-fit p-1 m-1 bg-primary-color text-white text-xs shadow-md rounded-md font-medium absolute top-1 left-1">{trimmedTimeAgo}</button>
+                            <button className="promotion-button w-fit p-1 m-1 bg-[#FF4500] text-white text-xs shadow-md rounded-md font-medium absolute top-1 right-1">Chương: {item.chaptersLatest[0].chapter_name}</button>
+                </figure>
+        </Link>
+                {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
+              </div>
             );
           })}
         </div>
@@ -225,9 +249,10 @@ const Featured = ({ dark }) => {
                             Thể loại:
                           </p>
                           <div className="flex flex-1">
-                            {item?.category?.slice(0, 3).map((cate,index) => {
+                            {item?.category?.slice(0, 3).map((cate, index) => {
                               return (
-                                <p key={index}
+                                <p
+                                  key={index}
                                   className={`mr-1 rounded-xl bg-[#E6F4FF] text-primary-color text-sm hover:text-blue-400`}
                                 >
                                   {cate.name}
@@ -261,26 +286,31 @@ const Featured = ({ dark }) => {
               : "bg-white"
           } h-fit shadow-lg mt-10`}
         >
-          <div className="w-[50%] uppercase text-primary-color p-3 border-b-2 border-gray-200">
+          <div className="w-full font-medium uppercase text-primary-color p-3 border-b-2 border-gray-200">
             <FontAwesomeIcon icon={faCalendarDay} className="mr-2" />
-            Truyện mới
+            Truyện sắp ra mắt
           </div>
-          {storiesData.items?.slice(0, 10).map((item, index) => {
+          {storiesFT.items?.slice(0, 10).map((item, index) => {
             const timeAgo = formatDistanceToNow(new Date(item.updatedAt), {
               addSuffix: true,
               locale: vi,
             });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-              <div key={item._id} className="flex p-3 justify-start  border-b-2 border-gray-200">
+              <div
+                key={item._id}
+                className="flex p-3 justify-start  border-b-2 border-gray-200"
+              >
                 <img
-                  src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                  src={`https://img.otruyenapi.com${storiesFT.seoOnPage.og_image?.[index]}`}
                   alt="anh"
                   className="h-20"
                 />
                 <div className="ml-4 w-full h-20 flex flex-col justify-around">
                   <div className="flex-1">
-                    <p className="text-lg">{item.name}</p>
+                  <Link to={`/detail/${item.slug}`}>
+                    <p className="text-lg cursor-pointer">{item.name}</p>
+                  </Link>
                     <div className="flex text-base italic">
                       <p>Chapter {item.chaptersLatest[0].chapter_name}</p>
                     </div>

@@ -1,12 +1,19 @@
-import React, { useState } from 'react';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { changePasswordUser } from '../../services/apiLoginRequest';
 
 const Profile = () => {
   
   const [displayName, setDisplayName] = useState('Anh Phạm');
   const [coin, setCoin] = useState('0');
-  const [googleId, setGoogleId] = useState(12362371231902);
-  const [facebookId, setFacebookId] = useState('NULL');
+  const [googleId, setGoogleId] = useState(null);
+  const [facebookId, setFacebookId] = useState(null);
   const [email, setEmail] = useState('Anhp2069@gmail.com');
+
+  const user = useSelector((state) => state?.auth.login.currentUser);
+
+  console.table(user)
 
 
   console.log(displayName)
@@ -16,11 +23,10 @@ const Profile = () => {
   return (
     <div className=' w-full'>
       <p className='text-2xl font-medium mb-2'>Thông tin tài khoản</p>
-      <TextInput label="Tên hiển thị" value={displayName} onChange={(e) => handleChange(e, setDisplayName)} />
-      <TextInput label="Coin" value={coin} onChange={(e) => handleChange(e, setCoin)} />
-      <TextInput label="Google ID" value={googleId} onChange={(e) => handleChange(e, setGoogleId)} />
-      <TextInput label="Facebook ID" value={facebookId} onChange={(e) => handleChange(e, setFacebookId)} />
-      <TextInput label="Địa chỉ Email" value={email} onChange={(e) => handleChange(e, setEmail)} />
+      <TextInput label="Tên hiển thị" value={user?.username} />
+      <TextInput label="Địa chỉ Email" value={user?.email} />
+      <TextInput label="Google ID" value={googleId} />
+      <TextInput label="Facebook ID" value={facebookId} />
       <div className='w-full flex justify-center'>
         <button className='m-auto p-2 px-3 rounded-sm hover:bg-primary-color text-white bg-[#FF3860]'>Lưu</button>
       </div>
@@ -31,17 +37,28 @@ const Profile = () => {
 // mat khau
 
 const ChangePassWord = () => {
-  const [passWord,setPassWord] = useState('***')
-  const [newPassWord,setNewPassWord] = useState('***')
+
+  const user = useSelector((state) => state?.auth.login.currentUser);
+
+
+  const [passWord,setPassWord] = useState()
+  const [newPassWord,setNewPassWord] = useState()
+
+  const handleChangePassword = (e) =>{
+    // e.preventDefault()
+
+    changePasswordUser(user?._id,passWord,newPassWord)
+  }
+
   return (
     <div className='w-full'>
       <p className='text-2xl font-medium mb-2'>Đổi mật khẩu</p>
-      <TextInput label="Mật khẩu hiện tại" value={passWord} type="password" />
-      <TextInput label="Mật khẩu mới " value={newPassWord} type="password" />
-      <TextInput label="Xác nhận mật khẩu mới " />
+      <TextInput label="Mật khẩu hiện tại" value={passWord} onChange={(e)=>setPassWord(e.target.value)} type="password" />
+      <TextInput label="Mật khẩu mới " value={newPassWord} onChange={(e)=>setNewPassWord(e.target.value)} type="password" />
+      <TextInput label="Xác nhận mật khẩu mới " value={newPassWord} onChange={(e)=>setNewPassWord(e.target.value)} />
 
       <div className='w-full flex justify-center'>
-        <button className='m-auto p-2 px-3 rounded-sm hover:bg-primary-color text-white bg-[#FF3860]'>Lưu</button>
+        <button onClick={()=>handleChangePassword()} className='m-auto p-2 px-3 rounded-sm hover:bg-primary-color text-white bg-[#FF3860]'>Lưu</button>
       </div>
     </div>
   )

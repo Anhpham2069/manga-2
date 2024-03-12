@@ -44,3 +44,10 @@ export const logOut = async (dispatch, id, navigate, accessToken, axiosJWT) => {
     dispatch(logoutFail());
   }
 };
+export const changePasswordUser = async (userId, currentPassword, newPassword)=>{
+  try {
+    await axios.post(`http://localhost8000/api/auth/change-password`,userId, currentPassword, newPassword)
+  } catch (error) {
+    console.log(error)
+  }
+}

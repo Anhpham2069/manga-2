@@ -13,6 +13,8 @@ import StoriesAdmin from "./Admin/page/stories";
 import UserManage from "./Admin/page/user";
 import SearchResult from "./components/components/searchResult";
 import Category from "./pages/category";
+import History from "./pages/history";
+import FavoriteStories from "./pages/favorites";
 
 
 function App() {
@@ -27,6 +29,8 @@ function App() {
         <Route exact path="/filter" element={<FilterStories />} />
         <Route exact path="/search/:keyword" element={<SearchResult />} />
         <Route exact path="/category/:slug" element={<Category />} />
+        <Route exact path="/history" element={<History />} />
+        <Route exact path="/favorites" element={<FavoriteStories />} />
 
         <Route
           path="/genres/:genre"
