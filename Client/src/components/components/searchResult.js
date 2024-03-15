@@ -104,31 +104,31 @@ const SearchResult = () => {
             <div className={`
                 flex phone:flex-col gap-4 w-[95%]  mt-6 m-auto
             `}>
-                <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} phone:w-full w-full p-2`}>
+                <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} phone:w-full w-full h-full p-2`}>
                     <div className='py-1 h-12 flex items-center  justify-between text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] '>
                                 <p>Kết quả tìm kiếm</p>
                     </div>
                     <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} 
-                      mt-10  grid  phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 lg:grid-cols-3 desktop:grid-cols-5 lg:gap-4 place-items-center
+                      mt-10  grid  phone:grid-cols-2 h-full phone:gap-2 tablet:grid-cols-3 lg:grid-cols-3 desktop:grid-cols-5 lg:gap-4 place-items-center
                     `}>
-                    {currentTruyens?.map((item,index)=>{
+                      {!currentTruyens && <div>Không có gì</div>}
+                    {currentTruyens && currentTruyens.map((item,index)=>{
                             const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true,locale: vi  }); 
                             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, '');
                             // const newestChapter = layChapterMoiNhat(item);
                             return(
                             <>
-                                <div className='flex flex-col justify-center items-center gap-2'>
                                 <CardStories 
                                   key={item._id}
                                   id={item._id}
                                   title={item.name}
                                   img={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}  
                                   slug={item.slug}  
-                                  time={trimmedTimeAgo}              
+                                  time={trimmedTimeAgo}  
+                                  // chapter={item.chaptersLatest[0].chapter_name}            
                                   nomarl                  
                                   />     
                                     {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
-                                </div>
                             </>
                             )
                         })}

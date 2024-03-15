@@ -32,21 +32,22 @@ export const registerUser = async (user, dispatch, navigate) => {
     dispatch(registerFail());
   }
 };
-export const logOut = async (dispatch, id, navigate, accessToken, axiosJWT) => {
+export const logOut = async (dispatch, id, navigate, accessToken) => {
+  console.log(accessToken)
   dispatch(logoutStart());
   try {
-     await axiosJWT.post("http://localhost:8000/api/auth/logout", id, {
+     await axios.post("http://localhost:8000/api/auth/logout", id, {
       headers: { token: `Bearer ${accessToken}` },
     });
     dispatch(logoutSuccess());
-    navigate("/filter");
+    navigate("/login");
   } catch (err) {
     dispatch(logoutFail());
   }
 };
 export const changePasswordUser = async (userId, currentPassword, newPassword)=>{
   try {
-    await axios.post(`http://localhost8000/api/auth/change-password`,userId, currentPassword, newPassword)
+    await axios.post(`http://localhost:8000/api/auth/change-password`,userId, currentPassword, newPassword)
   } catch (error) {
     console.log(error)
   }

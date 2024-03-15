@@ -19,9 +19,9 @@ const HomeLayout = () => {
       <div className="lg:pt-10 tablet:px-6 lg:px-14 ">
         <ScheduleList />
       </div>
-      <div className="lg:pt-10 tablet:px-6 lg:px-14 ">
+      {/* <div className="lg:pt-10 tablet:px-6 lg:px-14 ">
         <TrendStoriesCpn />
-      </div>
+      </div> */}
       {/* <div className='lg:px-14 tablet:px-6'> */}
       <Featured dark={isDarkModeEnable} />
       {/* </div> */}

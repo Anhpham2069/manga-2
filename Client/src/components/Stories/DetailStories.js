@@ -37,9 +37,17 @@ const DetailStories = () => {
   const { slug } = useParams();
   console.log(slug);
 
+  // redux
   const isDarkModeEnable = useSelector(selectDarkMode);
-  const [story, setStory] = useState({});
+  const user = useSelector((state) => state?.auth.login.currentUser);
 
+  
+  const accessToken = user?.accessToken
+  const userId = user?._id
+  
+  //state
+  const [story, setStory] = useState({});
+  const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Function to toggle sorting order
@@ -56,6 +64,7 @@ const DetailStories = () => {
         if (res.data) {
           setStory(res.data.data);
           saveToHistory(res.data.data)
+          checkIsFavorite();
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -64,6 +73,44 @@ const DetailStories = () => {
     fetchData();
   }, [slug]);
   console.log(story);
+
+  const addToFavorites = async () => {
+    try {
+      const res = await axios.post('http://localhost:8000/api/favorites/add',{ slug, storyInfo: story,userId });
+      if (res.status === 201) {
+        message.success("Đã thêm vào mục yêu thích");
+        setIsFavorite(true);
+      }
+    } catch (error) {
+      console.error('Error adding to favorites:', error);
+    }
+  };
+  const checkIsFavorite = async () => {
+    try {
+      const res = await axios.get("http://localhost:8000/api/favorites/get-all");
+      const favorites = res.data;
+      const isFav = favorites.some((fav) => fav.slug === slug);
+      setIsFavorite(isFav);
+    } catch (error) {
+      console.error("Error checking favorite:", error);
+    }
+  };
+
+  const removeFromFavorites = async () => {
+    try {
+      const res =  await axios.delete(`http://localhost:8000/api/favorites/delete`,slug);
+      if(res.status === 200){
+        message.error("đã bỏ yêu thích")
+        setIsFavorite(false);
+      }
+    } catch (error) {
+      console.error('Error removing from favorites:', error);
+    }
+  };
+
+
+
+
 
   const filteredChapters = story.item?.chapters[0].server_data?.filter(
     (chap) => {
@@ -107,21 +154,21 @@ const DetailStories = () => {
   //   return <div>Truyện không tồn tại</div>;
   // }
   // const latestChapter = stories.chapters[stories.chapters.length - 1];
-  const saveToFavorites = (storyData) => {
-    // Lưu truyện vào Local Storage với key là "favorites"
+  // const saveToFavorites = (storyData) => {
+  //   // Lưu truyện vào Local Storage với key là "favorites"
     
-    const existingFavorites = localStorage.getItem("favorites");
-    const favorites = existingFavorites ? JSON.parse(existingFavorites) : [];
-    favorites.push(storyData);
-    localStorage.setItem("favorites", JSON.stringify(favorites));
-  };
+  //   const existingFavorites = localStorage.getItem("favorites");
+  //   const favorites = existingFavorites ? JSON.parse(existingFavorites) : [];
+  //   favorites.push(storyData);
+  //   localStorage.setItem("favorites", JSON.stringify(favorites));
+  // };
 
-  const addToFavorites = () => {
-    // Gọi hàm saveToFavorites khi người dùng nhấn vào nút "Theo dõi"
-    saveToFavorites(story);
-    // Thêm logic khác nếu cần
-    message.success("thêm vào yêu thích thành công")
-  };
+  // const addToFavorites = () => {
+  //   // Gọi hàm saveToFavorites khi người dùng nhấn vào nút "Theo dõi"
+  //   saveToFavorites(story);
+  //   // Thêm logic khác nếu cần
+  //   message.success("thêm vào yêu thích thành công")
+  // };
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
       <NavBar />
@@ -263,6 +310,21 @@ const DetailStories = () => {
                     </button>
                   </Link>
                   {/* </Link> */}
+                  {isFavorite ? 
+                  
+                  <button
+                    className={`${
+                      isDarkModeEnable
+                        ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                        : " bg-[#701f2f] hover:bg-[#FF7A95]"
+                    } w-52 rounded-md h-10  `}
+                    onClick={removeFromFavorites}
+                  >
+                    {" "}
+                    <FontAwesomeIcon icon={faHeart} /> Bỏ Theo Dõi
+                  </button>
+                  :
+                  
                   <button
                     className={`${
                       isDarkModeEnable
@@ -274,6 +336,7 @@ const DetailStories = () => {
                     {" "}
                     <FontAwesomeIcon icon={faHeart} /> Theo Dõi
                   </button>
+                  }
                 </div>
                 <div className="mt-3">
                   <p className="font-bold">Giới thiệu</p>

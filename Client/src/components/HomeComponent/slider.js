@@ -31,14 +31,13 @@ const Slider = () => {
     };
     fetchData();
   }, [slug]);
-  console.log(storiesData);
 
 
   return (
     <Carousel autoplay>
         {storiesData.items?.slice(0, 4).map((item, index) => (
           <div key={item._id} className=" relative   w-full bg-black phone:h-80 tablet:h-[440px]">
-              <img className="absolute w-full h-full opacity-25 object-cover z-10" src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}></img>
+              <img className="absolute w-full h-full opacity-25 object-cover z-1" src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}></img>
             <div className=" text-white flex justify-center p-10 h-full z-20 ">
               <div className="flex-1 tablet:p-20">
                 <div className="text-xl font-medium"><p>Chương {item.chaptersLatest[0].chapter_name}</p> </div>
@@ -46,7 +45,7 @@ const Slider = () => {
                 <div className="flex flex-wrap">
                   {item?.category?.map((cate, index) => {
                     return (
-                      <Link to={`/category/${cate.slug}`}>
+                      <Link to={`/category/${cate.slug}`} key={index}>
                           <div className="cursor-pointer">    
                               <p
                               key={index}

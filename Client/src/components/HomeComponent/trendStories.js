@@ -82,7 +82,7 @@ const TrendStoriesCpn = () => {
         </div>
       </div>
       <div
-        className=" container-trendStrories h-72 relative p-4 flex overflow-x-scroll scroll-none w-full transition-transform duration-300"
+        className=" container-trendStrories h-72 relative p-4 flex gap-2 overflow-x-scroll scroll-none w-full transition-transform duration-300"
         ref={containerRef}
       >
         {storiesData.items?.map((item, index) => {

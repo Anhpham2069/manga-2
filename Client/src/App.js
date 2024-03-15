@@ -15,6 +15,8 @@ import SearchResult from "./components/components/searchResult";
 import Category from "./pages/category";
 import History from "./pages/history";
 import FavoriteStories from "./pages/favorites";
+import Login from "./pages/login";
+import Register from "./pages/register";
 
 
 function App() {
@@ -31,6 +33,8 @@ function App() {
         <Route exact path="/category/:slug" element={<Category />} />
         <Route exact path="/history" element={<History />} />
         <Route exact path="/favorites" element={<FavoriteStories />} />
+        <Route exact path="/login" element={<Login />} />
+        <Route exact path="/register" element={<Register />} />
 
         <Route
           path="/genres/:genre"

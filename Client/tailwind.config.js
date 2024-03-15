@@ -14,6 +14,7 @@ module.exports = {
           'bg_dark':'#1A1A1A',
           'bg_light':'#E8EBF5',
           'bg_dark_light': '#242526',
+          'bg_hover': '#E6F4FF',
         },
         height:{
           '440': "28rem",

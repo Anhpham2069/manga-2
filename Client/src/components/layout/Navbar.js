@@ -24,10 +24,9 @@ import Login from "../components/login";
 import Register from "../components/register";
 import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode, toggleDarkMode } from "../layout/DarkModeSlice";
-import { setSearchTerm, selectSearchTerm } from "../../redux/slice/searchSlice";
-import SearchResultItem from "../components/searchResult";
+import { selectSearchTerm } from "../../redux/slice/searchSlice";
 import axios from "axios";
-import { logOut, loginUser } from "../../services/apiLoginRequest";
+import { logOut } from "../../services/apiLoginRequest";
 import { createAxios } from "../../createInstance";
 import { logoutSuccess } from "../../redux/slice/authSlice";
 
@@ -38,7 +37,7 @@ const NavBar = () => {
 
   const searchTerm = useSelector(selectSearchTerm);
   const isDarkModeEnable = useSelector(selectDarkMode);
-  const user = useSelector((state) => state?.auth.login.currentUser);
+  const user = useSelector((state) => state.auth.login.currentUser);
 
   
   const accessToken = user?.accessToken
@@ -70,7 +69,6 @@ const NavBar = () => {
   const handleInputFocus = () => {
     setShowResults(true);
   };
-
   const handleInputBlur = () => {
     setShowResults(false);
   };
@@ -136,7 +134,6 @@ const NavBar = () => {
       setIsLoading(false);
     }
   };
-  console.log(searchResults);
 
   const clearInput = () => {
     setKeyword("");
@@ -161,24 +158,6 @@ const NavBar = () => {
     dispatch(toggleDarkMode());
   };
 
-  //login
-  const showModalLogin = () => {
-    setIsModalLoginOpen(true);
-  };
-  const showModalRegister = () => {
-    setIsModalRegisterOpen(true);
-  };
-  const handleOk = () => {
-    setIsModalLoginOpen(false);
-    setIsModalRegisterOpen(false);
-  };
-  const handleCancel = () => {
-    setIsModalLoginOpen(false);
-    setIsModalRegisterOpen(false);
-  };
-  // const hide = () => {
-  //   setOpen(false);
-  // };
   const handleOpenChange = (newOpen) => {
     setOpenCategory(newOpen);
   };
@@ -200,7 +179,7 @@ const NavBar = () => {
 let axiosJWT = createAxios(user,dispatch,logoutSuccess)
 
 const handleLogout = () =>{
-  logOut(dispatch,id,navigate, accessToken,axiosJWT);
+  logOut(dispatch,id,navigate, accessToken);
 }
 
   return (
@@ -537,15 +516,18 @@ const handleLogout = () =>{
                     <>
                       <button
                         className="text2 hover:text-gray-500"
-                        onClick={showModalLogin}
                       >
+                      <Link to={'/login'}>
                         <FontAwesomeIcon icon={faUser} /> Đăng nhập
+                      </Link>
                       </button>
                       <button
                         className="text2 mt-3 hover:text-gray-500"
-                        onClick={showModalRegister}
+                      
                       >
-                        <FontAwesomeIcon icon={faUserPlus} /> Đăng kí
+                        <Link to={'/register'}>
+                          <FontAwesomeIcon icon={faUserPlus} /> Đăng kí
+                        </Link>
                       </button>
                     </>
                   )}
@@ -570,23 +552,7 @@ A
               }
             </Popover>
 
-            <Modal
-              open={isModalLoginOpen}
-              title="Đăng nhập"
-              onOk={handleOk}
-              onCancel={handleCancel}
-            >
-              <Login />
-            </Modal>
-            <Modal
-              style={{ top: "3 rem" }}
-              open={isModalRegisterOpen}
-              title="Đăng kí"
-              onOk={handleOk}
-              onCancel={handleCancel}
-            >
-              <Register />
-            </Modal>
+           
           </div>
         </div>
       </div>

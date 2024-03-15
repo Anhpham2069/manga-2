@@ -55,7 +55,6 @@ const Featured = ({ dark }) => {
     }
     fetchData()
   },[])
-  console.log(storiesFT)
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
   };
@@ -153,32 +152,39 @@ const Featured = ({ dark }) => {
             });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-              <div
-                className="flex flex-col justify-center items-center gap-2 "
-                key={item._id}
-              >
-                     <Link to={`/detail/${item.slug}`}>
-                <figure className='h-72 mr-4 relative cursor-pointer'>
+              <>
+                <CardStories
+                      key={item._id}
+                      id={item._id}
+                      title={item.name}
+                      img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                      slug={item.slug}
+                      time={trimmedTimeAgo}
+                      chapter={item.chaptersLatest[0].chapter_name}
+                      nomarl
+                    />
+                     {/* <Link to={`/detail/${item.slug}`}> */}
+                {/* <figure className='h-72 mr-4 relative cursor-pointer'>
                     <div className='relative h-52 w-44 overflow-hidden'>
                         <img
                             src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
                             alt='anh'
                             className='w-full h-full object-cover transition-all duration-500 transform hover:scale-125'
-                        />
+                        /> */}
                         {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
                             <p className='mr-2'><FontAwesomeIcon icon={faBookmark} /> {saves}</p>
                             <p><FontAwesomeIcon icon={faEye} />{views} </p>
                         </div> */}
-                    </div>
+                    {/* </div>
                     <div>
                             <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{item.name}</p>
                     </div>
                             <button className="promotion-button w-fit p-1 m-1 bg-primary-color text-white text-xs shadow-md rounded-md font-medium absolute top-1 left-1">{trimmedTimeAgo}</button>
                             <button className="promotion-button w-fit p-1 m-1 bg-[#FF4500] text-white text-xs shadow-md rounded-md font-medium absolute top-1 right-1">Chương: {item.chaptersLatest[0].chapter_name}</button>
                 </figure>
-        </Link>
+        </Link> */}
                 {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
-              </div>
+              </>
             );
           })}
         </div>
