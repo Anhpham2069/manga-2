@@ -4,8 +4,9 @@ const { verifyToken } = require("../controllers/verifyToken");
 
 
 router.post('/add', verifyToken, favoritesController.addFavorite)
-router.delete('/delete', verifyToken, favoritesController.deleteFavorites)
+router.post('/delete',favoritesController.deleteFavorites)
 router.get('/get-all', verifyToken, favoritesController.getAllFavorites)
+router.get('/get-single/:userId', favoritesController.getUserFavorites)
 
 
 module.exports = router;

@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const middlewareController = require("../controllers/middlewareController");
+const { verifyToken } = require('../controllers/verifyToken');
 
 
 
-router.get("/all-user",middlewareController.verifyToken, userController.getAllUsers);
+router.get("/all-user",verifyToken, userController.getAllUsers);
 
 //DELETE USER
 router.delete("/delete-user/:id", userController.deleteUser);

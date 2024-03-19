@@ -5,10 +5,7 @@ dotenv.config();
 
 const connectDB = async () => {
     try {
-      await mongoose.connect(process.env.DATABASE, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
+      await mongoose.connect(process.env.DATABASE);
       console.log('Kết nối thành công đến MongoDB');
     } catch (error) {
       console.error('Failed to connect to MongoDB:', error);

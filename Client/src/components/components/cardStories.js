@@ -97,7 +97,7 @@ const CardStories = ({
 }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
   return (
-    <figure className=" w-full h-80 mr-4 cursor-pointer ">
+    <figure className=" w-full h-80 mr-4 cursor-pointer my-5">
       <div className=" relative h-[75%] w-full overflow-hidden rounded-sm ">
         <Link to={`/detail/${slug}`}>
           <img
@@ -129,7 +129,7 @@ const CardStories = ({
           <a
             className={`${
               isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "
-            } w-full font-light text-lg mt-3`}
+            } w-full font-base. font-sans text-lg mt-3`}
           >
             {title}
           </a>

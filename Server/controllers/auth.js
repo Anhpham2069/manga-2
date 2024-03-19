@@ -132,7 +132,6 @@ const authController = {
 
   logOut: async (req, res) => {
     //Clear cookies when user logs out
-
     res.status(200).json("Logged out successfully!");
   },
 

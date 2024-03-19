@@ -187,7 +187,7 @@ const handleLogout = () =>{
       <div
         className={`${
           isDarkModeEnable ? "bg-[#3A64C2]" : "bg-regal-blue"
-        }  w-full h-16 text-white  flex items-center`}
+        }  w-full h-16 text-white  flex items-center `}
       >
         <div className="px-14 flex items-center w-full max-lg:justify-between">
           <div className="lg:hidden">

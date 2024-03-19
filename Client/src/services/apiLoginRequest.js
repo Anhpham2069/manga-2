@@ -33,12 +33,14 @@ export const registerUser = async (user, dispatch, navigate) => {
   }
 };
 export const logOut = async (dispatch, id, navigate, accessToken) => {
-  console.log(accessToken)
   dispatch(logoutStart());
   try {
-     await axios.post("http://localhost:8000/api/auth/logout", id, {
+     await axios.post("http://localhost:8000/api/auth/logout", 
+     id, 
+     {
       headers: { token: `Bearer ${accessToken}` },
-    });
+    }
+    );
     dispatch(logoutSuccess());
     navigate("/login");
   } catch (err) {

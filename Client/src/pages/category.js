@@ -7,17 +7,13 @@ import { selectDarkMode } from "../components/layout/DarkModeSlice";
 import CardStories from "../components/components/cardStories";
 // icon
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-
-  faList,
-  faTableCells,
-} from "@fortawesome/free-solid-svg-icons";
+import { faList, faTableCells } from "@fortawesome/free-solid-svg-icons";
 // layout
 import NavBar from "../components/layout/Navbar";
 import Footer from "../components/layout/footer";
 import { useEffect } from "react";
 import axios from "axios";
-import { Skeleton } from "antd";
+import { Checkbox, Skeleton } from "antd";
 import { useParams } from "react-router-dom";
 
 const Category = () => {
@@ -62,15 +58,19 @@ const Category = () => {
     };
     fetchData();
   }, [selectedCategory]);
-  console.log(isCategory);
+  console.log(genres);
 
-  const handleCategoryChange = (event) => {
+  const handleCategoryChange = (e,slug) => {
+    e.preventDefault();
+    setSelectedCategory(slug);
+  };
+  const handleCategoryChangeMb = (event) => {
     const newSlug = event.target.value;
     setSelectedCategory(newSlug);
   };
 
   //   phan trang (pagination)
-  
+
   return (
     <div
       className={`${
@@ -78,15 +78,11 @@ const Category = () => {
       }`}
     >
       <NavBar />
-      <div
-        className={`
-                 w-[95%]  mt-6 m-auto
-            `}
-      >
+      <div className={`w-[95%]  mt-6 m-auto flex`}>
         <div
           className={`${
             darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-          } laptop:col-span-1  p-2`}
+          } laptop:col-span-1  p-5`}
         >
           <div className="py-2 p-2 h-12 flex items-center  justify-between text-xl font-semibold  border-b-[1px] border-[#F0F0F0] ">
             <p>
@@ -108,10 +104,13 @@ const Category = () => {
                   onClick={() => setGridCols(6)}
                 />
               </div>
-              <select
-                className="bg-[#E6F4FF] rounded-xl p-2 text-primary-color"
+              
+            </div>
+          </div>
+          <select
+                className="phone:block tablet:hidden w-full  bg-[#E6F4FF] rounded-xl p-2  my-5 text-primary-color"
                 value={selectedCategory}
-                onChange={handleCategoryChange}
+                onChange={handleCategoryChangeMb}
               >
                 {genres?.items.map((item) => {
                   return (
@@ -133,22 +132,27 @@ const Category = () => {
                   );
                 })}
               </select>
-            </div>
-          </div>
+          <div className="flex w-full tablet:p-5">
+            <div
+              className={`${
+                darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
+              } tablet:mt-10 tablet:p-5
+               tablet:w-[75%] phone:w-full grid  phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 laptop:grid-cols-${gridCols} desktop:grid-cols-4 lg:gap-5 place-items-center`}
+            >
+              {loading && <Skeleton avatar active />}
 
-          <div
-            className={`${
-              darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-            } w-full mt-10  grid  phone:grid-cols-1 phone:gap-2 tablet:grid-cols-3 laptop:grid-cols-${gridCols} desktop:grid-cols-6 lg:gap-1 place-items-center`}
-          >
-            {loading && <Skeleton avatar active />}
-
-            {isCategory.items?.map((item, index) => {
-              const timeupa = new Date(item.updatedAt);
-              const formattedDateTime = timeupa.toISOString().replace('T', ' ').replace('Z', '');
-              const trimmedTimeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi }).replace(/^khoảng\s/, "");
-              return (
-                <>
+              {isCategory.items?.map((item, index) => {
+                const timeupa = new Date(item.updatedAt);
+                const formattedDateTime = timeupa
+                  .toISOString()
+                  .replace("T", " ")
+                  .replace("Z", "");
+                const trimmedTimeAgo = formatDistanceToNow(
+                  new Date(item.updatedAt),
+                  { addSuffix: true, locale: vi }
+                ).replace(/^khoảng\s/, "");
+                return (
+                  <>
                     <CardStories
                       key={item._id}
                       id={item._id}
@@ -157,23 +161,30 @@ const Category = () => {
                       slug={item.slug}
                       time={trimmedTimeAgo}
                       timeup={formattedDateTime}
-                      
                       // chapter={item.chaptersLatest[0].chapter_name}
                       nomarl
                     />
-                </>
-              );
-            })}
+                  </>
+                );
+              })}
+            </div>
+            <div className="flex-1 border-2 p-2 phone:hidden  tablet:block h-fit">
+              <div className="border-b-2 font-semibold text-2xl text-primary-color">
+                <p>Thể loại</p>
+              </div>
+              <div className="grid phone:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-2 ">
+                {genres?.items.map((item) => {
+                  return <div onClick={(e)=>handleCategoryChange(e,item.slug)} className="flex items-center border-b-2 p-3 font-medium hover:text-[#AE4AD9] cursor-pointer">{item.name}</div>;
+                })}
+              </div>
+            </div>
           </div>
-          {/* <div className="p-4 w-full border-t-[1px] mt-10">
-      
-          </div> */}
+          <div className="p-4 border-t-[1px] mt-10"></div>
         </div>
       </div>
       <Footer />
     </div>
   );
 };
-
 
 export default Category;

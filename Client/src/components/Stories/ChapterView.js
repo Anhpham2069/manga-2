@@ -140,11 +140,11 @@ const ReadStories = () => {
               <span className='text-[#999999]'> - Chapter {chapter?.item.chapter_name}</span>
             </div>
             <div className='text-[#999999]  text-center'>Nếu không xem được truyện vui lòng đổi "SERVER ẢNH" bên dưới</div>
-            <div className='text-white w-full flex justify-center gap-2 mt-3'>
+            {/* <div className='text-white w-full flex justify-center gap-2 mt-3'>
               <button className={`${active ? "bg-[#E59FF3]": " bg-primary-color"} px-2 py-1 rounded-md`}>Server 1</button>
               <button className="px-2 py-1 rounded-md bg-primary-color">Server 2</button>
               <button className="px-2 py-1 rounded-md bg-primary-color">Server 3</button>
-            </div>
+            </div> */}
             <div className='w-full flex justify-center mt-5 text-white'><button className=" px-2 py-1 rounded-md bg-[#F0AD4E]">
               <FontAwesomeIcon icon={faCircleExclamation} /> Báo lỗi</button></div>
 
@@ -184,6 +184,7 @@ const ReadStories = () => {
           <div className=' w-full flex flex-col justify-center mt-32'>
             {chapter?.item.chapter_image.map((i)=>(
               <img 
+                loading='lazy'
                 className='phone:mx-5 laptop:mx-40 desktop:mx-60'
                 src={`https://sv1.otruyencdn.com/${chapter.item.chapter_path}/${i.image_file}`} alt='anh'>
               </img>

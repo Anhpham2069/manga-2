@@ -26,21 +26,22 @@ import {
   faTags,
 } from "@fortawesome/free-solid-svg-icons";
 import CardStories from "../components/cardStories";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 
 import { Data } from "../../services/Data";
 import axios from "axios";
 import { message } from "antd";
+import { addFavoritesStory, getAllFavorites, removeFavoritesStory } from "../../services/apiStoriesRequest";
 
 const DetailStories = () => {
   const { slug } = useParams();
-  console.log(slug);
+  const dispatch = useDispatch()
 
   // redux
   const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state?.auth.login.currentUser);
-
+  const favorites = useSelector((state)=>state.favorite.favorites?.allFavorites)
   
   const accessToken = user?.accessToken
   const userId = user?._id
@@ -50,10 +51,6 @@ const DetailStories = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Function to toggle sorting order
-
-  // Filter the chapters based on the search query
-  // const [chapters,setChapters] = useState([])
   
   useEffect(() => {
     const fetchData = async () => {
@@ -71,46 +68,29 @@ const DetailStories = () => {
       }
     };
     fetchData();
+    getAllFavorites(accessToken,userId,dispatch)
   }, [slug]);
-  console.log(story);
 
-  const addToFavorites = async () => {
-    try {
-      const res = await axios.post('http://localhost:8000/api/favorites/add',{ slug, storyInfo: story,userId });
-      if (res.status === 201) {
-        message.success("Đã thêm vào mục yêu thích");
-        setIsFavorite(true);
-      }
-    } catch (error) {
-      console.error('Error adding to favorites:', error);
-    }
+  const addToFavorites = (e) => {
+    e.preventDefault();
+    const storyInfo = story
+    addFavoritesStory(accessToken,slug,storyInfo,userId,dispatch)
+    setIsFavorite(true)
+    message.success("Đã thêm vào yêu thích")
   };
-  const checkIsFavorite = async () => {
-    try {
-      const res = await axios.get("http://localhost:8000/api/favorites/get-all");
-      const favorites = res.data;
-      const isFav = favorites.some((fav) => fav.slug === slug);
-      setIsFavorite(isFav);
-    } catch (error) {
-      console.error("Error checking favorite:", error);
-    }
+  const checkIsFavorite = () => {
+    const isFav = favorites?.some((fav) => fav.slug === slug);
+    console.log(isFav)
+    setIsFavorite(isFav);
   };
+  
 
-  const removeFromFavorites = async () => {
-    try {
-      const res =  await axios.delete(`http://localhost:8000/api/favorites/delete`,slug);
-      if(res.status === 200){
-        message.error("đã bỏ yêu thích")
-        setIsFavorite(false);
-      }
-    } catch (error) {
-      console.error('Error removing from favorites:', error);
-    }
+  const removeFromFavorites = (e) => {
+    e.preventDefault();
+    removeFavoritesStory(accessToken,slug,userId,dispatch)
+    setIsFavorite(false)
+    message.warning("đã bỏ theo dõi ")
   };
-
-
-
-
 
   const filteredChapters = story.item?.chapters[0].server_data?.filter(
     (chap) => {
@@ -136,7 +116,6 @@ const DetailStories = () => {
       locale: vi,
     });
   } else {
-    // If updated_time is not available, provide a default value or handle it gracefully
     timeUpdate = "N/A";
   }
   const chapterLength = story.item?.chapters[0]?.server_data.length
@@ -150,25 +129,7 @@ const DetailStories = () => {
     history.push({ slug: currentSlug, timestamp });
     localStorage.setItem("history", JSON.stringify(history));
   };
-  // if (!truyen) {
-  //   return <div>Truyện không tồn tại</div>;
-  // }
-  // const latestChapter = stories.chapters[stories.chapters.length - 1];
-  // const saveToFavorites = (storyData) => {
-  //   // Lưu truyện vào Local Storage với key là "favorites"
-    
-  //   const existingFavorites = localStorage.getItem("favorites");
-  //   const favorites = existingFavorites ? JSON.parse(existingFavorites) : [];
-  //   favorites.push(storyData);
-  //   localStorage.setItem("favorites", JSON.stringify(favorites));
-  // };
 
-  // const addToFavorites = () => {
-  //   // Gọi hàm saveToFavorites khi người dùng nhấn vào nút "Theo dõi"
-  //   saveToFavorites(story);
-  //   // Thêm logic khác nếu cần
-  //   message.success("thêm vào yêu thích thành công")
-  // };
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
       <NavBar />
