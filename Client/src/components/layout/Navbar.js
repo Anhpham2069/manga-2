@@ -20,8 +20,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import "../HomeComponent/style.css";
 import TooltipComponent from "../components/tooltip";
-import Login from "../components/login";
-import Register from "../components/register";
 import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode, toggleDarkMode } from "../layout/DarkModeSlice";
 import { selectSearchTerm } from "../../redux/slice/searchSlice";

@@ -105,11 +105,11 @@ const SearchResult = () => {
                 flex phone:flex-col gap-4 w-[95%]  mt-6 m-auto
             `}>
                 <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} phone:w-full w-full h-full p-2`}>
-                    <div className='py-1 h-12 flex items-center  justify-between text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] '>
-                                <p>Kết quả tìm kiếm</p>
+                    <div className='py-1 h-12 flex items-center  justify-between text-2xl font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] '>
+                                <p>Kết quả tìm kiếm cho: {keyword}</p>
                     </div>
                     <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} 
-                      mt-10  grid  phone:grid-cols-2 h-full phone:gap-2 tablet:grid-cols-3 lg:grid-cols-3 desktop:grid-cols-5 lg:gap-4 place-items-center
+                     p-10 grid  phone:grid-cols-2 h-full phone:gap-2 tablet:grid-cols-3 lg:grid-cols-3 desktop:grid-cols-5 lg:gap-4 place-items-center
                     `}>
                       {!currentTruyens && <div>Không có gì</div>}
                     {currentTruyens && currentTruyens.map((item,index)=>{

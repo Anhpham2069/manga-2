@@ -114,7 +114,25 @@ const ReadStories = () => {
       console.log(id)
       navigate(`/detail/${slug}/view/${id}`)
      }
- 
+ useEffect(()=>{
+   const saveChapterViewHistory = () => {
+    // Get existing history from localStorage
+    const timestamp = new Date().getTime();
+    const currentSlug = story?.item?.slug;
+    const currentChapter = chapter?.item?.chapter_name
+    console.log(currentChapter)
+    const expirationDate = new Date();
+    const existingHistory = localStorage.getItem("historyChapter");
+    const historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
+    // Save the entire story object along with the timestamp and expiration date
+    historyChapter.push({ slug: currentSlug, timestamp, expirationDate, currentChapter, story: story });
+    localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
+  };
+  saveChapterViewHistory()
+ },[id])
+  
+    // Rest of your component code...
+
   
   
   const active = true

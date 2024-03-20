@@ -32,26 +32,31 @@ import { selectDarkMode } from "../layout/DarkModeSlice";
 import { Data } from "../../services/Data";
 import axios from "axios";
 import { message } from "antd";
-import { addFavoritesStory, getAllFavorites, removeFavoritesStory } from "../../services/apiStoriesRequest";
+import {
+  addFavoritesStory,
+  getAllFavorites,
+  removeFavoritesStory,
+} from "../../services/apiStoriesRequest";
 
 const DetailStories = () => {
   const { slug } = useParams();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   // redux
   const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state?.auth.login.currentUser);
-  const favorites = useSelector((state)=>state.favorite.favorites?.allFavorites)
-  
-  const accessToken = user?.accessToken
-  const userId = user?._id
-  
+  const favorites = useSelector(
+    (state) => state.favorite.favorites?.allFavorites
+  );
+
+  const accessToken = user?.accessToken;
+  const userId = user?._id;
+
   //state
   const [story, setStory] = useState({});
   const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -60,7 +65,7 @@ const DetailStories = () => {
         );
         if (res.data) {
           setStory(res.data.data);
-          saveToHistory(res.data.data)
+          saveToHistory(res.data.data);
           checkIsFavorite();
         }
       } catch (error) {
@@ -68,28 +73,27 @@ const DetailStories = () => {
       }
     };
     fetchData();
-    getAllFavorites(accessToken,userId,dispatch)
+    getAllFavorites(accessToken, userId, dispatch);
   }, [slug]);
 
   const addToFavorites = (e) => {
     e.preventDefault();
-    const storyInfo = story
-    addFavoritesStory(accessToken,slug,storyInfo,userId,dispatch)
-    setIsFavorite(true)
-    message.success("Đã thêm vào yêu thích")
+    const storyInfo = story;
+    addFavoritesStory(accessToken, slug, storyInfo, userId, dispatch);
+    setIsFavorite(true);
+    message.success("Đã thêm vào yêu thích");
   };
   const checkIsFavorite = () => {
     const isFav = favorites?.some((fav) => fav.slug === slug);
-    console.log(isFav)
+    console.log(isFav);
     setIsFavorite(isFav);
   };
-  
 
   const removeFromFavorites = (e) => {
     e.preventDefault();
-    removeFavoritesStory(accessToken,slug,userId,dispatch)
-    setIsFavorite(false)
-    message.warning("đã bỏ theo dõi ")
+    removeFavoritesStory(accessToken, slug, userId, dispatch);
+    setIsFavorite(false);
+    message.warning("đã bỏ theo dõi ");
   };
 
   const filteredChapters = story.item?.chapters[0].server_data?.filter(
@@ -118,17 +122,27 @@ const DetailStories = () => {
   } else {
     timeUpdate = "N/A";
   }
-  const chapterLength = story.item?.chapters[0]?.server_data.length
-  console.log(chapterLength)
+  const chapterLength = story.item?.chapters[0]?.server_data.length;
+  console.log(chapterLength);
 
   const saveToHistory = (storyData) => {
     const timestamp = new Date().getTime();
     const currentSlug = storyData?.item?.slug;
+    const expirationDate = new Date();
     const existingHistory = localStorage.getItem("history");
-    const history = existingHistory ? JSON.parse(existingHistory) : [];
-    history.push({ slug: currentSlug, timestamp });
+    let history = existingHistory ? JSON.parse(existingHistory) : [];
+    const existingIndex = history.findIndex(item => item.slug === currentSlug);
+    if (existingIndex !== -1) {
+      // If the same story exists in history, replace it with new data
+      history[existingIndex] = { slug: currentSlug, timestamp, expirationDate, story: storyData };
+    } else {
+      // Otherwise, add new data to history
+      history.push({ slug: currentSlug, timestamp, expirationDate, story: storyData });
+    }
     localStorage.setItem("history", JSON.stringify(history));
   };
+  
+  
 
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
@@ -160,7 +174,11 @@ const DetailStories = () => {
                 <span>******</span>
                 <p>9.3/10 (12)</p>
               </div> */}
-              <Link to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data?.split("/").pop()}`}>
+              <Link
+                to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data
+                  ?.split("/")
+                  .pop()}`}
+              >
                 <button
                   className={`${
                     isDarkModeEnable
@@ -209,7 +227,12 @@ const DetailStories = () => {
                   </span>
                   <p>{story?.item?.updatedAt?.slice(0, 10)}</p>
                 </div>
-                <div className='flex justify-between'><span><FontAwesomeIcon icon={faBusinessTime} /> Cập nhật</span><p>{timeUpdate}</p></div>
+                <div className="flex justify-between">
+                  <span>
+                    <FontAwesomeIcon icon={faBusinessTime} /> Cập nhật
+                  </span>
+                  <p>{timeUpdate}</p>
+                </div>
               </aside>
             </div>
             <div
@@ -226,7 +249,7 @@ const DetailStories = () => {
                   </p>
                   <p>tên khác: {story.seoOnPage?.seoSchema.name}</p>
                 </header>
-                <div className="flex mt-3">
+                <div className="flex flex-wrap gap-1 mt-3">
                   {story.item?.category?.map((cate) => {
                     return (
                       <NavLink to={`/category/${cate.slug}`} key={cate.id}>
@@ -242,62 +265,70 @@ const DetailStories = () => {
                     );
                   })}
                 </div>
-                <div className="text-white w-full flex justify-center mt-5">
+                <div className="text-white w-full flex tablet:flex-row phone:flex-col items-center gap-5 justify-center mt-5">
                   {/* <Link to={`/detail/${id}/1`}> */}
-                  <Link to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data?.split("/").pop()}`}>
-                    <button
-                      className={`${
-                        isDarkModeEnable
-                          ? "bg-[#719331] hover:bg-[#576D2C] text-text_darkMode"
-                          : " bg-[#8BC34A] hover:bg-[#B2D786]"
-                      } w-52 rounded-md h-10  `}
+                  <button
+                    className={`${
+                      isDarkModeEnable
+                        ? "bg-[#719331] hover:bg-[#576D2C] text-text_darkMode"
+                        : " bg-[#8BC34A] hover:bg-[#B2D786]"
+                    } phone:w-full tablet:w-52 rounded-md h-10  `}
+                  >
+                    {" "}
+                    <Link
+                      to={`view/${story.item?.chapters[0].server_data[0]?.chapter_api_data
+                        ?.split("/")
+                        .pop()}`}
                     >
-                      {" "}
                       <FontAwesomeIcon icon={faBook} /> Bắt đầu đọc
-                    </button>
-                  </Link>
+                    </Link>
+                  </button>
                   {/* </Link> */}
                   {/* <Link to={`/detail/${id}/${latestChapter.chapter_id}`}> */}
-                  <Link to={`view/${story.item?.chapters[0]?.server_data[chapterLength-1]?.chapter_api_data?.split("/").pop()}`}>  
+                  <button
+                    className={`${
+                      isDarkModeEnable
+                        ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
+                        : " bg-[#BD10E0] hover:bg-[#D360EA]"
+                    } phone:w-full tablet:w-52 rounded-md h-10 `}
+                  >
+                    {" "}
+                    <Link
+                      to={`view/${story.item?.chapters[0]?.server_data[
+                        chapterLength - 1
+                      ]?.chapter_api_data
+                        ?.split("/")
+                        .pop()}`}
+                    >
+                      <FontAwesomeIcon icon={faBookTanakh} /> Chương mới nhất
+                    </Link>
+                  </button>
+                  {/* </Link> */}
+                  {isFavorite ? (
                     <button
                       className={`${
                         isDarkModeEnable
-                          ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
-                          : " bg-[#BD10E0] hover:bg-[#D360EA]"
-                      } w-52 rounded-md h-10   mx-4`}
+                          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                          : " bg-[#701f2f] hover:bg-[#FF7A95]"
+                      } phone:w-full tablet:w-52 rounded-md h-10  `}
+                      onClick={removeFromFavorites}
                     >
                       {" "}
-                      <FontAwesomeIcon icon={faBookTanakh} /> Chương mới nhất
+                      <FontAwesomeIcon icon={faHeart} /> Bỏ Theo Dõi
                     </button>
-                  </Link>
-                  {/* </Link> */}
-                  {isFavorite ? 
-                  
-                  <button
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                        : " bg-[#701f2f] hover:bg-[#FF7A95]"
-                    } w-52 rounded-md h-10  `}
-                    onClick={removeFromFavorites}
-                  >
-                    {" "}
-                    <FontAwesomeIcon icon={faHeart} /> Bỏ Theo Dõi
-                  </button>
-                  :
-                  
-                  <button
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                        : " bg-[#FF3860] hover:bg-[#FF7A95]"
-                    } w-52 rounded-md h-10  `}
-                    onClick={addToFavorites}
-                  >
-                    {" "}
-                    <FontAwesomeIcon icon={faHeart} /> Theo Dõi
-                  </button>
-                  }
+                  ) : (
+                    <button
+                      className={`${
+                        isDarkModeEnable
+                          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                          : " bg-[#FF3860] hover:bg-[#FF7A95]"
+                      } phone:w-full tablet:w-52 rounded-md h-10  `}
+                      onClick={addToFavorites}
+                    >
+                      {" "}
+                      <FontAwesomeIcon icon={faHeart} /> Theo Dõi
+                    </button>
+                  )}
                 </div>
                 <div className="mt-3">
                   <p className="font-bold">Giới thiệu</p>
@@ -436,7 +467,7 @@ const DetailStories = () => {
               } text-start w-full p-5  my-5`}
             >
               <p className="">
-                Bạn cần<span className="font-bold"> Đăng nhập</span> hoặc{" "}
+                Bạn cần<Link to={'/login'} className="font-bold"> Đăng nhập</Link> hoặc{" "}
                 <span className="font-bold"> Đăng kí</span> để bình luận
               </p>
             </div>
