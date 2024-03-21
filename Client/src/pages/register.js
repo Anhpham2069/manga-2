@@ -59,7 +59,7 @@ const Register = () => {
                 />
               </div>
               <div className=" w-full">
-                <span className="font-light">Tài khoản</span>
+                <span className="font-light">Email</span>
                 <input
                   type="email"
                   name="email"

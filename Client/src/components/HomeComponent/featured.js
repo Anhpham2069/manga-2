@@ -113,8 +113,8 @@ const Featured = ({ dark }) => {
           isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
         } lg:w-[70%] pl-3.5 shadow-lg `}
       >
-        <div className="flex border-b-2 border-gray-200 w-4/5 py-2 font-semibold">
-          <div className="h-12 flex items-center ">
+        <div className="flex border-b-2 border-gray-200 w-full py-2 font-semibold">
+          <div className="h-12 flex items-center phone:h-14 phone:w-full ">
             <FontAwesomeIcon
               icon={faStarOfLife}
               color="#5383EE"

@@ -12,7 +12,7 @@ import {
 } from "../redux/slice/favoritesSlice";
 const apiURL = process.env.REACT_APP_API_URL;
 
-export const storiesDataft = async () => {
+export const storiesDataft = async (slug) => {
   try {
     const res = await axios.get(
       `https://otruyenapi.com/v1/api/danh-sach/sap-ra-mat`

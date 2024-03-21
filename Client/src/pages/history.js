@@ -21,14 +21,22 @@ const History = () => {
       console.log(existingHistory)
       if (existingHistory) {
         let history = JSON.parse(existingHistory);
-        // Filter out expired data
-        history = history.filter(item => new Date(item.expirationDate).getTime() );
+        // Create an object to track history by slug
+        const historyBySlug = {};
+        history.forEach(item => {
+          if (!historyBySlug[item.slug] || new Date(item.timestamp).getTime() > new Date(historyBySlug[item.slug].timestamp).getTime()) {
+            historyBySlug[item.slug] = item;
+          }
+        });
+        // Convert object values back to array
+        history = Object.values(historyBySlug);
         history.sort((a, b) => b.timestamp - a.timestamp);
         setHistory(history);
       }
     };
     getHistory();
   }, []);
+  
   
 console.log(history)
   return (
@@ -84,8 +92,10 @@ console.log(history)
                   </div>
                   <div>
                     <p className="font-medium">Đã đọc <span className="text-gray-400 italic">: {trimmedTimeAgo}</span>  </p>
-                    <p className="font-medium text-gray-400 italic"> Đọc tiếp chapter:  <span cla>{item.currentChapter}</span> </p>
-                   
+                    <Link to={`/detail/${item.slug}/view/${item.currentChapterId}`}>
+                      <p className="font-medium text-gray-400 italic"> Đọc tiếp chapter:  <span cla>{item.currentChapter}</span> </p>
+                    </Link>
+                    {/* http://localhost:3000/detail/vuu-vat/view/658c4c2be120ddf21990fb70 */}
                   </div>
                 </div>
                 {/* <button

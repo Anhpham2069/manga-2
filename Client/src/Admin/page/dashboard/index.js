@@ -1,8 +1,10 @@
 // Dasbroad.js
 import React from "react";
 import ChartComponent from "./ChartComponest";
+import { useSelector } from "react-redux";
 
 const Dasbroad = () => {
+  const userList = useSelector((state) => state.user.users?.allUsers);
   return (
     <div>
       <div className=" w-full p-10 tablet:flex justify-between ">
@@ -131,7 +133,7 @@ const Dasbroad = () => {
           </svg>
           <div>
             <p className="font-medium">Người dùng</p>
-            <p className="text-2xl">50</p>
+            <p className="text-2xl">{userList?.length}</p>
           </div>
         </div>
         <div className=" w-[30%] h-24 flex gap-5 items-center bg-green-400 text-white font-bold text-lg rounded-md">

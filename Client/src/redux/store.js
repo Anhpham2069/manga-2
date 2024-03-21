@@ -17,6 +17,7 @@ import genreReducer  from './slice/genreSlice';
 import storyReducer from './slice/storiesSlice'
 import authReducer from './slice/authSlice';
 import favoritesSlice from './slice/favoritesSlice';
+import userSlice from './slice/userSlice';
 
 
 const persistConfig = {
@@ -31,6 +32,7 @@ const rootReducer =  combineReducers({
   stories: storyReducer,
   auth: authReducer,
   favorite: favoritesSlice,
+  user: userSlice,
 },)
 
 const persistedReducer = persistReducer(persistConfig, rootReducer)

@@ -17,6 +17,7 @@ import {
   faCircleUser,
   faSpinner,
   faClose,
+  faFaceSmile,
 } from "@fortawesome/free-solid-svg-icons";
 import "../HomeComponent/style.css";
 import TooltipComponent from "../components/tooltip";
@@ -503,6 +504,15 @@ const handleLogout = () =>{
                           <FontAwesomeIcon icon={faClockRotateLeft} /> Lịch sử
                         </button>
                       </Link>
+                      {user.admin && 
+                        <Link to={'/admin'}>
+                          <button
+                            className="text2 mt-3 hover:text-gray-500"
+                          >
+                            <FontAwesomeIcon icon={faFaceSmile} /> Admin
+                          </button>
+                        </Link>
+                      }
                       <button
                         className="text2 mt-3 hover:text-gray-500"
                         onClick={handleLogout}

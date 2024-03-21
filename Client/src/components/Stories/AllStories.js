@@ -30,12 +30,18 @@ const AllStories = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+
+  // const pageRanges = 5;
+
+  const [totalItems, setTotalItems] = useState();
+  // const totalItemsPerPage = 24;
+
   const itemsPerPage = 24;
   const sortedData = [...Data].sort((a, b) => b.views - a.views);
   useEffect(() => {
     fetchData();
   }, [slug, currentPage]); // Fetch data when slug or currentPage changes
-  
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -44,15 +50,20 @@ const AllStories = () => {
         {
           params: {
             page: currentPage,
-            totalItemsPerPage: itemsPerPage
-          }
+            totalItemsPerPage: itemsPerPage,
+          },
         }
       );
-  
+
       if (res.data) {
-        console.log(res.data.data.params.pagination.totalItemsPerPage)
         setStoriesData(res.data.data);
-        setTotalPages(Math.ceil(res.data.data.params.pagination.totalItems / res.data.data.params.pagination.totalItemsPerPage));
+        setTotalItems(res.data.data.params.pagination.totalItems)
+        setTotalPages(
+          Math.ceil(
+            res.data.data.params.pagination.totalItems /
+              res.data.data.params.pagination.totalItemsPerPage
+          )
+        );
       }
     } catch (error) {
       // Xử lý lỗi ở đây
@@ -62,7 +73,7 @@ const AllStories = () => {
   };
 
   console.log(storiesData);
-  console.log(totalPages)
+  console.log(totalPages);
 
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
@@ -71,7 +82,7 @@ const AllStories = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
-  
+
   // Tạo phạm vi của các trang
   const getPageRange = () => {
     const pageRange = [];
@@ -79,11 +90,10 @@ const AllStories = () => {
     const endPage = Math.min(totalPages, startPage + 4);
     for (let i = startPage; i <= endPage; i++) {
       pageRange.push(i);
-    } 
+    }
     return pageRange;
   };
-  
-  
+
   return (
     <div
       className={`${
@@ -100,7 +110,9 @@ const AllStories = () => {
           <div className="grid phone:grid-cols-2 tablet:grid-cols-4 laptop:grid-cols-1 laptop:h-[40%]">
             <div
               className={`${
-                slug == "truyen-moi" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+                slug == "truyen-moi"
+                  ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md"
+                  : ""
               } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
               flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("truyen-moi")}
@@ -121,7 +133,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "sap-ra-mat" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+                slug == "sap-ra-mat"
+                  ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md"
+                  : ""
               } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
               flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("sap-ra-mat")}
@@ -142,7 +156,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "dang-phat-hanh" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+                slug == "dang-phat-hanh"
+                  ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md"
+                  : ""
               } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
               flex gap-2 items-center  border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("dang-phat-hanh")}
@@ -164,7 +180,9 @@ const AllStories = () => {
             </div>
             <div
               className={`${
-                slug == "hoan-thanh" ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md" : ""
+                slug == "hoan-thanh"
+                  ? "bg-[#E6F4FF] text-[#1677FF] border-r-4 shadow-md"
+                  : ""
               } hover:bg-[#F0F0F0] rounded-sm w-full m-auto p-5 cursor-pointer 
               flex gap-2 items-center border-blue-500 hover:border-r-4 `}
               onClick={() => handleSectionClick("hoan-thanh")}
@@ -233,8 +251,13 @@ const AllStories = () => {
               );
             })}
           </div>
-          <div className='p-4 flex justify-center items-center w-full border-t-[1px] mt-10'>
-              <Pagination currentPage={currentPage} totalPages={totalPages} handlePageChange={handlePageChange} getPageRange={getPageRange}/>
+          <div className="p-4 flex justify-center items-center w-full border-t-[1px] mt-10">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handlePageChange={handlePageChange}
+              getPageRange={getPageRange}
+            />
           </div>
         </div>
 
@@ -247,6 +270,5 @@ const AllStories = () => {
     </div>
   );
 };
-
 
 export default AllStories;
