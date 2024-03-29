@@ -27,7 +27,9 @@ const storiesSlice = createSlice({
         state.stories[index] = updatedStory;
       }
     },
-    
+    getAllStoriesStart: () =>{
+      
+    }
     // other reducers...
   },
 });

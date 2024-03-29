@@ -61,10 +61,9 @@ const Login = () => {
                 <span className="font-light">Tài khoản</span>
                 <input
                   type="text"
-                  placeholder="Username"
                   name="email"
                   onChange={(e) => setUserName(e.target.value)}
-                  className="border-b-2 border-bd-color outline-none w-full p-2 rounded-md text-lg font-medium"
+                  className="border-b-2 border-bd-color outline-none w-full p-2 text-lg font-medium"
                 />
               </div>
               <div className="mb-4 w-full">
@@ -72,9 +71,8 @@ const Login = () => {
                 <input
                   name="password"
                   type="password"
-                  placeholder="Password"
                   onChange={(e) => setPassword(e.target.value)}
-                  className="border-b-2 border-bd-color outline-none w-full p-2 rounded-md text-lg font-medium"
+                  className="border-b-2 border-bd-color outline-none w-full p-2 text-lg font-medium"
                 />
               </div>
               <div className="w-full">

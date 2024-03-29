@@ -380,7 +380,7 @@ const AllStories = () => {
           onSearch={onSearch}
         /> */}
       </div>
-      <Table dataSource={stories} columns={columns} onChange={onChange} />
+      {/* <Table dataSource={stories} columns={columns} onChange={onChange} /> */}
     </div>
   );
 };

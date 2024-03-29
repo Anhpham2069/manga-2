@@ -10,6 +10,11 @@ import {
   removeFavoriteStart,
   removeFavoriteSuccess,
 } from "../redux/slice/favoritesSlice";
+import {
+  getstorysFailed,
+  getstorysStart,
+  getstorysSuccess,
+} from "../redux/slice/storySlice";
 const apiURL = process.env.REACT_APP_API_URL;
 
 export const storiesDataft = async (slug) => {
@@ -22,14 +27,20 @@ export const storiesDataft = async (slug) => {
     console.error("Error fetching data:", error);
   }
 };
-export const addFavoritesStory = async (accessToken,slug,storyInfo,userId,dispatch) => {
+export const addFavoritesStory = async (
+  accessToken,
+  slug,
+  storyInfo,
+  userId,
+  dispatch
+) => {
   dispatch(addFavoriteStart());
   try {
     const res = await axios.post(
       `${apiURL}/api/favorites/add`,
-      { slug, userId, storyInfo }, 
+      { slug, userId, storyInfo },
       {
-        headers: { token: `Bearer ${accessToken}` }, 
+        headers: { token: `Bearer ${accessToken}` },
       }
     );
     dispatch(addFavoriteSuccess(res.data));
@@ -38,14 +49,19 @@ export const addFavoritesStory = async (accessToken,slug,storyInfo,userId,dispat
     dispatch(addFavoriteFailed());
   }
 };
-export const removeFavoritesStory = async (accessToken,slug,userId,dispatch) => {
+export const removeFavoritesStory = async (
+  accessToken,
+  slug,
+  userId,
+  dispatch
+) => {
   dispatch(removeFavoriteStart());
   try {
     const res = await axios.post(
       `${apiURL}/api/favorites/delete`,
-      { slug, userId }, 
+      { slug, userId },
       {
-        headers: { token: `Bearer ${accessToken}` }, 
+        headers: { token: `Bearer ${accessToken}` },
       }
     );
     dispatch(removeFavoriteSuccess({ slug }));
@@ -61,11 +77,24 @@ export const getAllFavorites = async (accessToken, userId, dispatch) => {
     const res = await axios.get(
       `${apiURL}/api/favorites/get-single/${userId}`,
       {
-        headers: { token: `Bearer ${accessToken}` }, 
+        headers: { token: `Bearer ${accessToken}` },
       }
     );
     dispatch(getFavoritesSuccess(res.data));
   } catch (error) {
     dispatch(getFavoritesFailed());
+  }
+};
+
+// stories
+
+export const getAllStories = async (dispatch) => {
+  dispatch(getstorysStart());
+  try {
+    const res = await axios.get(`https://otruyenapi.com/v1/api/home`);
+    dispatch(getstorysSuccess(res.data));
+  } catch (error) {
+    dispatch(getstorysFailed());
+ 
   }
 };
