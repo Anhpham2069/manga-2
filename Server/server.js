@@ -41,6 +41,7 @@ const usersRouter = require('./routes/users');
 const genresRouter = require('./routes/genres');
 const notificationRouter = require('./routes/noti');
 const favoriteRouter = require('./routes/favorites')
+const readHistoryRouter = require('./routes/history');
 
 app.use('/api/story', storiesRouter);
 app.use('/api/auth', authRouter);
@@ -48,6 +49,7 @@ app.use('/api/user', usersRouter);
 app.use('/api/genre', genresRouter);
 app.use('/api/noti', notificationRouter);
 app.use('/api/favorites',favoriteRouter)
+app.use('/api/history',readHistoryRouter)
 
 
 // Passport Routes

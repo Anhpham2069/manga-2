@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { Helmet } from "react-helmet";
 import { vi } from "date-fns/locale";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -24,6 +25,26 @@ const Featured = ({ dark }) => {
   const [storiesFT, setStoriesFT] = useState([]);
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("truyen-moi");
+  const [readHistory, setReadHistory] = useState();
+  const [selectedButton, setSelectedButton] = useState("homnay");
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await axios.get(
+          `http://localhost:8000/api/history/get-all`
+        );
+        if (res.data) {
+          setReadHistory(res.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  console.log(readHistory);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -44,21 +65,20 @@ const Featured = ({ dark }) => {
     fetchData();
   }, [slug]);
 
-  useEffect(()=>{
-    const fetchData = async ()=>{
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-          const res = await storiesDataft()
-          setStoriesFT(res.data)
+        const res = await storiesDataft();
+        setStoriesFT(res.data);
       } catch (error) {
-        console.log(error)
+        console.log(error);
       }
-    }
-    fetchData()
-  },[])
+    };
+    fetchData();
+  }, []);
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
   };
-  const [selectedButton, setSelectedButton] = useState("homnay");
 
   const handleClick = (button) => {
     setSelectedButton(button);
@@ -72,23 +92,21 @@ const Featured = ({ dark }) => {
     ); // Lấy ngày hiện tại mà không có giờ, phút, giây
     switch (selectedButton) {
       case "homnay":
-        return storiesData.items?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.updatedAt);
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1); // Lấy ngày hôm qua
-
+        return readHistory?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.timestamp);
+          const today = new Date(); // Lấy ngày hôm nay
           return (
-            storyDate.getFullYear() === yesterday.getFullYear() &&
-            storyDate.getMonth() === yesterday.getMonth() &&
-            storyDate.getDate() === yesterday.getDate()
+            storyDate.getFullYear() === today.getFullYear() &&
+            storyDate.getMonth() === today.getMonth() &&
+            storyDate.getDate() === today.getDate()
           );
         });
 
       case "tuannay":
         const lastWeek = new Date(currentDate);
         lastWeek.setDate(lastWeek.getDate() - 7); // Ngày của tuần trước
-        return storiesData.items?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.updatedAt);
+        return readHistory?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.timestamp);
           return storyDate >= lastWeek && storyDate <= currentDate;
         });
       case "thangnay":
@@ -97,17 +115,24 @@ const Featured = ({ dark }) => {
           currentDate.getMonth(),
           1
         ); // Ngày đầu tiên của tháng
-        return storiesData.items?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.updatedAt);
+        return readHistory?.slice(0, 10).filter((story) => {
+          const storyDate = new Date(story.timestamp);
           return storyDate >= firstDayOfMonth && storyDate <= currentDate;
         });
       default:
         return [];
     }
   };
-
+  console.log(renderList());
   return (
     <div className="phone:flex-row lg:flex tablet:mx-6 lg:mx-14  mt-4 ">
+      <Helmet>
+        <title>Trang chủ - Đọc truyện 5s</title>
+        <meta
+          name="description"
+          content="Khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s. Đọc những câu chuyện mới, tìm những câu chuyện đã hoàn thành và khám phá những bản phát hành sắp tới."
+        />
+      </Helmet>
       <div
         className={`${
           isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
@@ -154,16 +179,16 @@ const Featured = ({ dark }) => {
             return (
               <>
                 <CardStories
-                      key={item._id}
-                      id={item._id}
-                      title={item.name}
-                      img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
-                      slug={item.slug}
-                      time={trimmedTimeAgo}
-                      chapter={item.chaptersLatest[0].chapter_name}
-                      nomarl
-                    />
-                     {/* <Link to={`/detail/${item.slug}`}> */}
+                  key={item._id}
+                  id={item._id}
+                  title={item.name}
+                  img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                  slug={item.slug}
+                  time={trimmedTimeAgo}
+                  chapter={item.chaptersLatest[0].chapter_name}
+                  nomarl
+                />
+                {/* <Link to={`/detail/${item.slug}`}> */}
                 {/* <figure className='h-72 mr-4 relative cursor-pointer'>
                     <div className='relative h-52 w-44 overflow-hidden'>
                         <img
@@ -171,11 +196,11 @@ const Featured = ({ dark }) => {
                             alt='anh'
                             className='w-full h-full object-cover transition-all duration-500 transform hover:scale-125'
                         /> */}
-                        {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
+                {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
                             <p className='mr-2'><FontAwesomeIcon icon={faBookmark} /> {saves}</p>
                             <p><FontAwesomeIcon icon={faEye} />{views} </p>
                         </div> */}
-                    {/* </div>
+                {/* </div>
                     <div>
                             <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{item.name}</p>
                     </div>
@@ -236,51 +261,63 @@ const Featured = ({ dark }) => {
               />
             </div>
             <div>
-              {renderList()?.map((item, index) => {
-                return (
-                  <div
-                    key={index}
-                    className="flex p-3 justify-start cursor-pointer border-b-2 border-gray-200"
-                  >
-                    <img
-                      src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
-                      alt="anh"
-                      className="h-20"
-                    />
-                    <div className="ml-4 h-20 flex flex-col justify-around">
-                      <div className="flex-1">
-                        <p>{item.name}</p>
-                        <div className="flex justify-between gap-1 items-center text-xs">
-                          <p className="font-semibold text-[#888888] mr-1 ">
-                            Thể loại:
-                          </p>
-                          <div className="flex flex-1">
-                            {item?.category?.slice(0, 3).map((cate, index) => {
-                              return (
-                                <p
-                                  key={index}
-                                  className={`mr-1 rounded-xl bg-[#E6F4FF] text-primary-color text-sm hover:text-blue-400`}
-                                >
-                                  {cate.name}
-                                </p>
-                              );
-                            })}
+              {renderList()
+                ?.sort((a, b) => b.readCount - a.readCount)
+                .map((item, index) => {
+                  return (
+                    <div
+                      key={index}
+                      className="flex p-3 justify-start cursor-pointer border-b-2 border-gray-200"
+                    >
+                      <img
+                        src={`https://img.otruyenapi.com/uploads/${item.storyInfo?.seoOnPage.og_image[0]}`}
+                        alt="anh"
+                        className="h-20"
+                      />
+                      <div className="ml-4 h-20 flex flex-col justify-around">
+                        <div className="flex-1">
+                          <Link to={`/detail/${item.slug}`}>
+                            <p>{item.storyInfo.item.name}</p>
+                          </Link>
+                          <div className="flex justify-between gap-1 items-center text-xs">
+                            <p className="font-semibold text-[#888888] mr-1 ">
+                              Thể loại:
+                            </p>
+                            <div className="flex flex-1">
+                              {item?.category
+                                ?.slice(0, 3)
+                                .map((cate, index) => {
+                                  return (
+                                    <p
+                                      key={index}
+                                      className={`mr-1 rounded-xl  text-primary-color text-sm hover:text-blue-400`}
+                                    >
+                                      {cate.name}
+                                    </p>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                          <div>
+                            <p>
+                              <FontAwesomeIcon icon={faEye} />{" "}
+                              {item.readCount.toLocaleString()}{" "}
+                            </p>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex font-light text-sm">
-                        {/* <p className="mr-2">
+                        <div className="flex font-light text-sm">
+                          {/* <p className="mr-2">
                           <FontAwesomeIcon icon={faBookmark} /> {item.saves}
                         </p>
                         <p>
                           <FontAwesomeIcon icon={faEye} />{" "}
                           {item.views.toLocaleString()}{" "}
                         </p> */}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -312,11 +349,11 @@ const Featured = ({ dark }) => {
                   alt="anh"
                   className="h-20"
                 />
-                <div className="ml-4 w-full h-20 flex flex-col justify-around">
+                <div className="ml-4 w-full h-full flex flex-col justify-around">
                   <div className="flex-1">
-                  <Link to={`/detail/${item.slug}`}>
-                    <p className="text-lg cursor-pointer">{item.name}</p>
-                  </Link>
+                    <Link to={`/detail/${item.slug}`}>
+                      <p className="text-lg cursor-pointer">{item.name}</p>
+                    </Link>
                     <div className="flex text-base italic">
                       <p>Chapter {item.chaptersLatest[0].chapter_name}</p>
                     </div>

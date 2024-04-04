@@ -24,7 +24,11 @@ const ReadStories = () => {
   const isDarkModeEnable = useSelector(selectDarkMode);
   const [story, setStory] = useState([]);
   const [activeBtn, setActiveBtn] = useState(false);
+  const navigate = useNavigate();
+  const [isVisible, setIsVisible] = useState(true);
   // const [chapters,setChapters] = useState([])
+
+
   useEffect(() => {
     const fetchData = async () => {
       const res = await axios.get(
@@ -36,7 +40,6 @@ const ReadStories = () => {
     };
     fetchData();
   }, []);
-  console.log(story);
   useEffect(() => {
     const fetchData = async () => {
       const res = await axios.get(
@@ -48,11 +51,23 @@ const ReadStories = () => {
     };
     fetchData();
   }, [id, activeBtn]);
-  console.log(chapter);
 
-  const navigate = useNavigate();
+  const saveHistory = async () => {
+    try {
+      const currentSlug = slug
+      const storyInfo = story;
+      await axios.post("http://localhost:8000/api/history/save", {slug: currentSlug,storyInfo});
+    } catch (error) {
+      console.error("Error saving chapter view history:", error);
+    }
+  };
 
-  const [isVisible, setIsVisible] = useState(true);
+  useEffect(() => {
+    if (chapter) {
+      saveHistory();
+    }
+  }, [chapter]);
+
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -67,6 +82,10 @@ const ReadStories = () => {
       setIsVisible(true);
     }
   };
+
+
+
+
 
   const getNextChapterId = (currentChapterId, chapters) => {
     console.log(currentChapterId);

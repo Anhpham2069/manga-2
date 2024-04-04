@@ -14,28 +14,42 @@ const History = () => {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    // Get history from Local Storage
     const getHistory = () => {  
       const currentTime = new Date().getTime();
       const existingHistory = localStorage.getItem("historyChapter");
-      console.log(existingHistory)
       if (existingHistory) {
         let history = JSON.parse(existingHistory);
-        // Create an object to track history by slug
+        
+        // Logic to keep only the most recent entry for each slug
         const historyBySlug = {};
         history.forEach(item => {
           if (!historyBySlug[item.slug] || new Date(item.timestamp).getTime() > new Date(historyBySlug[item.slug].timestamp).getTime()) {
             historyBySlug[item.slug] = item;
           }
         });
+  
         // Convert object values back to array
         history = Object.values(historyBySlug);
+  
+        // Sort by timestamp
         history.sort((a, b) => b.timestamp - a.timestamp);
-        setHistory(history);
+  
+        // Filter out items older than 7 days
+        const filteredHistory = history.filter(item => {
+          const lastUpdatedTime = new Date(item.timestamp).getTime();
+          const timeDifference = currentTime - lastUpdatedTime;
+          const millisecondsPerDay = 1000 * 60 * 60 * 24;
+          const daysDifference = Math.floor(timeDifference / millisecondsPerDay);
+          return daysDifference < 7; // Keep items updated within the last 7 days
+        });
+  
+        // Set the filtered history
+        setHistory(filteredHistory);
       }
     };
     getHistory();
   }, []);
+  
   
   
 console.log(history)

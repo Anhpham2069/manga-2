@@ -6,6 +6,7 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import NavBar from "../components/layout/Navbar";
 import Footer from "../components/layout/footer";
+import { Helmet } from "react-helmet";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,13 @@ const Register = () => {
 
   return (
     <>
+     <Helmet>
+        <title>Đăng kí</title>
+        <meta
+          name="description"
+          content="Đăng kí để khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s. Đọc những câu chuyện mới, tìm những câu chuyện đã hoàn thành và khám phá những bản phát hành sắp tới."
+        />
+      </Helmet>
    <NavBar /> 
       <div className="w-full h-screen flex flex-col justify-center items-center gap-1 bg-bg_light">
         <div className=" phone:w-full tablet:w-[90%] h-[90%] flex phone:flex-col tablet:flex-row justify-center items-center gap-1 border-2 bg-white shadow-lg rounded-md border-gray-200">
