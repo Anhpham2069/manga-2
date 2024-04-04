@@ -14,6 +14,7 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 const SideBarAdmin = ({ onItemClick }) => {
   const menuItems = [
@@ -53,7 +54,9 @@ const SideBarAdmin = ({ onItemClick }) => {
 
   return (
     <div className="bg-white text-bg_dark_light">
-      <img src="https://manga.io.vn/uploads/images/logo.png"></img>
+      <Link to={"/"}>
+        <img src="https://manga.io.vn/uploads/images/logo.png"></img>
+      </Link>
       <div className=" h-screen w-full p-4">
         {menuItems.map((item) => (
           <div
