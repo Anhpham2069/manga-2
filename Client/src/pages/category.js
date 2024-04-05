@@ -15,8 +15,11 @@ import { useEffect } from "react";
 import axios from "axios";
 import { Checkbox, Skeleton } from "antd";
 import { useParams } from "react-router-dom";
+import { getAllCategory } from "../services/apiStoriesRequest";
 
+const apiURLOTruyen = process.env.REACT_APP_API_URL_OTruyen;
 const Category = () => {
+  console.log(apiURLOTruyen)
   const { slug: initialSlug } = useParams();
 
   const darkMode = useSelector(selectDarkMode);
@@ -30,10 +33,11 @@ const Category = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialSlug);
 
   useEffect(() => {
+    // setGenres(getAllCategory())
     const fetchDataGenres = async () => {
-      const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
+      const res = await getAllCategory();
       if (res.data) {
-        setGenres(res.data.data);
+        setGenres(res.data);
       }
     };
     fetchDataGenres();

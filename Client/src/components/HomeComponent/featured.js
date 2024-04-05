@@ -16,7 +16,7 @@ import { Data } from "../../services/Data";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 import axios from "axios";
-import { storiesDataft } from "../../services/apiStoriesRequest";
+import { getStoriesByList } from "../../services/apiStoriesRequest";
 
 const Featured = ({ dark }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
@@ -68,7 +68,7 @@ const Featured = ({ dark }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await storiesDataft();
+        const res = await getStoriesByList("sap-ra-mat");
         setStoriesFT(res.data);
       } catch (error) {
         console.log(error);

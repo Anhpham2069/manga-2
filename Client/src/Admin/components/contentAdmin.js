@@ -2,7 +2,7 @@ import React from 'react';
 import Dasbroad from '../page/dashboard';
 import StoriesAdmin from '../page/stories';
 import UserManage from '../page/user';
-import GenresAdmin from '../page/genres';
+import GenresAdmin from '../page/genres/allCategory';
 import AdminNotificationForm from '../page/noti';
 // import { Profile, ChangePassWord, Gift  } from './Content'; // Nhớ import các component đã tạo
 

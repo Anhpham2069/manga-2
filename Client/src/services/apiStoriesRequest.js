@@ -16,11 +16,13 @@ import {
   getstorysSuccess,
 } from "../redux/slice/storySlice";
 const apiURL = process.env.REACT_APP_API_URL;
+const apiURLOTruyen = process.env.API_URL_OTruyen;
+console.log(apiURLOTruyen)
 
-export const storiesDataft = async (slug) => {
+export const getStoriesByList = async (slug) => {
   try {
     const res = await axios.get(
-      `https://otruyenapi.com/v1/api/danh-sach/sap-ra-mat`
+      `https://otruyenapi.com/v1/api/danh-sach/${slug}`
     );
     return res.data;
   } catch (error) {
@@ -91,10 +93,32 @@ export const getAllFavorites = async (accessToken, userId, dispatch) => {
 export const getAllStories = async (dispatch) => {
   dispatch(getstorysStart());
   try {
-    const res = await axios.get(`https://otruyenapi.com/v1/api/home`);
+    const res = await axios.get(`${apiURLOTruyen}/home`);
     dispatch(getstorysSuccess(res.data));
   } catch (error) {
     dispatch(getstorysFailed());
  
   }
 };
+//history
+
+export const getAllHistory = async()=>{
+  try {
+    const res = await axios.get(`${apiURL}/api/history/get-all`)
+    return res.data
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+//category
+
+export const getAllCategory =  async () =>{
+  try {
+    const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
+    if(res.data)
+      return res.data.data
+  } catch (error) {
+    console.log(error)
+  }
+}
