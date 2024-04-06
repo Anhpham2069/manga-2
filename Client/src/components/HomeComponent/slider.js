@@ -41,7 +41,11 @@ const Slider = () => {
             <div className=" text-white flex justify-center p-10 h-full z-20 ">
               <div className="flex-1 tablet:p-20">
                 <div className="text-xl font-medium"><p>Chương {item.chaptersLatest[0].chapter_name}</p> </div>
-                <div className="phone:text-sm tablet:text-4xl w-full font-semibold  pt-2 pb-10"> <p>{item.name}</p></div>
+                  <div className="phone:text-sm tablet:text-4xl w-full font-semibold  pt-2 pb-10">
+                    <Link to={`detail/${item.slug}/view/${item.chaptersLatest[0].chapter_api_data?.split("/").pop()}`}>
+                      <p>{item.name}</p>   
+                    </Link>
+                  </div>
                 <div className="flex flex-wrap">
                   {item?.category?.map((cate, index) => {
                     return (

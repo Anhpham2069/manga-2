@@ -22,6 +22,7 @@ import { useEffect } from "react";
 import axios from "axios";
 import { Skeleton } from "antd";
 import Pagination from "../components/pagination";
+import { getAllHistory } from "../../services/apiStoriesRequest";
 const AllStories = () => {
   const darkMode = useSelector(selectDarkMode);
   // sate
@@ -30,6 +31,7 @@ const AllStories = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+   
 
   // const pageRanges = 5;
 
@@ -71,9 +73,7 @@ const AllStories = () => {
       setLoading(false);
     }
   };
-
-  console.log(storiesData);
-  console.log(totalPages);
+  
 
   const handleSectionClick = (sectionSlug) => {
     setSlug(sectionSlug);
@@ -263,7 +263,7 @@ const AllStories = () => {
 
         {/* Pho bien */}
         {/* <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} h-fit shadow-lg flex-1`}> */}
-        <PopularSection darkMode={darkMode} sortedData={sortedData} />
+        <PopularSection darkMode={darkMode} />
         {/* </div> */}
       </div>
       <Footer />

@@ -2,32 +2,35 @@ const ReadHistory = require('../models/history');
 
 // Lưu lịch sử đọc truyện mới
 exports.saveReadHistory = async (req, res) => {
-    try {
-      const { slug,storyInfo } = req.body;
-  
-      // Kiểm tra xem có lịch sử đọc trước đó không
-      const existingHistory = await ReadHistory.findOne({
-        slug,
+  try {
+    const { slug, storyInfo, chapter } = req.body;
+
+    // Kiểm tra xem có lịch sử đọc trước đó không
+    const existingHistory = await ReadHistory.findOne({
+      slug,
+    });
+
+    if (existingHistory) {
+      // Nếu đã có lịch sử đọc trước đó, tăng readCount lên 1
+      existingHistory.readCount += 1;
+      // Cập nhật trường chapter
+      existingHistory.chapter = chapter; // Sửa dòng này
+      await existingHistory.save();
+      res.status(200).json({ message: 'Lịch sử đọc truyện đã được cập nhật.' });
+    } else {
+      // Nếu chưa có lịch sử đọc, tạo lịch sử mới và đặt readCount là 1
+      const newHistory = new ReadHistory({
+          slug, storyInfo, chapter // Sửa dòng này
       });
-  
-      if (existingHistory) {
-        // Nếu đã có lịch sử đọc trước đó, tăng readCount lên 1
-        existingHistory.readCount += 1;
-        await existingHistory.save();
-        res.status(200).json({ message: 'Lịch sử đọc truyện đã được cập nhật.' });
-      } else {
-        // Nếu chưa có lịch sử đọc, tạo lịch sử mới và đặt readCount là 1
-        const newHistory = new ReadHistory({
-            slug,storyInfo
-        });
-        await newHistory.save();
-        res.status(201).json({ message: 'Lịch sử đọc truyện đã được lưu.' });
-      }
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+      await newHistory.save();
+      res.status(201).json({ message: 'Lịch sử đọc truyện đã được lưu.' });
     }
-  };
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+  }
+};
+
   // Lấy tất cả lịch sử đọc truyện từ tất cả người dùng
 exports.getAllReadHistory = async (req, res) => {
   try {

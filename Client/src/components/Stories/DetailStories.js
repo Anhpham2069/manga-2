@@ -35,6 +35,7 @@ import { message } from "antd";
 import {
   addFavoritesStory,
   getAllFavorites,
+  getAllHistory,
   removeFavoritesStory,
 } from "../../services/apiStoriesRequest";
 
@@ -48,7 +49,6 @@ const DetailStories = () => {
   const favorites = useSelector(
     (state) => state.favorite.favorites?.allFavorites
   );
-
   const accessToken = user?.accessToken;
   const userId = user?._id;
 
@@ -56,6 +56,21 @@ const DetailStories = () => {
   const [story, setStory] = useState({});
   const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [readHistory, setReadHistory] = useState();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getAllHistory();
+        if (res) {
+          setReadHistory(res);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,7 +100,6 @@ const DetailStories = () => {
   };
   const checkIsFavorite = () => {
     const isFav = favorites?.some((fav) => fav.slug === slug);
-    console.log(isFav);
     setIsFavorite(isFav);
   };
 
@@ -123,7 +137,6 @@ const DetailStories = () => {
     timeUpdate = "N/A";
   }
   const chapterLength = story.item?.chapters[0]?.server_data.length;
-  console.log(chapterLength);
 
   const saveToHistory = (storyData) => {
     const timestamp = new Date().getTime();
@@ -131,18 +144,50 @@ const DetailStories = () => {
     const expirationDate = new Date();
     const existingHistory = localStorage.getItem("history");
     let history = existingHistory ? JSON.parse(existingHistory) : [];
-    const existingIndex = history.findIndex(item => item.slug === currentSlug);
+    const existingIndex = history.findIndex(
+      (item) => item.slug === currentSlug
+    );
     if (existingIndex !== -1) {
       // If the same story exists in history, replace it with new data
-      history[existingIndex] = { slug: currentSlug, timestamp, expirationDate, story: storyData };
+      history[existingIndex] = {
+        slug: currentSlug,
+        timestamp,
+        expirationDate,
+        story: storyData,
+      };
     } else {
       // Otherwise, add new data to history
-      history.push({ slug: currentSlug, timestamp, expirationDate, story: storyData });
+      history.push({
+        slug: currentSlug,
+        timestamp,
+        expirationDate,
+        story: storyData,
+      });
     }
     localStorage.setItem("history", JSON.stringify(history));
   };
+  console.log(readHistory);
+  console.log(story);
+  const currentChapterRef = useRef(null);
+
+  useEffect(() => {
+    if (currentChapterRef.current) {
+      currentChapterRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  }, [filteredChapters]);
+
   
-  
+  const scrollToCurrentChapter = () => {
+    if (currentChapterRef.current) {
+      currentChapterRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  };
 
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
@@ -338,16 +383,17 @@ const DetailStories = () => {
               </div>
               <div className="mt-14">
                 <div className="py-3 font-semibold text-primary-color  flex justify-between items-center border-b-[1px] border-gray-100">
-                  <div>
-                    <FontAwesomeIcon icon={faBookOpen} /> Danh sách chương
+                  <div className="w-full flex justify-between items-center">
+                    <div>
+                      <FontAwesomeIcon icon={faBookOpen} /> Danh sách chương
+                    </div>
+                    <button
+                      onClick={scrollToCurrentChapter}
+                      className="bg-blue-500 text-white px-4 py-2 mt-4 rounded-md"
+                    >
+                      Cuộn xuống chương đang đọc
+                    </button>
                   </div>
-
-                  {/* <FontAwesomeIcon 
-                          className='cursor-pointer' 
-                          icon={faArrowRightArrowLeft} 
-                          rotation={90} 
-                          onClick={toggleSortOrder} 
-                      /> */}
                 </div>
                 {/* danh sach chuong */}
                 <div className="w-full ">
@@ -359,19 +405,39 @@ const DetailStories = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+
                   <div className="pt-4 grid lg:grid-cols-4 gap-4 overflow-y-auto max-h-80">
                     {filteredChapters?.map((chap) => {
+                      const currentChapterIndex = readHistory?.findIndex(
+                        (item) =>
+                          parseInt(item.chapter) ===
+                            parseInt(chap.chapter_name) &&
+                          item.slug === story.params.slug
+                      );
+                      const isCurrentChapter = currentChapterIndex !== -1;
+                      console.log(isCurrentChapter);
                       return (
                         <Link
                           to={`view/${chap.chapter_api_data.split("/").pop()}`}
                           key={chap.chapter_name}
                         >
                           <div
+                            ref={isCurrentChapter ? currentChapterRef : null}
                             className={`${
                               isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                            }  rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
+                            } ${
+                              isCurrentChapter ? "bg-red-200 font-semibold" : ""
+                            } rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
                           >
-                            <p>Chapter {chap.chapter_name}</p>
+                            <p className="w-full flex justify-between">
+                              Chapter {chap.chapter_name}
+                              {isCurrentChapter && (
+                                <span className="text-end italic">
+                                  {" "}
+                                  Đang đọc{" "}
+                                </span>
+                              )}{" "}
+                            </p>
                             {/* <p className='text-gray-500 text-sm'>12 giờ trước</p> */}
                           </div>
                         </Link>
@@ -383,6 +449,7 @@ const DetailStories = () => {
             </div>
           </div>
         </div>
+        
         {/* recommend */}
 
         <div
@@ -416,29 +483,25 @@ const DetailStories = () => {
             className="container-trendStrories h-fit relative p-4 flex overflow-x-scroll scroll-none w-full transition-transform duration-300"
             ref={containerRef}
           >
-            {Data.map((item) => {
-              const timeAgo = formatDistanceToNow(new Date(item.date_added), {
+            {favorites?.map((item) => {
+              const timeAgo = formatDistanceToNow(new Date(item.createdAt), {
                 addSuffix: true,
                 locale: vi,
               });
               const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
               // const newestChapter = layChapterMoiNhat(item);
-              if (item.views > 10000) {
-                return (
-                  <CardStories
-                    key={item.id}
-                    id={item.id}
-                    title={item.title}
-                    img={item.image}
-                    time={trimmedTimeAgo}
-                    views={item.views}
-                    saves={item.saves}
-                    nomarl
-                  />
-                );
-              }
-
-              return null;
+              return (
+                <CardStories
+                  key={item._id}
+                  id={item._id}
+                  title={item.storyInfo.item.name}
+                  img={item.storyInfo?.seoOnPage.seoSchema.image}
+                  slug={item.slug}
+                  time={trimmedTimeAgo}
+                  chapter={item.storyInfo.item.chapters[0].server_data?.length}
+                  nomarl
+                />
+              );
             })}
           </div>
         </div>
@@ -467,8 +530,12 @@ const DetailStories = () => {
               } text-start w-full p-5  my-5`}
             >
               <p className="">
-                Bạn cần<Link to={'/login'} className="font-bold"> Đăng nhập</Link> hoặc{" "}
-                <span className="font-bold"> Đăng kí</span> để bình luận
+                Bạn cần
+                <Link to={"/login"} className="font-bold">
+                  {" "}
+                  Đăng nhập
+                </Link>{" "}
+                hoặc <span className="font-bold"> Đăng kí</span> để bình luận
               </p>
             </div>
             <div className="relative w-[90%] flex justify-center mb-5 ">

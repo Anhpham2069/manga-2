@@ -17,7 +17,7 @@ import {
 } from "../redux/slice/storySlice";
 const apiURL = process.env.REACT_APP_API_URL;
 const apiURLOTruyen = process.env.API_URL_OTruyen;
-console.log(apiURLOTruyen)
+console.log(apiURL)
 
 export const getStoriesByList = async (slug) => {
   try {
@@ -122,3 +122,4 @@ export const getAllCategory =  async () =>{
     console.log(error)
   }
 }
+

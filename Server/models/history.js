@@ -5,6 +5,9 @@ const ReadHistorySchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  chapter:{
+    type: Number,
+  },
   storyInfo: {
     type: Object,
   },

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const ScheduleList = () => {
   const [storiesData, setStoriesData] = useState([]);
@@ -32,6 +33,7 @@ const ScheduleList = () => {
     };
     fetchData();
   }, [slug]);
+
 
   return (
     <div
@@ -67,15 +69,17 @@ const ScheduleList = () => {
                   [{hour}:{minute}]
                 </p>
                 <div className="flex">
-                  <p
-                    className={`${
-                      isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"
-                    } font-semibold pl-1`}
-                  >
-                    {item.chaptersLatest[0].filename
-                      .slice(0, item.chaptersLatest[0].filename.indexOf("["))
-                      .trim()}
-                  </p>
+                  <Link to={`detail/${item.slug}/view/${item.chaptersLatest[0].chapter_api_data?.split("/").pop()}`}>
+                    <p
+                      className={`${
+                        isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"
+                      } font-semibold pl-1`}
+                    >
+                      {item.chaptersLatest[0].filename
+                        .slice(0, item.chaptersLatest[0].filename.indexOf("["))
+                        .trim()}
+                    </p>
+                  </Link>
                   <p
                     className={`${
                       isDarkModeEnable ? "text-text_darkMode" : "text-slate-900"

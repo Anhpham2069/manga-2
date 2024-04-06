@@ -16,7 +16,7 @@ import { Data } from "../../services/Data";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 import axios from "axios";
-import { getStoriesByList } from "../../services/apiStoriesRequest";
+import { getAllHistory, getStoriesByList } from "../../services/apiStoriesRequest";
 
 const Featured = ({ dark }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
@@ -31,11 +31,9 @@ const Featured = ({ dark }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:8000/api/history/get-all`
-        );
-        if (res.data) {
-          setReadHistory(res.data);
+        const res = await getAllHistory()
+        if (res) {
+          setReadHistory(res);
         }
       } catch (error) {
         console.log(error);
@@ -274,15 +272,15 @@ const Featured = ({ dark }) => {
                         alt="anh"
                         className="h-20"
                       />
-                      <div className="ml-4 h-20 flex flex-col justify-around">
+                      <div className="ml-4 flex flex-col justify-around">
                         <div className="flex-1">
                           <Link to={`/detail/${item.slug}`}>
                             <p>{item.storyInfo.item.name}</p>
                           </Link>
                           <div className="flex justify-between gap-1 items-center text-xs">
-                            <p className="font-semibold text-[#888888] mr-1 ">
+                            {/* <p className="font-semibold text-[#888888] mr-1 ">
                               Thể loại:
-                            </p>
+                            </p> */}
                             <div className="flex flex-1">
                               {item?.category
                                 ?.slice(0, 3)

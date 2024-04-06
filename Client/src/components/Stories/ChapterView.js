@@ -28,7 +28,46 @@ const ReadStories = () => {
   const [isVisible, setIsVisible] = useState(true);
   // const [chapters,setChapters] = useState([])
 
+  const [history, setHistory] = useState([]);
 
+  useEffect(() => {
+    const getHistory = () => {  
+      const currentTime = new Date().getTime();
+      const existingHistory = localStorage.getItem("historyChapter");
+      if (existingHistory) {
+        let history = JSON.parse(existingHistory);
+        
+        // Logic to keep only the most recent entry for each slug
+        const historyBySlug = {};
+        history.forEach(item => {
+          if (!historyBySlug[item.slug] || new Date(item.timestamp).getTime() > new Date(historyBySlug[item.slug].timestamp).getTime()) {
+            historyBySlug[item.slug] = item;
+          }
+        });
+  
+        // Convert object values back to array
+        history = Object.values(historyBySlug);
+  
+        // Sort by timestamp
+        history.sort((a, b) => b.timestamp - a.timestamp);
+  
+        // Filter out items older than 7 days
+        const filteredHistory = history.filter(item => {
+          const lastUpdatedTime = new Date(item.timestamp).getTime();
+          const timeDifference = currentTime - lastUpdatedTime;
+          const millisecondsPerDay = 1000 * 60 * 60 * 24;
+          const daysDifference = Math.floor(timeDifference / millisecondsPerDay);
+          return daysDifference < 7; // Keep items updated within the last 7 days
+        });
+  
+        // Set the filtered history
+        setHistory(filteredHistory);
+      }
+    };
+    getHistory();
+  }, []);
+  
+  
   useEffect(() => {
     const fetchData = async () => {
       const res = await axios.get(
@@ -51,12 +90,12 @@ const ReadStories = () => {
     };
     fetchData();
   }, [id, activeBtn]);
-
   const saveHistory = async () => {
     try {
       const currentSlug = slug
       const storyInfo = story;
-      await axios.post("http://localhost:8000/api/history/save", {slug: currentSlug,storyInfo});
+      const currentChapter = chapter?.item.chapter_name
+      await axios.post("http://localhost:8000/api/history/save", {slug: currentSlug,storyInfo,chapter: currentChapter});
     } catch (error) {
       console.error("Error saving chapter view history:", error);
     }
@@ -313,6 +352,7 @@ const ReadStories = () => {
             >
               {story.item?.chapters[0].server_data?.map((chap) => {
                 // console.log(chap.chapter_api_data.split('/').pop())
+              
                 return (
                   <option
                     className={`${

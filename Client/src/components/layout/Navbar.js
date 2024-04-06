@@ -264,7 +264,7 @@ const handleLogout = () =>{
                         <div className="flex h-20 w-full p-2 hover:bg-[#F1F1F2] hover:border-r-4 border-indigo-500">
                           <img
                             className="h-full"
-                            src={`https://img.otruyenapi.com//uploads/${searchResults.seoOnPage.og_image?.[index]}`}
+                            src={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}
                             alt="anh"
                           />
                           <p
@@ -357,6 +357,11 @@ const handleLogout = () =>{
             <Link to={"/filter"}>
               <div className="hover:text-white cursor-pointer">
                 <p className="text"> Tìm kiếm nâng cao</p>
+              </div>
+            </Link>
+            <Link to={"/contact"}>
+              <div className="hover:text-white cursor-pointer px-7">
+                <p className="text"> Liên hệ</p>
               </div>
             </Link>
           </div>
