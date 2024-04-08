@@ -4,10 +4,12 @@ require("dotenv").config();
 const favoritesController = {
   addFavorite: async (req, res) => {
     try {
-      const { slug, userId, storyInfo } = req.body;
+      const { userId, storyInfo } = req.body;
+
+      const {slug} = req.params
 
       // Tạo một bản ghi mới
-      const newFavorite = new Favorite({  userId, storyInfo });
+      const newFavorite = new Favorite({slug,  userId, storyInfo });
 
       // Lưu bản ghi mới vào cơ sở dữ liệu
       await newFavorite.save();

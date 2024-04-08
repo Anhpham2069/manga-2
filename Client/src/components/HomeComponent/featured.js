@@ -42,17 +42,14 @@ const Featured = ({ dark }) => {
     fetchData();
   }, []);
 
-  console.log(readHistory);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `https://otruyenapi.com/v1/api/danh-sach/${slug}`
-        );
+        const res = await getStoriesByList(slug)
         if (res.data) {
-          setStoriesData(res.data.data);
+          setStoriesData(res.data);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -121,7 +118,8 @@ const Featured = ({ dark }) => {
         return [];
     }
   };
-  console.log(renderList());
+
+  
   return (
     <div className="phone:flex-row lg:flex tablet:mx-6 lg:mx-14  mt-4 ">
       <Helmet>
@@ -186,27 +184,6 @@ const Featured = ({ dark }) => {
                   chapter={item.chaptersLatest[0].chapter_name}
                   nomarl
                 />
-                {/* <Link to={`/detail/${item.slug}`}> */}
-                {/* <figure className='h-72 mr-4 relative cursor-pointer'>
-                    <div className='relative h-52 w-44 overflow-hidden'>
-                        <img
-                            src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
-                            alt='anh'
-                            className='w-full h-full object-cover transition-all duration-500 transform hover:scale-125'
-                        /> */}
-                {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
-                            <p className='mr-2'><FontAwesomeIcon icon={faBookmark} /> {saves}</p>
-                            <p><FontAwesomeIcon icon={faEye} />{views} </p>
-                        </div> */}
-                {/* </div>
-                    <div>
-                            <p className={`${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black "} font-semibold mt-3`}>{item.name}</p>
-                    </div>
-                            <button className="promotion-button w-fit p-1 m-1 bg-primary-color text-white text-xs shadow-md rounded-md font-medium absolute top-1 left-1">{trimmedTimeAgo}</button>
-                            <button className="promotion-button w-fit p-1 m-1 bg-[#FF4500] text-white text-xs shadow-md rounded-md font-medium absolute top-1 right-1">Chương: {item.chaptersLatest[0].chapter_name}</button>
-                </figure>
-        </Link> */}
-                {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
               </>
             );
           })}
@@ -227,7 +204,7 @@ const Featured = ({ dark }) => {
               : "bg-white"
           } shadow-lg h-fit `}
         >
-          <div className="w-[40%] uppercase text-primary-color p-3 border-b-2 border-gray-200">
+          <div className="w-full uppercase text-primary-color p-3 border-b-2 border-gray-200">
             <FontAwesomeIcon icon={faFire} className="mr-2" />
             Xem nhiều
           </div>

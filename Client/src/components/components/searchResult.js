@@ -1,7 +1,7 @@
 import React,{useState} from 'react'
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectDarkMode } from '../layout/DarkModeSlice';
 import { Data } from '../../services/Data';
 //cpn
@@ -16,7 +16,11 @@ import { useEffect } from 'react';
 import axios from 'axios';
 import PopularSection from '../Stories/PopularSection';
 import { useParams } from 'react-router-dom';
+import { getAllStories } from '../../services/apiStoriesRequest';
 const SearchResult = () => {
+
+    const dispatch = useDispatch()
+
     const darkMode = useSelector(selectDarkMode)
     
     const {slug,keyword} = useParams()
@@ -30,10 +34,6 @@ const SearchResult = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     
-    // Thêm hàm để xử lý khi input bị focus và blur
-;
-  
-  // Thêm useEffect để gọi API mỗi khi từ khóa tìm kiếm thay đổi
   useEffect(() => {
     const fetchData = async () => {
       if (keyword.trim() !== "") {
@@ -62,18 +62,12 @@ const SearchResult = () => {
     fetchData();
   }, [keyword]); 
 
-    const sortedData = [...Data].sort((a, b) => b.views - a.views);
-    function layChapterMoiNhat(tuaTruyen) {
-        return tuaTruyen.chapters.reduce((newestChapter, chapter) => (
-          chapter.chapter_id > (newestChapter ? newestChapter.chapter_id : -1) ? chapter : newestChapter
-        ), null);
-      }
+
   useEffect(()=>{
     const fetchData =  async ()=>{
-      const res = await axios.get(`https://otruyenapi.com/v1/api/home`)
-      
+      const res = await getAllStories(dispatch)
       if(res.data){
-        setStoriesData(res.data.data)
+        setStoriesData(res.data)
       }
     }
     fetchData()
@@ -147,7 +141,7 @@ const SearchResult = () => {
 
                 {/* Pho bien */}
                 {/* <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} h-fit shadow-lg flex-1`}> */}
-                       <PopularSection darkMode={darkMode} sortedData={sortedData} />
+                       <PopularSection darkMode={darkMode}/>
                     {/* </div> */}
             </div>
         <Footer />

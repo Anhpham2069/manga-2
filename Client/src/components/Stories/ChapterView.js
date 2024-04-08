@@ -8,12 +8,16 @@ import {
   faHeart,
   faHome,
   faArrowRight,
+  faArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
+
+import "./style.css";
+import { getDetailStory } from "../../services/apiStoriesRequest";
 
 const ReadStories = () => {
   const [chapter, setChapter] = useState();
@@ -27,52 +31,13 @@ const ReadStories = () => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   // const [chapters,setChapters] = useState([])
+  const user = useSelector((state) => state?.auth.login.currentUser);
 
-  const [history, setHistory] = useState([]);
+  const userId = user?._id;
 
-  useEffect(() => {
-    const getHistory = () => {  
-      const currentTime = new Date().getTime();
-      const existingHistory = localStorage.getItem("historyChapter");
-      if (existingHistory) {
-        let history = JSON.parse(existingHistory);
-        
-        // Logic to keep only the most recent entry for each slug
-        const historyBySlug = {};
-        history.forEach(item => {
-          if (!historyBySlug[item.slug] || new Date(item.timestamp).getTime() > new Date(historyBySlug[item.slug].timestamp).getTime()) {
-            historyBySlug[item.slug] = item;
-          }
-        });
-  
-        // Convert object values back to array
-        history = Object.values(historyBySlug);
-  
-        // Sort by timestamp
-        history.sort((a, b) => b.timestamp - a.timestamp);
-  
-        // Filter out items older than 7 days
-        const filteredHistory = history.filter(item => {
-          const lastUpdatedTime = new Date(item.timestamp).getTime();
-          const timeDifference = currentTime - lastUpdatedTime;
-          const millisecondsPerDay = 1000 * 60 * 60 * 24;
-          const daysDifference = Math.floor(timeDifference / millisecondsPerDay);
-          return daysDifference < 7; // Keep items updated within the last 7 days
-        });
-  
-        // Set the filtered history
-        setHistory(filteredHistory);
-      }
-    };
-    getHistory();
-  }, []);
-  
-  
   useEffect(() => {
     const fetchData = async () => {
-      const res = await axios.get(
-        `https://otruyenapi.com/v1/api/truyen-tranh/${slug}`
-      );
+      const res = await getDetailStory(slug)
       if (res.data) {
         setStory(res.data.data);
       }
@@ -86,16 +51,24 @@ const ReadStories = () => {
       );
       if (res.data) {
         setChapter(res.data.data);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
     fetchData();
   }, [id, activeBtn]);
   const saveHistory = async () => {
     try {
-      const currentSlug = slug
+      const currentSlug = slug;
       const storyInfo = story;
-      const currentChapter = chapter?.item.chapter_name
-      await axios.post("http://localhost:8000/api/history/save", {slug: currentSlug,storyInfo,chapter: currentChapter});
+      const currentChapter = chapter?.item.chapter_name;
+      const currentChapterId = id;
+      await axios.post("http://localhost:8000/api/history/save", {
+        currentChapterId,
+        userId,
+        slug: currentSlug,
+        storyInfo,
+        chapter: currentChapter,
+      });
     } catch (error) {
       console.error("Error saving chapter view history:", error);
     }
@@ -107,6 +80,7 @@ const ReadStories = () => {
     }
   }, [chapter]);
 
+  //scoll to top
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
@@ -122,9 +96,28 @@ const ReadStories = () => {
     }
   };
 
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        // Show button when scrolled down more than 100px
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
 
+    window.addEventListener("scroll", handleScroll);
 
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  //previus and next chapter
 
   const getNextChapterId = (currentChapterId, chapters) => {
     console.log(currentChapterId);
@@ -188,6 +181,7 @@ const ReadStories = () => {
   };
 
   // history
+
   useEffect(() => {
     if (!chapter) return; // Kiểm tra nếu chapter chưa có, thì không làm gì cả
 
@@ -196,16 +190,23 @@ const ReadStories = () => {
   }, [chapter]);
 
   const saveChapterViewHistory = () => {
-    // Get existing history from localStorage
     const timestamp = new Date().getTime();
     const currentSlug = slug;
     const currentChapter = chapter?.item?.chapter_name;
     const currentChapterId = id;
-    console.log(currentChapter);
     const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() - 7); // Ngày hết hạn là 7 ngày trước đó
+
     const existingHistory = localStorage.getItem("historyChapter");
-    const historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
-    // Save the entire story object along with the timestamp and expiration date
+    let historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
+
+    // Loại bỏ các mục cũ hơn 7 ngày
+    historyChapter = historyChapter.filter((item) => {
+      const itemExpirationDate = new Date(item.expirationDate);
+      return itemExpirationDate.getTime() > expirationDate.getTime();
+    });
+
+    // Thêm mục mới vào lịch sử
     historyChapter.push({
       slug: currentSlug,
       timestamp,
@@ -214,6 +215,8 @@ const ReadStories = () => {
       currentChapterId,
       story: story,
     });
+
+    // Cập nhật localStorage
     localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
   };
 
@@ -275,11 +278,17 @@ const ReadStories = () => {
           <div className="bg-[#BDE5F8] w-[95%] m-auto mt-3 py-2 text-primary-color text-center">
             {" "}
             <FontAwesomeIcon icon={faCircleInfo} /> Sử dụng mũi tên trái (←)
-            hoặc phải (→) để chuyển chapter
+            hoặc phải (→) để chuyển chương
           </div>
 
-          <div className="flex justify-center items-center gap-2 mt-5 text-sm">
-            <button className="px-3 rounded-full font-semibold text-white text-xl">
+          <div className={`${isDarkModeEnable ? "text-white" : "text-slate-500"} flex justify-center items-center gap-2 mt-5 text-sm`}>
+            <button
+              className="px-3 rounded-full font-semibold text-xl"
+              onClick={handleChangeToPreviousChapter}
+              disabled={
+                !getPreviousChapterId(id, story.item?.chapters[0].server_data)
+              }
+            >
               <FontAwesomeIcon icon={faArrowRight} rotation={180} size="sm" />
             </button>
 
@@ -303,7 +312,13 @@ const ReadStories = () => {
                 );
               })}
             </select>
-            <button className="px-3 rounded-full font-semibold text-white text-xl">
+            <button
+              className="px-3 rounded-full font-semibold text-xl"
+              onClick={handleChangeToNextChapter}
+              disabled={
+                !getNextChapterId(id, story.item?.chapters[0].server_data)
+              }
+            >
               <FontAwesomeIcon icon={faArrowRight} size="sm" />
             </button>
           </div>
@@ -352,7 +367,7 @@ const ReadStories = () => {
             >
               {story.item?.chapters[0].server_data?.map((chap) => {
                 // console.log(chap.chapter_api_data.split('/').pop())
-              
+
                 return (
                   <option
                     className={`${
@@ -387,160 +402,19 @@ const ReadStories = () => {
           </button>
         </div>
       </div>
+      <div className="fixed bottom-16 right-10">
+        {isVisible && (
+          <button
+            onClick={scrollToTop}
+            className="bounce bg-gray-800 shadow-md text-white py-3 px-4 rounded-full focus:outline-none"
+          >
+            <FontAwesomeIcon icon={faArrowUp} />
+          </button>
+        )}
+      </div>
       <Footer />
     </div>
   );
 };
 
 export default ReadStories;
-
-// const selectedStory = Data.find(item => item.id === parseInt(id));
-
-// // if (!selectedStory) {
-// //   return <div>Truyện không tồn tại</div>;
-// // }
-// console.log(selectedStory)
-//  // Tìm chương dựa trên chapterId
-//  const selectedChapter = selectedStory.chapters.find(chapter => chapter.chapter_id === parseInt(chapter_id));
-
-//  if (!selectedChapter) {
-//    return <div>Chương không tồn tại</div>;
-//  }
-// console.log(selectedChapter)
-
-//  const previusChapter = () =>{
-//   const currentChapterId = parseInt(chapter_id)
-//   if(currentChapterId>1){
-//     const previusChapterId = currentChapterId-1
-//     navigate(`/detail/${id}/${previusChapterId}`)
-//   }
-//  }
-//  const nextChapter = () =>{
-//   const currentChapterId = parseInt(chapter_id)
-//   if(currentChapterId <selectedStory.chapters.length){
-//     const nextChapterId = currentChapterId+1
-//     navigate(`/detail/${id}/${nextChapterId}`)
-//   }
-//  }
-
-//  const handleChangeChapter = (e) =>{
-//   const chapterSelect = parseInt(e.target.value)
-//   navigate(`/detail/${id}/${chapterSelect}`)
-//  }
-// <NavBar />
-//       <div className='relative'>
-//         <header className={`${isDarkModeEnable?"bg-bg_dark_light text-text_darkMode":"bg-white"} p-5 h-fit mt-10 w-[90%] m-auto`}>
-//           <div >
-//             <ul className='flex gap-1 text-[#A699A6]'>
-//               <Link to={"/"}>
-//                 <li className='hover:text-primary-color cursor-pointer'>Trang chủ &gt; </li>
-//               </Link>
-//               <Link to={`/detail/${id}`}>
-//                 <li className='hover:text-primary-color cursor-pointer'>{chapter?.item.comic_name} &gt;</li>
-//               </Link>
-//               <li className='hover:text-primary-color cursor-pointer'>{chapter?.item.chapter_name}</li>
-//             </ul>
-//           </div>
-
-//           <div className='m-auto text-center text-2xl font-semibold  mt-5'>
-//             <a className='hover:text-primary-color' href='#'>{chapter?.item.comic_name} </a>
-//             <span className='text-[#999999]'> - Chapter {chapter?.item.chapter_name}</span>
-//           </div>
-//           <div className='text-[#999999]  text-center'>Nếu không xem được truyện vui lòng đổi "SERVER ẢNH" bên dưới</div>
-//           <div className='text-white w-full flex justify-center gap-2 mt-3'>
-//             <button className={`${active ? "bg-[#E59FF3]": " bg-primary-color"} px-2 py-1 rounded-md`}>Server 1</button>
-//             <button className="px-2 py-1 rounded-md bg-primary-color">Server 2</button>
-//             <button className="px-2 py-1 rounded-md bg-primary-color">Server 3</button>
-//           </div>
-//           <div className='w-full flex justify-center mt-5 text-white'><button className=" px-2 py-1 rounded-md bg-[#F0AD4E]">
-//             <FontAwesomeIcon icon={faCircleExclamation} /> Báo lỗi</button></div>
-
-//           <div className='bg-[#BDE5F8] w-[95%] m-auto mt-3 py-2 text-primary-color text-center'> <FontAwesomeIcon icon={faCircleInfo} /> Sử dụng mũi tên trái (←) hoặc phải (→) để chuyển chapter</div>
-
-//           <div className='flex justify-center items-center gap-2 mt-5 text-sm'>
-//             {/* <button
-//                 className={`${parseInt(chapter_id) === 1 ? "bg-[#B3C8F8] cursor-not-allowed":"bg-primary-color"} px-3 rounded-full font-semibold text-white text-xl`}
-//                 onClick={() => {
-//                     if (parseInt(chapter_id) !== 1) {
-//                         previusChapter();
-//                     }
-//                 }}
-//             ><FontAwesomeIcon icon={faArrowRight} rotation={180} size='sm'/></button> */}
-
-//             <select
-//               className='bg-[#DDDDDD] w-40 h-7 px-2 rounded-full text-[#777]'
-//               // value={chapter_id}
-//               // onChange={handleChangeChapter}
-//             >
-//               {/* {selectedStory.chapters.map(chap=>{
-//                 return(
-//                   <option
-//                     label={`Chapter ${chap.chapter_id}`}
-//                     key={chap.chapter_id}
-//                     value={chap.chapter_id}>
-//                     Chapter {chap.chapter_id}
-//                   </option>
-//                 )
-//               })} */}
-//             </select>
-//             {/* <button
-//              className={`${parseInt(chapter_id) === selectedStory.chapters.length ? "bg-[#B3C8F8] cursor-not-allowed":"bg-primary-color"} px-3 rounded-full font-semibold text-white text-xl`}
-//              onClick={() => {
-//                  if (parseInt(chapter_id) !== selectedStory.chapters.length) {
-//                      nextChapter();
-//                  }
-//              }}              ><FontAwesomeIcon icon={faArrowRight} size='sm'/></button> */}
-//           </div>
-//         </header>
-//         <div className=' w-full flex flex-col justify-center mt-32'>
-//           {chapter?.item.chapter_image.map((i)=>(
-//             <img src={`https://sv1.otruyencdn.com/${chapter.item.chapter_path}/${i.image_file}`} alt='anh'>
-//             </img>
-//           ))}
-//         </div>
-//         <div className={`phone:text-sm bg-[#242526] py-1  lg:py-4 w-full fixed flex justify-center
-//             phone:justify-around lg:gap-4 items-center bottom-0 ${isVisible ? '' : 'hidden'}`}>
-//           <Link to={"/"}>
-//             <button className='lg:py-2 py-1 px-4 bg-[#8BC34A] text-white rounded-md'> <FontAwesomeIcon icon={faHome} /> <span className='phone:hidden lg:inline'>Trang chủ</span></button>
-//           </Link>
-//           <div className='flex justify-center gap-2'>
-//             {/* <button
-//             className={`${parseInt(chapter_id) === 1 ? "bg-[#B3C8F8] cursor-not-allowed":"bg-primary-color"} px-3 py-1 rounded-full font-semibold text-white text-xl`}
-//             onClick={() => {
-//                 if (parseInt(chapter_id) !== 1) {
-//                     previusChapter();
-//                 }
-//             }}
-//             ><FontAwesomeIcon icon={faArrowRight} rotation={180}/></button> */}
-//             <select
-//               className='bg-[#DDDDDD] phone:w-32 lg:w-40 py-1 px-2 rounded-full text-[#777]'
-//               // value={chapter_id}
-//               // onChange={handleChangeChapter}
-//             >
-//             {/* {selectedStory.chapters.map(item=>{
-//                 return(
-//                   <option
-//                     label={`Chapter ${item.chapter_id}`}
-//                     key={item.chapter_id}
-//                     value={item.chapter_id}
-//                   >Chapter {item.chapter_id}
-//                 </option>
-//                 )
-//               })} */}
-//             </select>
-//             <button
-//               //  className={`
-//               // ${parseInt(chapter_id) === selectedStory.chapters.length ?
-//               //   "bg-[#B3C8F8] cursor-not-allowed":"bg-primary-color"} px-3 py-1 rounded-full font-semibold text-white text-xl`}
-//               className='bg-[#B3C8F8] cursor-not-allowed":"bg-primary-color"} px-3 py-1 rounded-full font-semibold text-white text-xl'
-//                 //  onClick={() => {
-//               //      if (parseInt(chapter_id) !== selectedStory.chapters.length) {
-//               //          nextChapter();
-//               //      }
-//               //  }}
-//             ><FontAwesomeIcon icon={faArrowRight} /></button>
-//           </div>
-//           <button className='py-1 px-4 bg-[#ff3860] text-white rounded-md'> <FontAwesomeIcon icon={faHeart} /> <span className='phone:hidden lg:inline'>Theo dõi</span></button>
-//         </div>
-//       </div>
-//       <Footer />

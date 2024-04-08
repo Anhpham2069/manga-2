@@ -3,7 +3,7 @@ const ReadHistory = require('../models/history');
 // Lưu lịch sử đọc truyện mới
 exports.saveReadHistory = async (req, res) => {
   try {
-    const { slug, storyInfo, chapter } = req.body;
+    const {userId, slug, storyInfo, chapter,chapterId } = req.body;
 
     // Kiểm tra xem có lịch sử đọc trước đó không
     const existingHistory = await ReadHistory.findOne({
@@ -20,7 +20,7 @@ exports.saveReadHistory = async (req, res) => {
     } else {
       // Nếu chưa có lịch sử đọc, tạo lịch sử mới và đặt readCount là 1
       const newHistory = new ReadHistory({
-          slug, storyInfo, chapter // Sửa dòng này
+        userId, slug, storyInfo, chapter // Sửa dòng này
       });
       await newHistory.save();
       res.status(201).json({ message: 'Lịch sử đọc truyện đã được lưu.' });
@@ -41,6 +41,16 @@ exports.getAllReadHistory = async (req, res) => {
     res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
   }
 };
+exports.getLatestReadHistory = async (req, res) => {
+  try {
+    const latestHistory = await ReadHistory.findOne({ slug: req.params.slug }).sort({ timestamp: -1 });
+    res.status(200).json(latestHistory);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+  }
+};
+
 
   
 // Lấy lịch sử đọc truyện của một người dùng cụ thể

@@ -25,7 +25,7 @@ const FavoriteStories = () => {
   const user = useSelector((state) => state?.auth.login.currentUser);
   const accessToken = user?.accessToken;
   const userId = user?._id;
-
+console.log(favorites)
   const handleDeleteFavorites = (slug) => {
     removeFavoritesStory(accessToken, slug, userId, dispatch);
     message.success("Bỏ yêu thích");
@@ -61,7 +61,6 @@ const FavoriteStories = () => {
                   <div className="relative h-full flex">
                     <Link to={`/detail/${item.slug}`}>
                       <img
-                    
                         src={item.storyInfo?.seoOnPage.seoSchema.image}
                         alt="anh"
                         className="w-32 tablet:h-36 phone:h-20"

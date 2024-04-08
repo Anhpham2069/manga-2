@@ -36,6 +36,8 @@ import {
   addFavoritesStory,
   getAllFavorites,
   getAllHistory,
+  getDetailStory,
+  getLastChapter,
   removeFavoritesStory,
 } from "../../services/apiStoriesRequest";
 
@@ -61,23 +63,23 @@ const DetailStories = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllHistory();
+        const res = await getLastChapter(slug)
         if (res) {
-          setReadHistory(res);
+          const chapterCurrent = res.chapter;
+          setReadHistory(chapterCurrent);
         }
       } catch (error) {
         console.log(error);
       }
     };
     fetchData();
-  }, []);
+  }, [slug]);
+ 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get(
-          `https://otruyenapi.com/v1/api/truyen-tranh/${slug}`
-        );
+        const res = await getDetailStory(slug)
         if (res.data) {
           setStory(res.data.data);
           saveToHistory(res.data.data);
@@ -98,6 +100,8 @@ const DetailStories = () => {
     setIsFavorite(true);
     message.success("Đã thêm vào yêu thích");
   };
+console.log(favorites)
+
   const checkIsFavorite = () => {
     const isFav = favorites?.some((fav) => fav.slug === slug);
     setIsFavorite(isFav);
@@ -166,8 +170,6 @@ const DetailStories = () => {
     }
     localStorage.setItem("history", JSON.stringify(history));
   };
-  console.log(readHistory);
-  console.log(story);
   const currentChapterRef = useRef(null);
 
   useEffect(() => {
@@ -177,10 +179,11 @@ const DetailStories = () => {
         block: "center",
       });
     }
-  }, [filteredChapters]);
+  }, []);
 
   
-  const scrollToCurrentChapter = () => {
+  const scrollToCurrentChapter = (e) => {
+    e.preventDefault()
     if (currentChapterRef.current) {
       currentChapterRef.current.scrollIntoView({
         behavior: "smooth",
@@ -408,14 +411,11 @@ const DetailStories = () => {
 
                   <div className="pt-4 grid lg:grid-cols-4 gap-4 overflow-y-auto max-h-80">
                     {filteredChapters?.map((chap) => {
-                      const currentChapterIndex = readHistory?.findIndex(
-                        (item) =>
-                          parseInt(item.chapter) ===
-                            parseInt(chap.chapter_name) &&
-                          item.slug === story.params.slug
-                      );
-                      const isCurrentChapter = currentChapterIndex !== -1;
-                      console.log(isCurrentChapter);
+                      
+                      const currentChapterIndex = parseInt(readHistory);
+                      const isCurrentChapter = currentChapterIndex === parseInt(chap.chapter_name);
+                      console.log(currentChapterIndex);
+                      
                       return (
                         <Link
                           to={`view/${chap.chapter_api_data.split("/").pop()}`}
@@ -424,9 +424,9 @@ const DetailStories = () => {
                           <div
                             ref={isCurrentChapter ? currentChapterRef : null}
                             className={`${
-                              isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
+                              isDarkModeEnable ? "bg-[#252A34] " : "bg-[#EEF3FD]"
                             } ${
-                              isCurrentChapter ? "bg-red-200 font-semibold" : ""
+                              isCurrentChapter ? "bg-red-200 font-semibold text-black " : ""
                             } rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
                           >
                             <p className="w-full flex justify-between">

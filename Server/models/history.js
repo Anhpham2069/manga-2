@@ -1,26 +1,34 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const ReadHistorySchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: true,
+  },
   slug: {
     type: String,
-    required: true
+    required: true,
   },
-  chapter:{
+  chapter: {
     type: Number,
+  },
+
+  chapterId:{
+    type: String,
   },
   storyInfo: {
     type: Object,
   },
   readCount: {
     type: Number,
-    default: 1
+    default: 1,
   },
   timestamp: {
     type: Date,
-    default: Date.now
-  }
+    default: Date.now,
+  },
 });
 
-const ReadHistory = mongoose.model('ReadHistory', ReadHistorySchema);
+const ReadHistory = mongoose.model("ReadHistory", ReadHistorySchema);
 
 module.exports = ReadHistory;

@@ -17,9 +17,7 @@ import { Checkbox, Skeleton } from "antd";
 import { useParams } from "react-router-dom";
 import { getAllCategory } from "../services/apiStoriesRequest";
 
-const apiURLOTruyen = process.env.REACT_APP_API_URL_OTruyen;
 const Category = () => {
-  console.log(apiURLOTruyen)
   const { slug: initialSlug } = useParams();
 
   const darkMode = useSelector(selectDarkMode);
@@ -33,11 +31,10 @@ const Category = () => {
   const [selectedCategory, setSelectedCategory] = useState(initialSlug);
 
   useEffect(() => {
-    // setGenres(getAllCategory())
     const fetchDataGenres = async () => {
       const res = await getAllCategory();
-      if (res.data) {
-        setGenres(res.data);
+      if (res) {
+        setGenres(res);
       }
     };
     fetchDataGenres();
@@ -47,10 +44,7 @@ const Category = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}`
-        );
-
+        const res = await getAllCategory(selectedCategory);
         if (res.data) {
           setIsCategory(res.data.data);
         }
@@ -64,7 +58,7 @@ const Category = () => {
   }, [selectedCategory]);
   console.log(genres);
 
-  const handleCategoryChange = (e,slug) => {
+  const handleCategoryChange = (e, slug) => {
     e.preventDefault();
     setSelectedCategory(slug);
   };
@@ -108,34 +102,25 @@ const Category = () => {
                   onClick={() => setGridCols(6)}
                 />
               </div>
-              
             </div>
           </div>
           <select
-                className="phone:block tablet:hidden w-full  bg-[#E6F4FF] rounded-xl p-2  my-5 text-primary-color"
-                value={selectedCategory}
-                onChange={handleCategoryChangeMb}
-              >
-                {genres?.items.map((item) => {
-                  return (
-                    <option
-                      key={item.slug}
-                      value={item.slug}
-                      className="bg-[#E6F4FF] text-primary-color"
-                      // style={{
-                      //   /* Add your custom styling here */
-                      //   padding: '8px 12px',
-                      //   fontSize: '14px',
-                      //   fontWeight:"unset",
-                      //   borderRadius: '4px',
-                      //   cursor: 'pointer',
-                      // }}
-                    >
-                      {item.name}
-                    </option>
-                  );
-                })}
-              </select>
+            className="phone:block tablet:hidden w-full  bg-[#E6F4FF] rounded-xl p-2  my-5 text-primary-color"
+            value={selectedCategory}
+            onChange={handleCategoryChangeMb}
+          >
+            {genres?.items.map((item) => {
+              return (
+                <option
+                  key={item.slug}
+                  value={item.slug}
+                  className="bg-[#E6F4FF] text-primary-color"
+                >
+                  {item.name}
+                </option>
+              );
+            })}
+          </select>
           <div className="flex w-full tablet:p-5">
             <div
               className={`${
@@ -178,7 +163,14 @@ const Category = () => {
               </div>
               <div className="grid phone:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-2 ">
                 {genres?.items.map((item) => {
-                  return <div onClick={(e)=>handleCategoryChange(e,item.slug)} className="flex items-center border-b-2 p-3 font-medium hover:text-[#AE4AD9] cursor-pointer">{item.name}</div>;
+                  return (
+                    <div
+                      onClick={(e) => handleCategoryChange(e, item.slug)}
+                      className="flex items-center border-b-2 p-3 font-medium hover:text-[#AE4AD9] cursor-pointer"
+                    >
+                      {item.name}
+                    </div>
+                  );
                 })}
               </div>
             </div>

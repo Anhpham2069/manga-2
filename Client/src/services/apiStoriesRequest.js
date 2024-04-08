@@ -16,19 +16,44 @@ import {
   getstorysSuccess,
 } from "../redux/slice/storySlice";
 const apiURL = process.env.REACT_APP_API_URL;
-const apiURLOTruyen = process.env.API_URL_OTruyen;
-console.log(apiURL)
+const apiURLOTruyen = process.env.REACT_APP_API_URL_OTruyen;
+console.log(apiURLOTruyen);
+
+// stories
+
+export const getAllStories = async (dispatch) => {
+  dispatch(getstorysStart());
+  try {
+    const res = await axios.get(`${apiURLOTruyen}/home`);
+    dispatch(getstorysSuccess(res.data));
+  } catch (error) {
+    dispatch(getstorysFailed());
+  }
+};
 
 export const getStoriesByList = async (slug) => {
   try {
-    const res = await axios.get(
-      `https://otruyenapi.com/v1/api/danh-sach/${slug}`
-    );
+    const res = await axios.get(`${apiURLOTruyen}/danh-sach/${slug}`);
     return res.data;
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 };
+export const getDetailStory = async (slug) => {
+  try {
+    const res = await axios.get(
+      `${apiURLOTruyen}/truyen-tranh/${slug}`
+    );
+    return res;
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  }
+};
+
+
+
+
+
 export const addFavoritesStory = async (
   accessToken,
   slug,
@@ -39,8 +64,8 @@ export const addFavoritesStory = async (
   dispatch(addFavoriteStart());
   try {
     const res = await axios.post(
-      `${apiURL}/api/favorites/add`,
-      { slug, userId, storyInfo },
+      `${apiURL}/api/favorites/add/${slug}`,
+      { userId, storyInfo },
       {
         headers: { token: `Bearer ${accessToken}` },
       }
@@ -73,6 +98,9 @@ export const removeFavoritesStory = async (
   }
 };
 
+
+//favorite
+
 export const getAllFavorites = async (accessToken, userId, dispatch) => {
   dispatch(getFavoritesStart());
   try {
@@ -88,38 +116,40 @@ export const getAllFavorites = async (accessToken, userId, dispatch) => {
   }
 };
 
-// stories
-
-export const getAllStories = async (dispatch) => {
-  dispatch(getstorysStart());
-  try {
-    const res = await axios.get(`${apiURLOTruyen}/home`);
-    dispatch(getstorysSuccess(res.data));
-  } catch (error) {
-    dispatch(getstorysFailed());
- 
-  }
-};
 //history
 
-export const getAllHistory = async()=>{
+export const getAllHistory = async () => {
   try {
-    const res = await axios.get(`${apiURL}/api/history/get-all`)
-    return res.data
+    const res = await axios.get(`${apiURL}/api/history/get-all`);
+    return res.data;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
+};
+export const getLastChapter = async (slug) => {
+  try {
+    const res = await axios.get(`${apiURL}/api/history/last/${slug}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
 
 //category
 
-export const getAllCategory =  async () =>{
+export const getAllCategory = async () => {
   try {
-    const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
-    if(res.data)
-      return res.data.data
+    const res = await axios.get(`${apiURLOTruyen}/the-loai`);
+    if (res.data) return res.data.data;
   } catch (error) {
-    console.log(error)
+    console.log(error);
   }
-}
-
+};
+export const getStorybyCategory = async (cate) => {
+  try {
+    const res = await axios.get(`${apiURLOTruyen}/the-loai/${cate}`);
+    if (res.data) return res.data.data;
+  } catch (error) {
+    console.log(error);
+  }
+};

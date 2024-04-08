@@ -43,8 +43,6 @@ const NavBar = () => {
   const id = user?._id
 
   
-  console.log(user);
-
   // const [isOpen,setIsOpen] = useState(false)
   const [openCategory, setOpenCategory] = useState(false);
   const [openRating, setOpenRating] = useState(false);

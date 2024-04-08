@@ -135,6 +135,10 @@ const CardStories = ({
           </a>
         </Link>
         {/* </Tooltip> */}
+         {/* <div className='bg-black h-1/6 opacity-50 w-full absolute bottom-0 text-white text-sm flex items-center justify-start p-1'>
+                            <p className='mr-2'><FontAwesomeIcon icon={faBookmark} /> {saves}</p>
+                            <p><FontAwesomeIcon icon={faEye} />{views} </p>
+                        </div> */}
       </div>
     </figure>
   );

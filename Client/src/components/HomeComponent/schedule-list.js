@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
-import axios from "axios";
 import { Link } from "react-router-dom";
+import { getStoriesByList } from "../../services/apiStoriesRequest";
 
 const ScheduleList = () => {
   const [storiesData, setStoriesData] = useState([]);
-  const [slug, setSlug] = useState("truyen-moi");
-  const [loading, setLoading] = useState(false);
   const isDarkModeEnable = useSelector(selectDarkMode);
   const currentDate = new Date();
   const formattedDate = currentDate.toLocaleDateString("vi-VN");
@@ -15,24 +13,18 @@ const ScheduleList = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
       try {
-        const res = await axios.get(
-          `https://otruyenapi.com/v1/api/danh-sach/${slug}`
-        );
+        const res = await getStoriesByList("truyen-moi")
         if (res.data) {
-          setStoriesData(res.data.data);
+          setStoriesData(res.data);
         }
       } catch (error) {
-        // Xử lý lỗi ở đây, ví dụ:
         console.error("Error fetching data:", error);
-        // Có thể hiển thị thông báo lỗi cho người dùng hoặc xử lý theo cách phù hợp khác
       } finally {
-        setLoading(false);
       }
     };
     fetchData();
-  }, [slug]);
+  }, []);
 
 
   return (
@@ -54,7 +46,7 @@ const ScheduleList = () => {
           </p>
         </div>
         <div className="pl-4">
-          {storiesData.items?.slice(0, 10).map((item, index) => {
+          {storiesData.items?.slice(0, 10).map((item) => {
             const dateObject = new Date(item.updatedAt);
 
             const hour = dateObject.getHours();
