@@ -10,28 +10,33 @@ import {
   faBookmark,
   faEye,
   faCalendarDay,
+  faSave,
 } from "@fortawesome/free-solid-svg-icons";
 import CardStories from "../components/cardStories";
 import { Data } from "../../services/Data";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 import axios from "axios";
-import { getAllHistory, getStoriesByList } from "../../services/apiStoriesRequest";
+import { getAllHistory, getNumberSaveStory, getStoriesByList } from "../../services/apiStoriesRequest";
 
 const Featured = ({ dark }) => {
+
+  const dispatch = useDispatch()
+
   const isDarkModeEnable = useSelector(selectDarkMode);
   // sate
   const [storiesData, setStoriesData] = useState([]);
   const [storiesFT, setStoriesFT] = useState([]);
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("truyen-moi");
-  const [readHistory, setReadHistory] = useState();
   const [selectedButton, setSelectedButton] = useState("homnay");
+  const [readHistory, setReadHistory] = useState();
+  const [saveStory,setSaveStory] = useState()
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllHistory()
+        const res = await getAllHistory(dispatch)
         if (res) {
           setReadHistory(res);
         }
@@ -41,6 +46,20 @@ const Featured = ({ dark }) => {
     };
     fetchData();
   }, []);
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getNumberSaveStory(dispatch)
+        if (res) {
+          setSaveStory(res);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
+  console.log(readHistory)
 
 
   useEffect(() => {
@@ -239,6 +258,10 @@ const Featured = ({ dark }) => {
               {renderList()
                 ?.sort((a, b) => b.readCount - a.readCount)
                 .map((item, index) => {
+                  let displayValues = 0
+                  if(saveStory?.hasOwnProperty(item.slug)){
+                    displayValues = saveStory[item.slug];
+                  }
                   return (
                     <div
                       key={index}
@@ -273,10 +296,14 @@ const Featured = ({ dark }) => {
                                 })}
                             </div>
                           </div>
-                          <div>
+                          <div className="flex flex-col justify-center items-start font-light text-sm">
                             <p>
                               <FontAwesomeIcon icon={faEye} />{" "}
                               {item.readCount.toLocaleString()}{" "}
+                            </p>
+                            <p>
+                              <FontAwesomeIcon icon={faBookmark} />{" "}
+                                {displayValues}
                             </p>
                           </div>
                         </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
+import { Modal, Checkbox, Input, Space } from "antd";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -17,27 +18,31 @@ import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 
 import "./style.css";
-import { getDetailStory } from "../../services/apiStoriesRequest";
+import {
+  addStoryError,
+  getDetailStory,
+} from "../../services/apiStoriesRequest";
 
 const ReadStories = () => {
   const [chapter, setChapter] = useState();
 
   const { id, slug } = useParams();
-  console.log(id, slug);
   // /658c4c2be120ddf21990fb70
   const isDarkModeEnable = useSelector(selectDarkMode);
   const [story, setStory] = useState([]);
   const [activeBtn, setActiveBtn] = useState(false);
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
+  const [isErorr, setIsErorr] = useState("");
   // const [chapters,setChapters] = useState([])
   const user = useSelector((state) => state?.auth.login.currentUser);
-
   const userId = user?._id;
+  const nameUser = user?.username;
+  const accessToken = user?.accessToken
 
   useEffect(() => {
     const fetchData = async () => {
-      const res = await getDetailStory(slug)
+      const res = await getDetailStory(slug);
       if (res.data) {
         setStory(res.data.data);
       }
@@ -125,7 +130,6 @@ const ReadStories = () => {
       (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
     );
     if (currentIndex === -1) {
-      console.error("Không tìm thấy chap hiện tại trong danh sách.");
       return null;
     }
 
@@ -134,7 +138,6 @@ const ReadStories = () => {
     if (nextIndex >= 0 && nextIndex < chapters.length) {
       return chapters[nextIndex].chapter_api_data.split("/").pop();
     } else {
-      console.error("Không tìm thấy chap tiếp theo.");
       return null;
     }
   };
@@ -143,15 +146,12 @@ const ReadStories = () => {
       (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
     );
     if (currentIndex === -1) {
-      console.error("Không tìm thấy chap hiện tại trong danh sách.");
       return null;
     }
     const previousIndex = currentIndex - 1;
-    console.log(currentIndex);
     if (previousIndex >= 0 && previousIndex < chapters.length) {
       return chapters[previousIndex].chapter_api_data.split("/").pop();
     } else {
-      console.error("Không tìm thấy chap trước đó.");
       return null;
     }
   };
@@ -176,7 +176,6 @@ const ReadStories = () => {
   };
   const handleChangeChapter = (e) => {
     const id = e.target.value;
-    console.log(id);
     navigate(`/detail/${slug}/view/${id}`);
   };
 
@@ -221,8 +220,23 @@ const ReadStories = () => {
   };
 
   // Rest of your component code...
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const showModal = () => {
+    setIsModalOpen(true);
+  };
+  const handleOk = () => {
+    if (story) {
+      const userID = userId;
+      const userName = nameUser;
+      const nameErr = isErorr;
+      const storyInfo = story.item.name;
 
-  const active = true;
+      addStoryError(userID, userName, nameErr, storyInfo,accessToken);
+    }
+  };
+  const handleCancel = () => {
+    setIsModalOpen(false);
+  };
   return (
     <div className="bg-[#333333]">
       <NavBar />
@@ -270,9 +284,32 @@ const ReadStories = () => {
               <button className="px-2 py-1 rounded-md bg-primary-color">Server 3</button>
             </div> */}
           <div className="w-full flex justify-center mt-5 text-white">
-            <button className=" px-2 py-1 rounded-md bg-[#F0AD4E]">
+            <button
+              onClick={showModal}
+              className=" px-2 py-1 rounded-md bg-[#F0AD4E]"
+            >
               <FontAwesomeIcon icon={faCircleExclamation} /> Báo lỗi
             </button>
+            {user ? 
+            
+            <Modal
+              title="Nhập nội dung lỗi"
+              open={isModalOpen}
+              onOk={handleOk}
+              onCancel={handleCancel}
+            >
+              <div>
+                <Input
+                  placeholder="Nội dung lỗi"
+                  onChange={(e) => setIsErorr(e.target.value)}
+                />
+              </div>
+            </Modal>
+            : 
+              <Modal title="bạn cần đăng nhập để báo lỗi"  open={isModalOpen}  onCancel={handleCancel}>
+                <button><a href="/login" className="text-xl">Đăng nhập ngay</a></button>
+              </Modal>
+            }
           </div>
 
           <div className="bg-[#BDE5F8] w-[95%] m-auto mt-3 py-2 text-primary-color text-center">
@@ -281,7 +318,11 @@ const ReadStories = () => {
             hoặc phải (→) để chuyển chương
           </div>
 
-          <div className={`${isDarkModeEnable ? "text-white" : "text-slate-500"} flex justify-center items-center gap-2 mt-5 text-sm`}>
+          <div
+            className={`${
+              isDarkModeEnable ? "text-white" : "text-slate-500"
+            } flex justify-center items-center gap-2 mt-5 text-sm`}
+          >
             <button
               className="px-3 rounded-full font-semibold text-xl"
               onClick={handleChangeToPreviousChapter}
@@ -298,7 +339,6 @@ const ReadStories = () => {
               onChange={handleChangeChapter}
             >
               {story.item?.chapters[0].server_data?.map((chap) => {
-                // console.log(chap.chapter_api_data.split('/').pop())
                 return (
                   <option
                     className={`${
@@ -366,7 +406,6 @@ const ReadStories = () => {
               onChange={handleChangeChapter}
             >
               {story.item?.chapters[0].server_data?.map((chap) => {
-                // console.log(chap.chapter_api_data.split('/').pop())
 
                 return (
                   <option

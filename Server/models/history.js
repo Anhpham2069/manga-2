@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const ReadHistorySchema = new mongoose.Schema({
   userId: {
     type: String,
-    required: true,
   },
   slug: {
     type: String,
@@ -12,7 +11,6 @@ const ReadHistorySchema = new mongoose.Schema({
   chapter: {
     type: Number,
   },
-
   chapterId:{
     type: String,
   },

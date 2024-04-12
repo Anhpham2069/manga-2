@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 import { getStoriesByList } from "../../services/apiStoriesRequest";
 
 
-// const apiURL_Img = process.env.URL_IMG;
+const apiURL_Img = process.env.URL_IMG;
 const Slider = () => {
   const [storiesData, setStoriesData] = useState([]);
 
-  // console.log(apiURL_Img)
+  console.log(apiURL_Img)
   useEffect(() => {
     const fetchData = async () => {
       try {

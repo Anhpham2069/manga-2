@@ -8,6 +8,14 @@ const favoritesSlice = createSlice({
       isFetching: false,
       error: false,
     },
+    countFavorites: {
+      alLCountFavorites:[],
+      isFetching: false,
+      error: false,
+    },
+    countHistory: {
+      alLCountHistory: null,
+    }
   },
   reducers: {
     addFavoriteStart: (state) => {
@@ -59,6 +67,24 @@ const favoritesSlice = createSlice({
     getFavoritesFailed: (state) => {
       state.favorites.error = true;
     },
+
+
+    getCountFavoritesStart : (state) =>{
+      state.countFavorites.isFetching = true;
+    },
+    getCountFavoritesSuccess: (state,action) =>{
+      state.countFavorites.alLCountFavorites = action.payload
+      state.countFavorites.error = false
+    },
+    getCountFavoritesFail: (state)=>{
+      state.countFavorites.isFetching = false;
+      state.countFavorites.error = true
+    },
+
+    getCountHistorySuccess: (state,action) =>{
+      state.countHistory.alLCountHistory = action.payload
+    }
+
   },
 });
 export const {
@@ -71,6 +97,10 @@ export const {
   removeFavoriteStart,
   removeFavoriteSuccess,
   removeFavoriteFailed,
+  getCountFavoritesStart,
+  getCountFavoritesSuccess,
+  getCountFavoritesFail,
+  getCountHistorySuccess,
 } = favoritesSlice.actions;
 
 export default favoritesSlice.reducer;

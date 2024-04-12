@@ -12,6 +12,7 @@ import {
   ReadOutlined,
   RightOutlined,
   UserOutlined,
+  ExclamationCircleOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -21,27 +22,28 @@ const SideBarAdmin = ({ onItemClick }) => {
     {
       label: "Dashboard",
       icon: <DashboardOutlined />,
-      icon2: <RightOutlined />,
       key: 1,
     },
     {
       label: "Truyện",
       icon: <ProfileFilled />,
-      icon2: <RightOutlined />,
       key: 2,
     },
     {
       label: "Thể loại",
       icon: <ReadOutlined />,
-      icon2: <RightOutlined />,
       key: 3,
     },
     { label: "Người dùng", icon: <UserOutlined />, icon2: <RightOutlined />, key: 4 },
     {
       label: "Thông báo",
       icon: <NotificationFilled />,
-      icon2: <RightOutlined />,
       key: 5,
+    },
+    {
+      label: "Báo lỗi",
+      icon: <ExclamationCircleOutlined />,
+      key: 6,
     },
   ];
 

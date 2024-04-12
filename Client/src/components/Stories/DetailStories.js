@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
 import { vi } from "date-fns/locale";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
@@ -37,6 +38,7 @@ import {
   getAllFavorites,
   getAllHistory,
   getDetailStory,
+  getFavoritesByUser,
   getLastChapter,
   removeFavoritesStory,
 } from "../../services/apiStoriesRequest";
@@ -51,6 +53,12 @@ const DetailStories = () => {
   const favorites = useSelector(
     (state) => state.favorite.favorites?.allFavorites
   );
+  const conutFavorites = useSelector(
+    (state) => state.favorite.countFavorites?.alLCountFavorites
+  );
+  const countHistory = useSelector(
+    (state) => state.favorite.countHistory?.alLCountHistory
+  );
   const accessToken = user?.accessToken;
   const userId = user?._id;
 
@@ -59,11 +67,11 @@ const DetailStories = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [readHistory, setReadHistory] = useState();
-
+  console.log(conutFavorites);
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getLastChapter(slug)
+        const res = await getLastChapter(slug);
         if (res) {
           const chapterCurrent = res.chapter;
           setReadHistory(chapterCurrent);
@@ -74,12 +82,11 @@ const DetailStories = () => {
     };
     fetchData();
   }, [slug]);
- 
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getDetailStory(slug)
+        const res = await getDetailStory(slug);
         if (res.data) {
           setStory(res.data.data);
           saveToHistory(res.data.data);
@@ -90,17 +97,38 @@ const DetailStories = () => {
       }
     };
     fetchData();
-    getAllFavorites(accessToken, userId, dispatch);
+    getFavoritesByUser(accessToken, userId, dispatch);
   }, [slug]);
+  const [fa, setFA] = useState();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await getFavoritesByUser(accessToken, userId, dispatch);
+      if (res) {
+        setFA(res);
+      }
+    };
+    fetchData();
+  }, [slug]);
+  console.log(fa);
 
   const addToFavorites = (e) => {
     e.preventDefault();
-    const storyInfo = story;
-    addFavoritesStory(accessToken, slug, storyInfo, userId, dispatch);
-    setIsFavorite(true);
-    message.success("Đã thêm vào yêu thích");
+    console.log(slug);
+    if (slug) {
+      const id = uuidv4();
+      const storyInfo = {
+        _id: id,
+        slug: slug,
+        story: story,
+      };
+      addFavoritesStory(accessToken, storyInfo, userId, dispatch);
+      setIsFavorite(true);
+      message.success("Đã thêm vào yêu thích");
+    } else {
+      console.error("Slug không được rỗng!");
+    }
   };
-console.log(favorites)
 
   const checkIsFavorite = () => {
     const isFav = favorites?.some((fav) => fav.slug === slug);
@@ -181,9 +209,8 @@ console.log(favorites)
     }
   }, []);
 
-  
   const scrollToCurrentChapter = (e) => {
-    e.preventDefault()
+    e.preventDefault();
     if (currentChapterRef.current) {
       currentChapterRef.current.scrollIntoView({
         behavior: "smooth",
@@ -411,11 +438,11 @@ console.log(favorites)
 
                   <div className="pt-4 grid lg:grid-cols-4 gap-4 overflow-y-auto max-h-80">
                     {filteredChapters?.map((chap) => {
-                      
                       const currentChapterIndex = parseInt(readHistory);
-                      const isCurrentChapter = currentChapterIndex === parseInt(chap.chapter_name);
+                      const isCurrentChapter =
+                        currentChapterIndex === parseInt(chap.chapter_name);
                       console.log(currentChapterIndex);
-                      
+
                       return (
                         <Link
                           to={`view/${chap.chapter_api_data.split("/").pop()}`}
@@ -424,9 +451,13 @@ console.log(favorites)
                           <div
                             ref={isCurrentChapter ? currentChapterRef : null}
                             className={`${
-                              isDarkModeEnable ? "bg-[#252A34] " : "bg-[#EEF3FD]"
+                              isDarkModeEnable
+                                ? "bg-[#252A34] "
+                                : "bg-[#EEF3FD]"
                             } ${
-                              isCurrentChapter ? "bg-red-200 font-semibold text-black " : ""
+                              isCurrentChapter
+                                ? "bg-red-200 font-semibold text-black "
+                                : ""
                             } rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
                           >
                             <p className="w-full flex justify-between">
@@ -449,7 +480,7 @@ console.log(favorites)
             </div>
           </div>
         </div>
-        
+
         {/* recommend */}
 
         <div
@@ -484,21 +515,21 @@ console.log(favorites)
             ref={containerRef}
           >
             {favorites?.map((item) => {
-              const timeAgo = formatDistanceToNow(new Date(item.createdAt), {
-                addSuffix: true,
-                locale: vi,
-              });
-              const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
+              // const timeAgo = formatDistanceToNow(new Date(item.createdAt), {
+              //   addSuffix: true,
+              //   locale: vi,
+              // });
+              // const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
               // const newestChapter = layChapterMoiNhat(item);
               return (
                 <CardStories
                   key={item._id}
                   id={item._id}
-                  title={item.storyInfo.item.name}
-                  img={item.storyInfo?.seoOnPage.seoSchema.image}
+                  title={item.story.item.name}
+                  img={item.story?.seoOnPage.seoSchema.image}
                   slug={item.slug}
-                  time={trimmedTimeAgo}
-                  chapter={item.storyInfo.item.chapters[0].server_data?.length}
+                  // time={trimmedTimeAgo}
+                  chapter={item.story.item.chapters[0].server_data?.length}
                   nomarl
                 />
               );

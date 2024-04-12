@@ -4,6 +4,7 @@ import StoriesAdmin from '../page/stories';
 import UserManage from '../page/user';
 import GenresAdmin from '../page/genres/allCategory';
 import AdminNotificationForm from '../page/noti';
+import ErrComponent from '../page/erorr';
 // import { Profile, ChangePassWord, Gift  } from './Content'; // Nhớ import các component đã tạo
 
 const ContentAdmin = ({ selectedItem }) => {
@@ -18,6 +19,8 @@ const ContentAdmin = ({ selectedItem }) => {
       content = <GenresAdmin />
     } else if(selectedItem == 5){
       content = <AdminNotificationForm />
+    } else if(selectedItem == 6){
+      content = <ErrComponent />
     }
 
   return <div className="content">{content}</div>;

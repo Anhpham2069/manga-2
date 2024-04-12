@@ -3,12 +3,16 @@ import {
   addFavoriteFailed,
   addFavoriteStart,
   addFavoriteSuccess,
+  getCountFavoritesSuccess,
+  getCountFavoritesStart,
+  getCountHistorySuccess,
   getFavoritesFailed,
   getFavoritesStart,
   getFavoritesSuccess,
   removeFavoriteFailed,
   removeFavoriteStart,
   removeFavoriteSuccess,
+  getCountFavoritesFail,
 } from "../redux/slice/favoritesSlice";
 import {
   getstorysFailed,
@@ -41,30 +45,24 @@ export const getStoriesByList = async (slug) => {
 };
 export const getDetailStory = async (slug) => {
   try {
-    const res = await axios.get(
-      `${apiURLOTruyen}/truyen-tranh/${slug}`
-    );
+    const res = await axios.get(`${apiURLOTruyen}/truyen-tranh/${slug}`);
     return res;
   } catch (error) {
     console.error("Error fetching data:", error);
   }
 };
 
-
-
-
-
 export const addFavoritesStory = async (
   accessToken,
-  slug,
   storyInfo,
   userId,
   dispatch
 ) => {
+  console.log(storyInfo);
   dispatch(addFavoriteStart());
   try {
     const res = await axios.post(
-      `${apiURL}/api/favorites/add/${slug}`,
+      `${apiURL}/api/favorites/add`,
       { userId, storyInfo },
       {
         headers: { token: `Bearer ${accessToken}` },
@@ -98,10 +96,19 @@ export const removeFavoritesStory = async (
   }
 };
 
-
 //favorite
 
-export const getAllFavorites = async (accessToken, userId, dispatch) => {
+export const getNumberSaveStory = async (dispatch) => {
+  dispatch(getCountFavoritesStart());
+  try {
+    const res = await axios.get(`${apiURL}/api/favorites/get-all`);
+    dispatch(getCountFavoritesSuccess(res.data));
+    return res.data;
+  } catch (error) {
+    dispatch(getCountFavoritesFail(error));
+  }
+};
+export const getFavoritesByUser = async (accessToken, userId, dispatch) => {
   dispatch(getFavoritesStart());
   try {
     const res = await axios.get(
@@ -118,9 +125,10 @@ export const getAllFavorites = async (accessToken, userId, dispatch) => {
 
 //history
 
-export const getAllHistory = async () => {
+export const getAllHistory = async (dispatch) => {
   try {
     const res = await axios.get(`${apiURL}/api/history/get-all`);
+    dispatch(getCountHistorySuccess(res.data));
     return res.data;
   } catch (error) {
     console.log(error);
@@ -149,6 +157,42 @@ export const getStorybyCategory = async (cate) => {
   try {
     const res = await axios.get(`${apiURLOTruyen}/the-loai/${cate}`);
     if (res.data) return res.data.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+// error
+
+export const addStoryError = async (
+  userID,
+  userName,
+  nameErr,
+  storyInfo,
+  accessToken
+) => {
+  console.log(userID, userName, nameErr, storyInfo, accessToken);
+  try {
+    const res = await axios.post(
+      `${apiURL}/api/error/add`,
+      {
+        userID,
+        userName,
+        nameErr,
+        storyInfo,
+      },
+      {
+        headers: { token: `Bearer ${accessToken}` },
+      }
+    );
+  } catch (error) {
+    console.log(error);
+  }
+};
+export const getAllErorr = async () => {
+  try {
+    const res = await axios.get(`${apiURL}/api/error/get-all`);
+    return res.data;
   } catch (error) {
     console.log(error);
   }

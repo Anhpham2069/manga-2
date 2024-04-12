@@ -10,6 +10,7 @@ import { selectDarkMode } from "../components/layout/DarkModeSlice";
 import { DeleteFilled } from "@ant-design/icons";
 import {
   getAllFavorites,
+  getFavoritesByUser,
   removeFavoritesStory,
 } from "../services/apiStoriesRequest";
 import { message } from "antd";
@@ -25,17 +26,32 @@ const FavoriteStories = () => {
   const user = useSelector((state) => state?.auth.login.currentUser);
   const accessToken = user?.accessToken;
   const userId = user?._id;
-console.log(favorites)
+
+
+// const [fa,setFA] = useState()
+
+//   useEffect(()=>{
+//     const fetchData = async () =>{
+//       const res = await getFavoritesByUser(accessToken, userId);
+//       if(res){
+//         setFA(res)
+//       }
+//     }
+//     fetchData()
+//   },[])
+// console.log(fa)
   const handleDeleteFavorites = (slug) => {
     removeFavoritesStory(accessToken, slug, userId, dispatch);
     message.success("Bỏ yêu thích");
   };
+
+
   useEffect(() => {
     if (!user) {
       navigate("/login");
     }
     if (accessToken) {
-      getAllFavorites(accessToken, userId, dispatch);
+      getFavoritesByUser(accessToken, userId, dispatch);
     }
   }, [accessToken, userId]);
 
@@ -50,18 +66,18 @@ console.log(favorites)
         </h2>
         <div className="p-5 bg-white flex flex-col gap-2">
           {favorites?.map((item, index) => {
-            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), {
-              addSuffix: true,
-              locale: vi,
-            });
-            const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
+            // const timeAgo = formatDistanceToNow(new Date(item.story.updatedAt), {
+            //   addSuffix: true,
+            //   locale: vi,
+            // });
+            // const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
               <div className="flex w-full p-2 justify-between items-center relative border-b-2">
                 <div className="flex justify-center gap-5 h-full w-full">
                   <div className="relative h-full flex">
                     <Link to={`/detail/${item.slug}`}>
                       <img
-                        src={item.storyInfo?.seoOnPage.seoSchema.image}
+                        src={item.story?.seoOnPage.seoSchema.image}
                         alt="anh"
                         className="w-32 tablet:h-36 phone:h-20"
                       />
@@ -73,10 +89,10 @@ console.log(favorites)
                         isDarkModeEnable ? "text-[#8a8282]" : "text-black "
                       } phone:text-sm font-bold tablet:text-3xl`}
                     >
-                      {item.storyInfo.item.name}
+                      {item.story.item.name}
                     </p>
                     <div className="flex flex-wrap ">
-                      {item.storyInfo.breadCrumb?.map((cate, index) => {
+                      {item.story.breadCrumb?.map((cate, index) => {
                         return (
                           <Link to={`/category/${cate.slug}`}>
                             <div className="cursor-pointer">
@@ -92,7 +108,7 @@ console.log(favorites)
                       })}
                     </div>
                     <div>
-                      <p className="font-medium">Đã thêm <span className="text-gray-400 italic">: {trimmedTimeAgo}</span> </p>
+                      {/* <p className="font-medium">Đã thêm <span className="text-gray-400 italic">: {trimmedTimeAgo}</span> </p> */}
                     </div>
                   </div>
                   <button
