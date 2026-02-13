@@ -9,11 +9,11 @@ import ErrComponent from '../page/erorr';
 
 const ContentAdmin = ({ selectedItem }) => {
   let content;
-    if (selectedItem === 1) {
+    if (selectedItem == 1) {
         content = <Dasbroad />;
-    } else if (selectedItem === 2) {
+    } else if (selectedItem == 2) {
         content = <StoriesAdmin />;
-    } else if (selectedItem === 4) {
+    } else if (selectedItem == 4) {
         content = <UserManage />;
     } else if(selectedItem == 3){
       content = <GenresAdmin />

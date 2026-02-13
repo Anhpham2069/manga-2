@@ -1,183 +1,187 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../components/layout/DarkModeSlice";
-//cpn
 import CardStories from "../components/components/cardStories";
-// icon
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faTableCells } from "@fortawesome/free-solid-svg-icons";
-// layout
 import NavBar from "../components/layout/Navbar";
 import Footer from "../components/layout/footer";
-import { useEffect } from "react";
 import axios from "axios";
-import { Checkbox, Skeleton } from "antd";
+import { Skeleton } from "antd";
 import { useParams } from "react-router-dom";
-import { getAllCategory } from "../services/apiStoriesRequest";
 
 const Category = () => {
   const { slug: initialSlug } = useParams();
-
   const darkMode = useSelector(selectDarkMode);
-  // sate
-  const [loading, setLoading] = useState(false);
-  const [isCategory, setIsCategory] = useState([]);
-  const [genres, setGenres] = useState();
-  const [gridCols, setGridCols] = useState(6);
 
-  //fetch
+  const [loading, setLoading] = useState(false);
+  const [isCategory, setIsCategory] = useState(null);
+  const [genres, setGenres] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(initialSlug);
 
+  // 👇 chế độ hiển thị
+  const [viewMode, setViewMode] = useState("grid");
+
+  // ====== LOAD VIEW MODE SAVED ======
+  useEffect(() => {
+    const saved = localStorage.getItem("viewMode");
+    if (saved) setViewMode(saved);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("viewMode", viewMode);
+  }, [viewMode]);
+
+  // ====== LẤY THỂ LOẠI ======
   useEffect(() => {
     const fetchDataGenres = async () => {
-      const res = await getAllCategory();
-      if (res) {
-        setGenres(res);
+      try {
+        const res = await axios.get("https://otruyenapi.com/v1/api/the-loai");
+        setGenres(res.data.data.items);
+      } catch (err) {
+        console.error(err);
       }
     };
     fetchDataGenres();
   }, []);
 
+  // ====== LẤY TRUYỆN ======
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await getAllCategory(selectedCategory);
-        if (res.data) {
-          setIsCategory(res.data.data);
-        }
+        const res = await axios.get(
+          `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=1`
+        );
+        setIsCategory(res.data.data);
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
-    fetchData();
+    if (selectedCategory) fetchData();
   }, [selectedCategory]);
-  console.log(genres);
 
   const handleCategoryChange = (e, slug) => {
     e.preventDefault();
     setSelectedCategory(slug);
   };
-  const handleCategoryChangeMb = (event) => {
-    const newSlug = event.target.value;
-    setSelectedCategory(newSlug);
-  };
-
-  //   phan trang (pagination)
 
   return (
-    <div
-      className={`${
-        darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"
-      }`}
-    >
+    <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
       <NavBar />
-      <div className={`w-[95%]  mt-6 m-auto flex`}>
-        <div
-          className={`${
-            darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-          } laptop:col-span-1  p-5`}
-        >
-          <div className="py-2 p-2 h-12 flex items-center  justify-between text-xl font-semibold  border-b-[1px] border-[#F0F0F0] ">
-            <p>
-              <span className="font-bold text-xl">Thể loại:</span>{" "}
-              {isCategory?.titlePage}
-            </p>
-            <div className="flex gap-5 items-center">
-              <div className="flex gap-3 text-slate-500">
-                <FontAwesomeIcon
-                  size="xl"
-                  className="hover:text-primary-color cursor-pointer"
-                  icon={faList}
-                  onClick={() => setGridCols(1)}
-                />
-                <FontAwesomeIcon
-                  size="xl"
-                  className="hover:text-primary-color cursor-pointer"
-                  icon={faTableCells}
-                  onClick={() => setGridCols(6)}
-                />
-              </div>
-            </div>
-          </div>
-          <select
-            className="phone:block tablet:hidden w-full  bg-[#E6F4FF] rounded-xl p-2  my-5 text-primary-color"
-            value={selectedCategory}
-            onChange={handleCategoryChangeMb}
-          >
-            {genres?.items.map((item) => {
-              return (
-                <option
-                  key={item.slug}
-                  value={item.slug}
-                  className="bg-[#E6F4FF] text-primary-color"
-                >
-                  {item.name}
-                </option>
-              );
-            })}
-          </select>
-          <div className="flex w-full tablet:p-5">
-            <div
-              className={`${
-                darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-              } tablet:mt-10 tablet:p-5
-               tablet:w-[75%] phone:w-full grid  phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 laptop:grid-cols-${gridCols} desktop:grid-cols-4 lg:gap-5 place-items-center`}
-            >
-              {loading && <Skeleton avatar active />}
 
-              {isCategory.items?.map((item, index) => {
-                const timeupa = new Date(item.updatedAt);
-                const formattedDateTime = timeupa
-                  .toISOString()
-                  .replace("T", " ")
-                  .replace("Z", "");
-                const trimmedTimeAgo = formatDistanceToNow(
-                  new Date(item.updatedAt),
-                  { addSuffix: true, locale: vi }
-                ).replace(/^khoảng\s/, "");
-                return (
-                  <>
-                    <CardStories
-                      key={item._id}
-                      id={item._id}
-                      title={item.name}
-                      img={`https://img.otruyenapi.com${isCategory.seoOnPage.og_image?.[index]}`}
-                      slug={item.slug}
-                      time={trimmedTimeAgo}
-                      timeup={formattedDateTime}
-                      // chapter={item.chaptersLatest[0].chapter_name}
-                      nomarl
-                    />
-                  </>
-                );
-              })}
-            </div>
-            <div className="flex-1 border-2 p-2 phone:hidden  tablet:block h-fit">
-              <div className="border-b-2 font-semibold text-2xl text-primary-color">
-                <p>Thể loại</p>
-              </div>
-              <div className="grid phone:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-2 ">
-                {genres?.items.map((item) => {
-                  return (
-                    <div
-                      onClick={(e) => handleCategoryChange(e, item.slug)}
-                      className="flex items-center border-b-2 p-3 font-medium hover:text-[#AE4AD9] cursor-pointer"
-                    >
-                      {item.name}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="p-4 border-t-[1px] mt-10"></div>
+      <div className="w-[95%] mt-6 m-auto flex">
+        <div className="w-[95%] mt-6 m-auto flex gap-6">
+
+  {/* ================= MAIN CONTENT ================= */}
+  <div className="flex-1">
+    <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} p-5 rounded-xl`}>
+      
+      {/* HEADER */}
+      <div className="py-2 h-12 flex items-center justify-between text-xl font-semibold border-b">
+        <p>
+          <span className="font-bold">Thể loại:</span> {isCategory?.titlePage}
+        </p>
+
+        {/* Toggle view */}
+        <div className="flex gap-4 text-slate-500">
+          <FontAwesomeIcon
+            icon={faList}
+            size="xl"
+            onClick={() => setViewMode("list")}
+            className={`cursor-pointer hover:text-primary-color ${
+              viewMode === "list" && "text-primary-color"
+            }`}
+          />
+          <FontAwesomeIcon
+            icon={faTableCells}
+            size="xl"
+            onClick={() => setViewMode("grid")}
+            className={`cursor-pointer hover:text-primary-color ${
+              viewMode === "grid" && "text-primary-color"
+            }`}
+          />
         </div>
       </div>
+
+      {/* MOBILE SELECT GENRES */}
+      <select
+        className="phone:block tablet:hidden w-full bg-[#E6F4FF] rounded-xl p-2 my-5 text-primary-color"
+        value={selectedCategory}
+        onChange={(e) => setSelectedCategory(e.target.value)}
+      >
+        {genres?.map((item) => (
+          <option key={item.slug} value={item.slug}>
+            {item.name}
+          </option>
+        ))}
+      </select>
+
+      {/* LIST / GRID STORIES */}
+      <div
+        className={`grid gap-4 mt-6 ${
+          viewMode === "grid"
+            ? "phone:grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
+            : "grid-cols-1"
+        }`}
+      >
+        {loading && <Skeleton active />}
+
+        {isCategory?.items?.map((item) => {
+          const trimmedTimeAgo = formatDistanceToNow(
+            new Date(item.updatedAt),
+            { addSuffix: true, locale: vi }
+          ).replace(/^khoảng\s/, "");
+
+          return (
+            <CardStories
+              key={item._id}
+              slug={item.slug}
+              title={item.name}
+              img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+              time={trimmedTimeAgo}
+              chapter={item.chaptersLatest?.[0]?.chapter_name}
+              viewMode={viewMode}
+            />
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  {/* ================= SIDEBAR GENRES ================= */}
+  <div className="w-[260px] phone:hidden tablet:block">
+    <div className={`${darkMode ? "bg-bg_dark_light" : "bg-white"} p-5 rounded-xl`}>
+      <h3 className="text-xl font-semibold border-b pb-2 mb-4 text-primary-color">
+        Thể loại
+      </h3>
+
+      <div className="grid grid-cols-2 gap-2">
+        {genres?.map((item) => (
+          <div
+            key={item.slug}
+            onClick={(e) => handleCategoryChange(e, item.slug)}
+            className={`cursor-pointer text-sm p-2 rounded-lg transition ${
+              selectedCategory === item.slug
+                ? "bg-primary-color text-white"
+                : "hover:bg-slate-100 dark:hover:bg-slate-700"
+            }`}
+          >
+            {item.name}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+      </div>
+
       <Footer />
     </div>
   );

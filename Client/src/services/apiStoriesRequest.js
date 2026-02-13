@@ -23,6 +23,10 @@ const apiURL = process.env.REACT_APP_API_URL;
 const apiURLOTruyen = process.env.REACT_APP_API_URL_OTruyen;
 console.log(apiURLOTruyen);
 
+
+const authHeader = (token) => ({
+  headers: { token: `Bearer ${token}` },
+});
 // stories
 
 export const getAllStories = async (dispatch) => {
@@ -74,6 +78,11 @@ export const addFavoritesStory = async (
     dispatch(addFavoriteFailed());
   }
 };
+
+export const addFavoritesStoryAPI = (token, storyInfo, userId) =>
+  axios
+    .post(`${apiURL}/api/favorites/add`, { userId, storyInfo }, authHeader(token))
+    .then((res) => res.data);
 export const removeFavoritesStory = async (
   accessToken,
   slug,

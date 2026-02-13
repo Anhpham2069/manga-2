@@ -1,30 +1,49 @@
-import React from "react";
+import React, { useState } from "react";
 import NavBar from "../layout/Navbar";
 import Slider from "./slider";
 import ScheduleList from "./schedule-list";
-import TrendStoriesCpn from "./trendStories";
 import Featured from "./featured";
 import Footer from "../layout/footer";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
+import StoryFilterMenu from "./StoryFilterMenu";
 
 const HomeLayout = () => {
   const isDarkModeEnable = useSelector(selectDarkMode);
+
+  const [activeFilter, setActiveFilter] = useState("truyen-moi");
+  const [slug, setSlug] = useState("truyen-moi");
+
   return (
-    <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"} flex flex-col `}>
+    <div
+      className={`${
+        isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
+      } flex flex-col`}
+    >
       <NavBar />
-      <div className=" pt-3 lg:px-14 tablet:px-6 ">
+
+      <div className="pt-3 lg:px-14 tablet:px-6">
         <Slider />
       </div>
-      <div className="lg:pt-10 tablet:px-6 lg:px-14 ">
+
+      <div className="lg:pt-10 tablet:px-6 lg:px-14">
         <ScheduleList />
       </div>
-      {/* <div className="lg:pt-10 tablet:px-6 lg:px-14 ">
-        <TrendStoriesCpn />
-      </div> */}
-      {/* <div className='lg:px-14 tablet:px-6'> */}
-      <Featured dark={isDarkModeEnable} />
-      {/* </div> */}
+
+      {/* ===== FILTER MENU ===== */}
+      <div className={`${
+        isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
+      } lg:px-14 tablet:px-6 mt-8`}>
+        <StoryFilterMenu
+          activeFilter={activeFilter}
+          setActiveFilter={setActiveFilter}
+          setSlug={setSlug}
+        />
+      </div>
+
+      {/* ===== FEATURED ===== */}
+      <Featured dark={isDarkModeEnable} slug={slug} />
+
       <Footer />
     </div>
   );

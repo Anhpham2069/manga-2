@@ -32,6 +32,7 @@ const Featured = ({ dark }) => {
   const [selectedButton, setSelectedButton] = useState("homnay");
   const [readHistory, setReadHistory] = useState();
   const [saveStory,setSaveStory] = useState()
+  const [activeFilter, setActiveFilter] = useState("latest");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,7 +62,23 @@ const Featured = ({ dark }) => {
   }, []);
   console.log(readHistory)
 
+const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `https://otruyenapi.com/v1/api/danh-sach/${slug}`
+      );
 
+      if (res.data?.data) {
+        setStoriesData(res.data.data);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  console.log(saveStory)
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -98,47 +115,72 @@ const Featured = ({ dark }) => {
     setSelectedButton(button);
   };
   const renderList = () => {
-    const today = new Date();
-    const currentDate = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    ); // Lấy ngày hiện tại mà không có giờ, phút, giây
-    switch (selectedButton) {
-      case "homnay":
-        return readHistory?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.timestamp);
-          const today = new Date(); // Lấy ngày hôm nay
-          return (
-            storyDate.getFullYear() === today.getFullYear() &&
-            storyDate.getMonth() === today.getMonth() &&
-            storyDate.getDate() === today.getDate()
-          );
-        });
+  const today = new Date();
 
-      case "tuannay":
-        const lastWeek = new Date(currentDate);
-        lastWeek.setDate(lastWeek.getDate() - 7); // Ngày của tuần trước
-        return readHistory?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.timestamp);
-          return storyDate >= lastWeek && storyDate <= currentDate;
-        });
-      case "thangnay":
-        const firstDayOfMonth = new Date(
-          currentDate.getFullYear(),
-          currentDate.getMonth(),
-          1
-        ); // Ngày đầu tiên của tháng
-        return readHistory?.slice(0, 10).filter((story) => {
-          const storyDate = new Date(story.timestamp);
-          return storyDate >= firstDayOfMonth && storyDate <= currentDate;
-        });
-      default:
-        return [];
-    }
-  };
+  // Lấy ngày hiện tại không có giờ phút giây
+  const currentDate = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate()
+  );
 
-  
+  switch (selectedButton) {
+    case "homnay":
+      return readHistory?.slice(0, 10).filter((story) => {
+        const storyDate = new Date(story.timestamp);
+
+        return (
+          storyDate.getFullYear() === currentDate.getFullYear() &&
+          storyDate.getMonth() === currentDate.getMonth() &&
+          storyDate.getDate() === currentDate.getDate()
+        );
+      });
+
+    case "tuannay":
+      // 🔥 Lấy thứ hiện tại (0 = CN, 1 = T2, ...)
+      const dayOfWeek = currentDate.getDay();
+
+      // Nếu là Chủ Nhật (0) thì lùi 6 ngày, còn lại lùi (dayOfWeek - 1)
+      const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+
+      const firstDayOfWeek = new Date(currentDate);
+      firstDayOfWeek.setDate(currentDate.getDate() - diffToMonday);
+      firstDayOfWeek.setHours(0, 0, 0, 0);
+
+      return readHistory?.slice(0, 10).filter((story) => {
+        const storyDate = new Date(story.timestamp);
+        return storyDate >= firstDayOfWeek && storyDate <= currentDate;
+      });
+
+    case "thangnay":
+      // 🔥 Ngày 1 của tháng
+      const firstDayOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+
+      return readHistory?.slice(0, 10).filter((story) => {
+        const storyDate = new Date(story.timestamp);
+        return storyDate >= firstDayOfMonth && storyDate <= currentDate;
+      });
+
+    default:
+      return [];
+  }
+};
+
+
+  const filterOptions = [
+  { label: "Latest Updated", value: "truyen-moi", color: "bg-green-200 text-green-800" },
+  { label: "🔥 Most Viewed", value: "xem-nhieu", color: "bg-purple-200 text-purple-800" },
+  { label: "✅ Completed", value: "hoan-thanh", color: "bg-blue-200 text-blue-800" },
+  { label: "New Release", value: "sap-ra-mat", color: "bg-yellow-200 text-yellow-800" },
+  { label: "Action", value: "action", color: "bg-gray-200 text-gray-800" },
+  { label: "Comedy", value: "comedy", color: "bg-gray-200 text-gray-800" },
+  { label: "Drama", value: "drama", color: "bg-gray-200 text-gray-800" },
+];
+
   return (
     <div className="phone:flex-row lg:flex tablet:mx-6 lg:mx-14  mt-4 ">
       <Helmet>
@@ -148,6 +190,7 @@ const Featured = ({ dark }) => {
           content="Khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s. Đọc những câu chuyện mới, tìm những câu chuyện đã hoàn thành và khám phá những bản phát hành sắp tới."
         />
       </Helmet>
+      
       <div
         className={`${
           isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
@@ -197,10 +240,10 @@ const Featured = ({ dark }) => {
                   key={item._id}
                   id={item._id}
                   title={item.name}
-                  img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
+                   img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                   slug={item.slug}
                   time={trimmedTimeAgo}
-                  chapter={item.chaptersLatest[0].chapter_name}
+                  chapter={item.chaptersLatest?.[0]?.chapter_name}
                   nomarl
                 />
               </>
@@ -357,7 +400,7 @@ const Featured = ({ dark }) => {
                       <p className="text-lg cursor-pointer">{item.name}</p>
                     </Link>
                     <div className="flex text-base italic">
-                      <p>Chapter {item.chaptersLatest[0].chapter_name}</p>
+                      <p>Chapter {item.chaptersLatest?.[0]?.chapter_name || ""}</p>
                     </div>
                   </div>
                   <div className="flex justify-end text-sm">

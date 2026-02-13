@@ -46,7 +46,7 @@ const ScheduleList = () => {
           </p>
         </div>
         <div className="pl-4">
-          {storiesData.items?.slice(0, 10).map((item) => {
+          {storiesData.items?.slice(1, 10).map((item) => {
             const dateObject = new Date(item.updatedAt);
 
             const hour = dateObject.getHours();
@@ -61,14 +61,14 @@ const ScheduleList = () => {
                   [{hour}:{minute}]
                 </p>
                 <div className="flex">
-                  <Link to={`detail/${item.slug}/view/${item.chaptersLatest[0].chapter_api_data?.split("/").pop()}`}>
+                 <Link to={`detail/${item.slug}/view/${item.chaptersLatest?.[0]?.chapter_name || ""?.split("/").pop()}`}>
                     <p
                       className={`${
                         isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"
                       } font-semibold pl-1`}
                     >
-                      {item.chaptersLatest[0].filename
-                        .slice(0, item.chaptersLatest[0].filename.indexOf("["))
+                      {item.chaptersLatest?.[0]?.filename || ""
+                        .slice(0, item.chaptersLatest?.[0]?.filename || "".indexOf("["))
                         .trim()}
                     </p>
                   </Link>
@@ -79,8 +79,8 @@ const ScheduleList = () => {
                   >
                     {" "}
                     -{" "}
-                    {item.chaptersLatest[0].filename
-                      .slice(item.chaptersLatest[0].filename.indexOf("["))
+                    {item.chaptersLatest?.[0]?.filename
+                      .slice(item.chaptersLatest?.[0]?.filename.indexOf("["))
                       .trim()}
                   </p>
                 </div>

@@ -6,9 +6,7 @@ const favoritesController = {
     try {
       const { userId, storyInfo } = req.body;
       // Tạo một đối tượng Date hiện tại
-      const currentTime = new Date().toLocaleString("en-US", {
-        timeZone: "Asia/Ho_Chi_Minh",
-      });
+      const currentTime = new Date();
 
       // Kiểm tra xem có bản ghi nào có userId tương tự không
       const existingFavorite = await Favorite.findOne({ userId });
@@ -33,11 +31,12 @@ const favoritesController = {
         return res.status(201).json({ message: "Tạo bản ghi mới thành công!" });
       }
     } catch (error) {
-      console.error(error);
-      return res
-        .status(500)
-        .json({ message: "Đã xảy ra lỗi khi thêm yêu thích!" });
-    }
+        console.error(error);
+        if (!res.headersSent) {
+          return res.status(500).json({ message: "Đã xảy ra lỗi khi thêm yêu thích!" });
+        }
+}
+
   },
 
   deleteFavorites: async (req, res) => {

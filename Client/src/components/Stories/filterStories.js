@@ -206,14 +206,12 @@ const FilterStories = () => {
                   <div className="flex flex-col justify-center items-center gap-2">
                   <CardStories
                       key={item._id}
-                      id={item._id}
-                      title={item.name}
-                      img={`https://img.otruyenapi.com${isCategory.seoOnPage.og_image[index]}`}
                       slug={item.slug}
+                      title={item.name}
+                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                       time={trimmedTimeAgo}
-                      timeup={formattedDateTime}
-                      // chapter={item.chaptersLatest[0].chapter_name}
-                      nomarl
+                      chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      // viewMode={viewMode}
                     />
                   </div>
                 </>

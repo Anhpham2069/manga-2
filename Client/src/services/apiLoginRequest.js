@@ -12,15 +12,25 @@ import {
 } from "../redux/slice/authSlice";
 
 export const loginUser = async (user, dispatch, navigate) => {
-    dispatch(loginStart());
+  dispatch(loginStart());
+
   try {
-    const res = await axios.post("http://localhost:8000/api/auth/login", user);
+    const res = await axios.post(
+      "http://localhost:8000/api/auth/login",
+      user
+    );
+
     dispatch(loginSuccess(res.data));
     navigate("/");
+
+    return res.data; // optional
   } catch (error) {
     dispatch(loginFail());
+
+    throw error; // 🔥 QUAN TRỌNG
   }
 };
+
 
 export const registerUser = async (user, dispatch, navigate) => {
     dispatch(registerStart());

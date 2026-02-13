@@ -9,7 +9,7 @@ const Footer = () => {
             <a>Chính sách bảo mật</a>
         </div>
         <div className='flex-col w-full m-auto  items-center phone:px-10 tablet:px-32 lg:px-80'>
-            <img className='m-auto' src='https://doctruyen5s.top/uploads/images/logo.png' alt='anh'></img>
+            {/* <img className='m-auto' src='https://doctruyen5s.top/uploads/images/logo.png' alt='anh'></img> */}
             <p>Mọi thông tin và hình ảnh trên website đều được sưu tầm trên Internet.
                  Chúng tôi không sở hữu hay chịu trách nhiệm bất kỳ thông tin nào trên web này. 
                  Nếu làm ảnh hưởng đến cá nhân

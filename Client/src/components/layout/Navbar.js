@@ -192,7 +192,16 @@ const handleLogout = () =>{
           </div>
           <div className="m-auto">
             <NavLink to={"/"}>
-              <img src="https://manga.io.vn/uploads/images/logo.png"></img>
+    <div class="flex items-center">
+  <div class="px-6 py-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg">
+    <h1 class="text-2xl font-extrabold text-white tracking-wide">
+      Truyện <span class="text-yellow-300">3s</span>
+    </h1>
+  </div>
+</div>
+
+
+              {/* <img src="https://www.vectorstock.com/royalty-free-vector/anime-high-quality-logo-ideal-for-t-shirt-vector-51421942"></img> */}
             </NavLink>
           </div>
           <div className="">

@@ -1,22 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Avatar, List } from "antd";
+import { Avatar, List, Tag, Button } from "antd";
 import { getAllErorr } from "../../../services/apiStoriesRequest";
-const data = [
-  {
-    title: "Ant Design Title 1",
-  },
-  {
-    title: "Ant Design Title 2",
-  },
-  {
-    title: "Ant Design Title 3",
-  },
-  {
-    title: "Ant Design Title 4",
-  },
-];
+
 const ErrComponent = () => {
-  const [isErorr, setIsErorr] = useState();
+  const [isErorr, setIsErorr] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -29,18 +16,36 @@ const ErrComponent = () => {
     };
     fetchData();
   }, []);
-  console.log(isErorr);
+
+  // 👉 cập nhật trạng thái đã sửa
+  const handleDone = (id) => {
+    const updated = isErorr.map((item) =>
+      item._id === id ? { ...item, status: "done" } : item
+    );
+    setIsErorr(updated);
+
+    // Nếu có API update thì gọi thêm ở đây
+    // await updateErrorStatus(id, "done")
+  };
+
   return (
     <div className="bg-white p-5 shadow-md">
-      {" "}
       <List
         itemLayout="horizontal"
         dataSource={isErorr}
         renderItem={(item, index) => (
           <List.Item
             actions={[
-              <a key="list-loadmore-edit">edit</a>,
-              <a key="list-loadmore-more">Xóa</a>,
+              item.status !== "done" && (
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => handleDone(item._id)}
+                >
+                  Đã check & sửa
+                </Button>
+              ),
+              <a key="delete">Xóa</a>,
             ]}
           >
             <List.Item.Meta
@@ -50,13 +55,15 @@ const ErrComponent = () => {
                   <Avatar
                     src={`https://api.dicebear.com/7.x/miniavs/svg?seed=${index}`}
                   />
-                  <p className=" font-light text-sm">{item.userName}</p>
+                  <p className="font-light text-sm">{item.userName}</p>
                 </div>
               }
               title={
                 <>
-                  {" "}
-                  <a href="https://ant.design">Tên truyện: {item.storyInfo}</a>
+                  Tên truyện: {item.storyInfo}{" "}
+                  {item.status === "done" && (
+                    <Tag color="green">Đã check & sửa</Tag>
+                  )}
                 </>
               }
               description={

@@ -105,7 +105,7 @@ console.log(history)
                     })}
                   </div>
                   <div>
-                    <p className="font-medium">Đã đọc <span className="text-gray-400 italic">: {trimmedTimeAgo}</span>  </p>
+                    <p className="font-medium">Đã đọc <span className="text-gray-400 italic"></span>  </p>
                     <Link to={`/detail/${item.slug}/view/${item.currentChapterId}`}>
                       <p className="font-medium text-gray-400 italic"> Đọc tiếp chapter:  <span cla>{item.currentChapter}</span> </p>
                     </Link>

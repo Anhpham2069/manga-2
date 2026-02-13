@@ -43,7 +43,9 @@ const notificationRouter = require('./routes/noti');
 const favoriteRouter = require('./routes/favorites')
 const readHistoryRouter = require('./routes/history');
 const storyErrorRouter = require('./routes/storyErorr');
+const contactRoute = require("./routes/contact");
 
+app.use("/api/contact", contactRoute);
 app.use('/api/story', storiesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', usersRouter);

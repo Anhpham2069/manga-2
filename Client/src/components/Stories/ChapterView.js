@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Modal, Checkbox, Input, Space } from "antd";
+import { Modal, Checkbox, Input, Space,message  } from "antd";
 import axios from "axios";
+import { v4 as uuidv4 } from "uuid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleExclamation,
@@ -13,20 +14,22 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
-
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 
 import "./style.css";
 import {
   addStoryError,
   getDetailStory,
+  addFavoritesStoryAPI,
+  removeFavoritesStory,
 } from "../../services/apiStoriesRequest";
 
 const ReadStories = () => {
   const [chapter, setChapter] = useState();
 
   const { id, slug } = useParams();
+  const dispatch = useDispatch();
   // /658c4c2be120ddf21990fb70
   const isDarkModeEnable = useSelector(selectDarkMode);
   const [story, setStory] = useState([]);
@@ -34,17 +37,23 @@ const ReadStories = () => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [isErorr, setIsErorr] = useState("");
+   const [isFavorite, setIsFavorite] = useState(false);
+    const [loadingFav, setLoadingFav] = useState(false);
   // const [chapters,setChapters] = useState([])
   const user = useSelector((state) => state?.auth.login.currentUser);
+    const favorites = useSelector(
+      (state) => state.favorite.favorites?.allFavorites,
+    );
   const userId = user?._id;
   const nameUser = user?.username;
   const accessToken = user?.accessToken
-
+console.log(story)
   useEffect(() => {
     const fetchData = async () => {
       const res = await getDetailStory(slug);
       if (res.data) {
         setStory(res.data.data);
+        checkIsFavorite();
       }
     };
     fetchData();
@@ -84,6 +93,53 @@ const ReadStories = () => {
       saveHistory();
     }
   }, [chapter]);
+  const addToFavorites = async (e) => {
+      e.preventDefault();
+  
+      if (!user) {
+        message.warning("Vui lòng đăng nhập để theo dõi truyện");
+        return;
+      }
+  
+      if (!slug) {
+        console.error("Slug không được rỗng!");
+        return;
+      }
+  
+      if (loadingFav) return;
+  
+      setLoadingFav(true);
+  
+      try {
+        const storyInfo = {
+          _id: uuidv4(),
+          slug,
+          story,
+        };
+  
+        await addFavoritesStoryAPI(accessToken, storyInfo, userId);
+  
+        setIsFavorite(true);
+        message.success("Đã thêm vào yêu thích");
+      } catch (err) {
+        console.error(err);
+        message.error("Thêm thất bại");
+      } finally {
+        setLoadingFav(false);
+      }
+    };
+
+    const checkIsFavorite = () => {
+    const isFav = favorites?.some((fav) => fav.slug === slug);
+    setIsFavorite(isFav);
+  };
+  const removeFromFavorites = (e) => {
+    e.preventDefault();
+    removeFavoritesStory(accessToken, slug, userId, dispatch);
+    setIsFavorite(false);
+    message.warning("đã bỏ theo dõi ");
+  };
+
 
   //scoll to top
 
@@ -126,7 +182,7 @@ const ReadStories = () => {
 
   const getNextChapterId = (currentChapterId, chapters) => {
     console.log(currentChapterId);
-    const currentIndex = story.item?.chapters[0].server_data?.findIndex(
+    const currentIndex = story.item?.chapters[0]?.server_data?.findIndex(
       (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
     );
     if (currentIndex === -1) {
@@ -142,7 +198,7 @@ const ReadStories = () => {
     }
   };
   const getPreviousChapterId = (currentChapterId, chapters) => {
-    const currentIndex = story.item?.chapters[0].server_data?.findIndex(
+    const currentIndex = story.item?.chapters[0]?.server_data?.findIndex(
       (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
     );
     if (currentIndex === -1) {
@@ -159,7 +215,7 @@ const ReadStories = () => {
   const handleChangeToPreviousChapter = () => {
     const previousChapterId = getPreviousChapterId(
       id,
-      story.item?.chapters[0].server_data
+      story.item?.chapters[0]?.server_data
     );
     if (previousChapterId) {
       navigate(`/detail/${slug}/view/${previousChapterId}`);
@@ -168,7 +224,7 @@ const ReadStories = () => {
   const handleChangeToNextChapter = () => {
     const nextChapterId = getNextChapterId(
       id,
-      story.item?.chapters[0].server_data
+      story.item?.chapters[0]?.server_data
     );
     if (nextChapterId) {
       navigate(`/detail/${slug}/view/${nextChapterId}`);
@@ -224,16 +280,29 @@ const ReadStories = () => {
   const showModal = () => {
     setIsModalOpen(true);
   };
-  const handleOk = () => {
-    if (story) {
-      const userID = userId;
-      const userName = nameUser;
-      const nameErr = isErorr;
-      const storyInfo = story.item.name;
+  const handleOk = async () => {
+  if (!isErorr.trim()) {
+    message.warning("Vui lòng nhập nội dung lỗi!");
+    return;
+  }
 
-      addStoryError(userID, userName, nameErr, storyInfo,accessToken);
-    }
-  };
+  try {
+    const userID = userId;
+    const userName = nameUser;
+    const nameErr = isErorr;
+    const storyInfo = story?.item?.name;
+
+    await addStoryError(userID, userName, nameErr, storyInfo, accessToken);
+
+    message.success("Đã gửi lỗi thành công!");
+
+    setIsModalOpen(false);   // đóng modal
+    setIsErorr("");          // reset input
+  } catch (error) {
+    message.error("Gửi lỗi thất bại!");
+  }
+};
+
   const handleCancel = () => {
     setIsModalOpen(false);
   };
@@ -275,9 +344,9 @@ const ReadStories = () => {
               - Chapter {chapter?.item.chapter_name}
             </span>
           </div>
-          <div className="text-[#999999]  text-center">
+          {/* <div className="text-[#999999]  text-center">
             Nếu không xem được truyện vui lòng đổi "SERVER ẢNH" bên dưới
-          </div>
+          </div> */}
           {/* <div className='text-white w-full flex justify-center gap-2 mt-3'>
               <button className={`${active ? "bg-[#E59FF3]": " bg-primary-color"} px-2 py-1 rounded-md`}>Server 1</button>
               <button className="px-2 py-1 rounded-md bg-primary-color">Server 2</button>
@@ -297,6 +366,9 @@ const ReadStories = () => {
               open={isModalOpen}
               onOk={handleOk}
               onCancel={handleCancel}
+              okButtonProps={{
+    className: "bg-blue-500 text-white hover:bg-blue-600"
+  }}
             >
               <div>
                 <Input
@@ -327,7 +399,7 @@ const ReadStories = () => {
               className="px-3 rounded-full font-semibold text-xl"
               onClick={handleChangeToPreviousChapter}
               disabled={
-                !getPreviousChapterId(id, story.item?.chapters[0].server_data)
+                !getPreviousChapterId(id, story?.item?.chapters[0]?.server_data)
               }
             >
               <FontAwesomeIcon icon={faArrowRight} rotation={180} size="sm" />
@@ -338,7 +410,7 @@ const ReadStories = () => {
               value={chapter?.item._id}
               onChange={handleChangeChapter}
             >
-              {story.item?.chapters[0].server_data?.map((chap) => {
+              {story.item?.chapters[0]?.server_data?.map((chap) => {
                 return (
                   <option
                     className={`${
@@ -356,7 +428,7 @@ const ReadStories = () => {
               className="px-3 rounded-full font-semibold text-xl"
               onClick={handleChangeToNextChapter}
               disabled={
-                !getNextChapterId(id, story.item?.chapters[0].server_data)
+                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
               }
             >
               <FontAwesomeIcon icon={faArrowRight} size="sm" />
@@ -389,13 +461,13 @@ const ReadStories = () => {
           <div className="flex justify-center gap-2">
             <button
               className={`${
-                !getPreviousChapterId(id, story.item?.chapters[0].server_data)
+                !getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
                   ? "bg-[#B3C8F8] cursor-not-allowed"
                   : "bg-primary-color"
               } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToPreviousChapter}
               disabled={
-                !getPreviousChapterId(id, story.item?.chapters[0].server_data)
+                !getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
               }
             >
               <FontAwesomeIcon icon={faArrowRight} rotation={180} />
@@ -405,7 +477,7 @@ const ReadStories = () => {
               value={chapter?.item._id}
               onChange={handleChangeChapter}
             >
-              {story.item?.chapters[0].server_data?.map((chap) => {
+              {story.item?.chapters[0]?.server_data?.map((chap) => {
 
                 return (
                   <option
@@ -422,23 +494,53 @@ const ReadStories = () => {
             </select>
             <button
               className={`${
-                !getNextChapterId(id, story.item?.chapters[0].server_data)
+                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
                   ? "bg-[#B3C8F8] cursor-not-allowed"
                   : "bg-primary-color"
               } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToNextChapter}
               disabled={
-                !getNextChapterId(id, story.item?.chapters[0].server_data)
+                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
               }
             >
               <FontAwesomeIcon icon={faArrowRight} />
             </button>
           </div>
-          <button className="py-1 px-4 bg-[#ff3860] text-white rounded-md">
-            {" "}
-            <FontAwesomeIcon icon={faHeart} />{" "}
-            <span className="phone:hidden lg:inline">Theo dõi</span>
-          </button>
+          {isFavorite ? (
+  <button
+    onClick={removeFromFavorites}
+    className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
+      ${
+        isDarkModeEnable
+          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+          : "bg-[#701f2f] hover:bg-[#FF7A95] text-white"
+      }`}
+  >
+    <FontAwesomeIcon icon={faHeart} />
+    <span className="phone:hidden lg:inline">
+      Bỏ theo dõi
+    </span>
+  </button>
+) : (
+  <button
+    disabled={!user}
+    onClick={addToFavorites}
+    className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
+      ${
+        !user
+          ? "bg-gray-400 cursor-not-allowed text-white"
+          : isDarkModeEnable
+            ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+            : "bg-[#FF3860] hover:bg-[#FF7A95] text-white"
+      }`}
+  >
+    <FontAwesomeIcon icon={faHeart} />
+    <span className="phone:hidden lg:inline">
+      Theo dõi
+    </span>
+  </button>
+)}
+
         </div>
       </div>
       <div className="fixed bottom-16 right-10">
