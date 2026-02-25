@@ -12,7 +12,16 @@ const favoritesController = {
       const existingFavorite = await Favorite.findOne({ userId });
 
       if (existingFavorite) {
-        // Nếu có, thêm storyInfo vào mảng storyInfo của bản ghi đó và cập nhật thời gian
+        // Kiểm tra trùng lặp slug
+        const isDuplicate = existingFavorite.storyInfo.some(
+          (s) => s.slug === storyInfo.slug
+        );
+        if (isDuplicate) {
+          return res
+            .status(400)
+            .json({ message: "Truyện đã có trong danh sách yêu thích!" });
+        }
+
         existingFavorite.storyInfo.push({
           ...storyInfo,
           createdAt: currentTime,
@@ -31,11 +40,11 @@ const favoritesController = {
         return res.status(201).json({ message: "Tạo bản ghi mới thành công!" });
       }
     } catch (error) {
-        console.error(error);
-        if (!res.headersSent) {
-          return res.status(500).json({ message: "Đã xảy ra lỗi khi thêm yêu thích!" });
-        }
-}
+      console.error(error);
+      if (!res.headersSent) {
+        return res.status(500).json({ message: "Đã xảy ra lỗi khi thêm yêu thích!" });
+      }
+    }
 
   },
 

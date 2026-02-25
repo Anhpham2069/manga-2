@@ -42,6 +42,8 @@ import {
   getFavoritesByUser,
   getLastChapter,
   removeFavoritesStory,
+  addComment,
+  getCommentsByStory,
 } from "../../services/apiStoriesRequest";
 
 const DetailStories = () => {
@@ -74,8 +76,27 @@ const DetailStories = () => {
   const [readHistory, setReadHistory] = useState();
   const [loadingFav, setLoadingFav] = useState(false);
   const [comment, setComment] = useState("");
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
 
-  const handleSubmitComment = () => {
+  // Fetch comments
+  const fetchComments = async () => {
+    setLoadingComments(true);
+    try {
+      const data = await getCommentsByStory(slug);
+      setComments(data || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComments();
+  }, [slug]);
+
+  const handleSubmitComment = async () => {
     if (!user) {
       message.warning("Bạn cần đăng nhập để bình luận");
       return;
@@ -86,14 +107,16 @@ const DetailStories = () => {
       return;
     }
 
-    // gọi API gửi comment ở đây
-    console.log("Comment:", comment);
-
-    message.success("Đã gửi bình luận");
-    setComment("");
+    try {
+      await addComment(accessToken, slug, userId, user.username, comment);
+      message.success("Đã gửi bình luận");
+      setComment("");
+      fetchComments();
+    } catch (error) {
+      message.error("Gửi bình luận thất bại");
+    }
   };
 
-  console.log(story);
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -115,8 +138,6 @@ const DetailStories = () => {
         const res = await getDetailStory(slug);
         if (res.data) {
           setStory(res.data.data);
-          saveToHistory(res.data.data);
-          checkIsFavorite();
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -126,17 +147,13 @@ const DetailStories = () => {
     getFavoritesByUser(accessToken, userId, dispatch);
   }, [slug]);
 
-  const [fa, setFA] = useState();
-
+  // Check isFavorite khi favorites thay đổi
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await getFavoritesByUser(accessToken, userId, dispatch);
-      if (res) {
-        setFA(res);
-      }
-    };
-    fetchData();
-  }, [slug]);
+    if (favorites && favorites.length > 0) {
+      const isFav = favorites.some((fav) => fav.slug === slug);
+      setIsFavorite(isFav);
+    }
+  }, [favorites, slug]);
   const addToFavorites = async (e) => {
     e.preventDefault();
 
@@ -191,10 +208,7 @@ const DetailStories = () => {
   //   }
   // };
 
-  const checkIsFavorite = () => {
-    const isFav = favorites?.some((fav) => fav.slug === slug);
-    setIsFavorite(isFav);
-  };
+
 
   const removeFromFavorites = (e) => {
     e.preventDefault();
@@ -232,34 +246,6 @@ const DetailStories = () => {
   const chapterLength = story.item?.chapters[0]?.server_data?.length || 0;
   const hasChapters = chapterLength > 0;
 
-  const saveToHistory = (storyData) => {
-    const timestamp = new Date().getTime();
-    const currentSlug = storyData?.item?.slug;
-    const expirationDate = new Date();
-    const existingHistory = localStorage.getItem("history");
-    let history = existingHistory ? JSON.parse(existingHistory) : [];
-    const existingIndex = history.findIndex(
-      (item) => item.slug === currentSlug,
-    );
-    if (existingIndex !== -1) {
-      // If the same story exists in history, replace it with new data
-      history[existingIndex] = {
-        slug: currentSlug,
-        timestamp,
-        expirationDate,
-        story: storyData,
-      };
-    } else {
-      // Otherwise, add new data to history
-      history.push({
-        slug: currentSlug,
-        timestamp,
-        expirationDate,
-        story: storyData,
-      });
-    }
-    localStorage.setItem("history", JSON.stringify(history));
-  };
   const currentChapterRef = useRef(null);
 
   useEffect(() => {
@@ -285,7 +271,7 @@ const DetailStories = () => {
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
       <NavBar />
       <div className="min-h-screen">
-        
+
 
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
           {/* header */}
@@ -321,11 +307,10 @@ const DetailStories = () => {
                     .pop()}`}
                 >
                   <button
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-[#3963C0] text-text_darkMode hover:bg-[#2f4fa0]"
-                        : "bg-primary-color text-white hover:opacity-90"
-                    } mt-5 w-full py-3 rounded-lg uppercase font-semibold transition duration-200`}
+                    className={`${isDarkModeEnable
+                      ? "bg-[#3963C0] text-text_darkMode hover:bg-[#2f4fa0]"
+                      : "bg-primary-color text-white hover:opacity-90"
+                      } mt-5 w-full py-3 rounded-lg uppercase font-semibold transition duration-200`}
                   >
                     Đọc ngay
                   </button>
@@ -408,11 +393,10 @@ const DetailStories = () => {
             </div>
 
             <div
-              className={`${
-                isDarkModeEnable
-                  ? "bg-bg_dark_light text-text_darkMode"
-                  : "bg-white"
-              } h-fit phone:mt-4 laptop:mt-0  col-span-4  p-7`}
+              className={`${isDarkModeEnable
+                ? "bg-bg_dark_light text-text_darkMode"
+                : "bg-white"
+                } h-fit phone:mt-4 laptop:mt-0  col-span-4  p-7`}
             >
               <div>
                 <header>
@@ -426,9 +410,8 @@ const DetailStories = () => {
                     return (
                       <NavLink to={`/category/${cate.slug}`} key={cate.id}>
                         <p
-                          className={`${
-                            isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                          } border-[1px] rounded-md
+                          className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
+                            } border-[1px] rounded-md
                              mr-4 text-primary-color text-sm border-primary-color p-1  hover:bg-primary-color hover:text-white`}
                         >
                           {cate.name}
@@ -445,16 +428,15 @@ const DetailStories = () => {
                   to={
                     hasChapters
                       ? `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data
-                          ?.split("/")
-                          .pop()}`
+                        ?.split("/")
+                        .pop()}`
                       : "#"
                   }
                   className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md font-medium
-                  ${
-                    hasChapters
+                  ${hasChapters
                       ? "bg-[#8BC34A] hover:bg-[#B2D786]"
                       : "bg-gray-400 cursor-not-allowed"
-                  }
+                    }
                 `}
                 >
                   <FontAwesomeIcon icon={faBook} />
@@ -462,23 +444,22 @@ const DetailStories = () => {
                 </Link>
 
                 {/* CHƯƠNG MỚI NHẤT */}
-               <Link
+                <Link
                   to={
                     hasChapters
                       ? `view/${story.item?.chapters[0]?.server_data[
-                          chapterLength - 1
-                        ]?.chapter_api_data
-                          ?.split("/")
-                          .pop()}`
+                        chapterLength - 1
+                      ]?.chapter_api_data
+                        ?.split("/")
+                        .pop()}`
                       : "#"
                   }
-                  className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${
-                    hasChapters
-                      ? isDarkModeEnable
-                        ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
-                        : "bg-[#BD10E0] hover:bg-[#D360EA]"
-                      : "bg-gray-400 cursor-not-allowed text-white"
-                  }`}
+                  className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${hasChapters
+                    ? isDarkModeEnable
+                      ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
+                      : "bg-[#BD10E0] hover:bg-[#D360EA]"
+                    : "bg-gray-400 cursor-not-allowed text-white"
+                    }`}
                 >
                   <FontAwesomeIcon icon={faBookTanakh} />
                   {hasChapters ? "Chương mới nhất" : "Chưa có chương"}
@@ -489,11 +470,10 @@ const DetailStories = () => {
                 {isFavorite ? (
                   <button
                     onClick={removeFromFavorites}
-                    className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${
-                      isDarkModeEnable
-                        ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                        : "bg-[#701f2f] hover:bg-[#FF7A95]"
-                    }`}
+                    className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${isDarkModeEnable
+                      ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                      : "bg-[#701f2f] hover:bg-[#FF7A95]"
+                      }`}
                   >
                     <FontAwesomeIcon icon={faHeart} />
                     Bỏ Theo Dõi
@@ -503,14 +483,13 @@ const DetailStories = () => {
                     disabled={!user}
                     onClick={addToFavorites}
                     className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium
-                      ${
-                        !user
-                          ? "bg-gray-400 cursor-not-allowed text-white"
-                          : isDarkModeEnable
-                            ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                            : "bg-[#FF3860] hover:bg-[#FF7A95]"
+                      ${!user
+                        ? "bg-gray-400 cursor-not-allowed text-white"
+                        : isDarkModeEnable
+                          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                          : "bg-[#FF3860] hover:bg-[#FF7A95]"
                       }`}
-                                      >
+                  >
                     <FontAwesomeIcon icon={faHeart} />
                     Theo Dõi
                   </button>
@@ -560,10 +539,9 @@ const DetailStories = () => {
                           <div
                             ref={isCurrentChapter ? currentChapterRef : null}
                             className={`relative p-3 rounded-lg border transition-all duration-300 text-center
-                              ${
-                                isCurrentChapter
-                                  ? "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white font-semibold shadow-lg animate-pulse scale-105"
-                                  : "hover:bg-primary-color hover:text-white"
+                              ${isCurrentChapter
+                                ? "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white font-semibold shadow-lg animate-pulse scale-105"
+                                : "hover:bg-primary-color hover:text-white"
                               }
                             `}
                           >
@@ -587,11 +565,10 @@ const DetailStories = () => {
         {/* recommend */}
 
         <div
-          className={`${
-            isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
-          } h-fit mt-40 m-auto laptop:w-[90%] shadow-lg `}
+          className={`${isDarkModeEnable
+            ? "bg-bg_dark_light text-text_darkMode"
+            : "bg-white"
+            } h-fit mt-40 m-auto laptop:w-[90%] shadow-lg `}
         >
           <div className="py-1 h-12 flex items-center justify-between px-4 text-primary-color border-b-[1px] border-[#F0F0F0] ">
             <button className=" text-lg font-semibold h-4/5  flex items-center justify-center rounded-lg">
@@ -642,11 +619,10 @@ const DetailStories = () => {
 
         {/* comment */}
         <div
-          className={`${
-            isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
-          } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg`}
+          className={`${isDarkModeEnable
+            ? "bg-bg_dark_light text-text_darkMode"
+            : "bg-white"
+            } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg`}
         >
           <div className="py-1 h-12 flex items-center justify-between px-4 text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0]">
             <p>
@@ -659,11 +635,10 @@ const DetailStories = () => {
             {/* ❌ CHƯA ĐĂNG NHẬP */}
             {!user && (
               <div
-                className={`${
-                  isDarkModeEnable
-                    ? "bg-bg_dark_light text-text_darkMode"
-                    : "bg-[#FFBABA]"
-                } text-start w-full p-5 my-5`}
+                className={`${isDarkModeEnable
+                  ? "bg-bg_dark_light text-text_darkMode"
+                  : "bg-[#FFBABA]"
+                  } text-start w-full p-5 my-5`}
               >
                 <p>
                   Bạn cần
@@ -686,11 +661,10 @@ const DetailStories = () => {
                   <textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    className={`${
-                      isDarkModeEnable
-                        ? "bg-bg_dark_light text-text_darkMode"
-                        : "bg-white"
-                    } h-40 w-full p-4 border-2 border-[#F0F0F0] outline-none rounded-md`}
+                    className={`${isDarkModeEnable
+                      ? "bg-bg_dark_light text-text_darkMode"
+                      : "bg-white"
+                      } h-40 w-full p-4 border-2 border-[#F0F0F0] outline-none rounded-md`}
                     placeholder="Nhập bình luận của bạn..."
                   />
                   <FontAwesomeIcon
@@ -709,16 +683,77 @@ const DetailStories = () => {
                 </button>
               </>
             )}
+
+            {/* Danh sách bình luận */}
+            <div className="w-[90%] mt-6">
+              {loadingComments ? (
+                <p className="text-center py-4 opacity-60">Đang tải bình luận...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-center py-4 opacity-60">Chưa có bình luận nào</p>
+              ) : (
+                <div className="space-y-4">
+                  {comments.map((cmt) => (
+                    <div
+                      key={cmt._id}
+                      className={`${isDarkModeEnable
+                        ? "bg-[#252A34] border-[#3a3f4b]"
+                        : "bg-[#F9F9F9] border-[#EBEBEB]"
+                        } p-4 rounded-lg border`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"
+                              }`}
+                          >
+                            {cmt.username?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <span className="font-semibold text-sm">{cmt.username}</span>
+                          <span className="text-xs opacity-50">
+                            {new Date(cmt.createdAt).toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        {user && (user._id === cmt.userId || user.admin) && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await axios.delete(
+                                  `${process.env.REACT_APP_API_URL}/api/comment/delete/${cmt._id}`,
+                                  { headers: { token: `Bearer ${accessToken}` } }
+                                );
+                                message.success("Đã xoá bình luận");
+                                fetchComments();
+                              } catch (err) {
+                                message.error("Xoá thất bại");
+                              }
+                            }}
+                            className="text-xs text-red-500 hover:text-red-700 transition"
+                          >
+                            Xoá
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-sm leading-relaxed pl-10">{cmt.content}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         {/* tag */}
         <div
-          className={`${
-            isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
-          } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg `}
+          className={`${isDarkModeEnable
+            ? "bg-bg_dark_light text-text_darkMode"
+            : "bg-white"
+            } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg `}
         >
           <div className="py-1 h-12 flex items-center  justify-between px-4 text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] ">
             <p>

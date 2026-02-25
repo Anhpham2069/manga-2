@@ -8,6 +8,6 @@ router.get('/get-all', readHistoryController.getAllReadHistory)
 router.get('/last/:slug', readHistoryController.getLatestReadHistory)
 
 // Lấy lịch sử đọc truyện của một người dùng cụ thể
-// router.get('/:userId', readHistoryController.getReadHistoryByUser);
+router.get('/user/:userId', readHistoryController.getReadHistoryByUser);
 
 module.exports = router;

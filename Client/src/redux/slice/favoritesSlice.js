@@ -9,7 +9,7 @@ const favoritesSlice = createSlice({
       error: false,
     },
     countFavorites: {
-      alLCountFavorites:[],
+      alLCountFavorites: [],
       isFetching: false,
       error: false,
     },
@@ -24,18 +24,18 @@ const favoritesSlice = createSlice({
     },
     addFavoriteSuccess: (state, action) => {
       state.favorites.isFetching = false;
-      state.favorites.allFavorites = null;
+      state.favorites.error = false;
+
+      if (!state.favorites.allFavorites) {
+        state.favorites.allFavorites = [];
+      }
 
       const isStoryExists = state.favorites.allFavorites.some(
         (favorite) => favorite.slug === action.payload.slug
       );
       if (!isStoryExists) {
         state.favorites.allFavorites.push(action.payload);
-      } else {
-        console.log("Story already exists in favorites.");
       }
-
-      state.favorites.error = false;
     },
     addFavoriteFailed: (state) => {
       state.favorites.isFetching = false;
@@ -52,7 +52,7 @@ const favoritesSlice = createSlice({
       );
     },
     removeFavoriteFailed: (state) => {
-      state.favorites.isFetching = false; 
+      state.favorites.isFetching = false;
       state.favorites.error = true;
     },
 
@@ -69,19 +69,19 @@ const favoritesSlice = createSlice({
     },
 
 
-    getCountFavoritesStart : (state) =>{
+    getCountFavoritesStart: (state) => {
       state.countFavorites.isFetching = true;
     },
-    getCountFavoritesSuccess: (state,action) =>{
+    getCountFavoritesSuccess: (state, action) => {
       state.countFavorites.alLCountFavorites = action.payload
       state.countFavorites.error = false
     },
-    getCountFavoritesFail: (state)=>{
+    getCountFavoritesFail: (state) => {
       state.countFavorites.isFetching = false;
       state.countFavorites.error = true
     },
 
-    getCountHistorySuccess: (state,action) =>{
+    getCountHistorySuccess: (state, action) => {
       state.countHistory.alLCountHistory = action.payload
     }
 

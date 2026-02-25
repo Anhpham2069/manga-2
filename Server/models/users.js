@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema(
     username: {
       type: String,
       required: true,
-      minLength: 6,
       maxLength: 20,
       unique: true,
     },
@@ -18,11 +17,8 @@ const userSchema = new mongoose.Schema(
         message: "Email không hợp lệ",
       },
     },
-    password: { type: String, required: true, minLength: 6 },
-    // googleId: { type: String },
-    // facebookId: { type: String },
-    // displayName: { type: String },
-    // role: { type: String, enum: ['customer', 'admin'], default: 'customer' },
+    password: { type: String, minLength: 6 },
+    googleId: { type: String },
     admin: { type: Boolean, default: false },
   },
   { timestamps: true }

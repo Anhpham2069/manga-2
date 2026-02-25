@@ -9,12 +9,15 @@ router.post('/login', authController.loginUser);
 //REFRESH TOKEN
 router.post("/refresh", authController.requestRefreshToken);
 // logout
-router.post("/logout",verifyToken, authController.logOut);
+router.post("/logout", verifyToken, authController.logOut);
 
 // Chỉnh sửa thông tin tài khoản (yêu cầu xác thực)
 router.put('/edit-profile', authController.editUser)
 
 // // Đổi mật khẩu (yêu cầu xác thực)
 router.post('/change-password', authController.changePassword);
+
+// Đăng nhập bằng Google
+router.post('/google-login', authController.googleLogin);
 
 module.exports = router;

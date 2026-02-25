@@ -206,3 +206,31 @@ export const getAllErorr = async () => {
     console.log(error);
   }
 };
+
+// comment
+
+export const addComment = async (accessToken, storySlug, userId, username, content) => {
+  try {
+    const res = await axios.post(
+      `${apiURL}/api/comment/add`,
+      { storySlug, userId, username, content },
+      {
+        headers: { token: `Bearer ${accessToken}` },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const getCommentsByStory = async (slug) => {
+  try {
+    const res = await axios.get(`${apiURL}/api/comment/${slug}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};

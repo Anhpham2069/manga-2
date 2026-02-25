@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Modal, Checkbox, Input, Space,message  } from "antd";
+import { Modal, Checkbox, Input, Space, message } from "antd";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -14,7 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
-import { useSelector,useDispatch } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 
 import "./style.css";
@@ -37,27 +37,33 @@ const ReadStories = () => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [isErorr, setIsErorr] = useState("");
-   const [isFavorite, setIsFavorite] = useState(false);
-    const [loadingFav, setLoadingFav] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [loadingFav, setLoadingFav] = useState(false);
   // const [chapters,setChapters] = useState([])
   const user = useSelector((state) => state?.auth.login.currentUser);
-    const favorites = useSelector(
-      (state) => state.favorite.favorites?.allFavorites,
-    );
+  const favorites = useSelector(
+    (state) => state.favorite.favorites?.allFavorites,
+  );
   const userId = user?._id;
   const nameUser = user?.username;
   const accessToken = user?.accessToken
-console.log(story)
   useEffect(() => {
     const fetchData = async () => {
       const res = await getDetailStory(slug);
       if (res.data) {
         setStory(res.data.data);
-        checkIsFavorite();
       }
     };
     fetchData();
   }, []);
+
+  // Check isFavorite khi favorites thay đổi
+  useEffect(() => {
+    if (favorites && favorites.length > 0) {
+      const isFav = favorites.some((fav) => fav.slug === slug);
+      setIsFavorite(isFav);
+    }
+  }, [favorites, slug]);
   useEffect(() => {
     const fetchData = async () => {
       const res = await axios.get(
@@ -72,67 +78,55 @@ console.log(story)
   }, [id, activeBtn]);
   const saveHistory = async () => {
     try {
-      const currentSlug = slug;
-      const storyInfo = story;
       const currentChapter = chapter?.item.chapter_name;
       const currentChapterId = id;
       await axios.post("http://localhost:8000/api/history/save", {
-        currentChapterId,
+        chapterId: currentChapterId,
         userId,
-        slug: currentSlug,
-        storyInfo,
+        slug,
+        storyInfo: story,
         chapter: currentChapter,
       });
     } catch (error) {
       console.error("Error saving chapter view history:", error);
     }
   };
-
-  useEffect(() => {
-    if (chapter) {
-      saveHistory();
-    }
-  }, [chapter]);
   const addToFavorites = async (e) => {
-      e.preventDefault();
-  
-      if (!user) {
-        message.warning("Vui lòng đăng nhập để theo dõi truyện");
-        return;
-      }
-  
-      if (!slug) {
-        console.error("Slug không được rỗng!");
-        return;
-      }
-  
-      if (loadingFav) return;
-  
-      setLoadingFav(true);
-  
-      try {
-        const storyInfo = {
-          _id: uuidv4(),
-          slug,
-          story,
-        };
-  
-        await addFavoritesStoryAPI(accessToken, storyInfo, userId);
-  
-        setIsFavorite(true);
-        message.success("Đã thêm vào yêu thích");
-      } catch (err) {
-        console.error(err);
-        message.error("Thêm thất bại");
-      } finally {
-        setLoadingFav(false);
-      }
-    };
+    e.preventDefault();
 
-    const checkIsFavorite = () => {
-    const isFav = favorites?.some((fav) => fav.slug === slug);
-    setIsFavorite(isFav);
+    if (!user) {
+      message.warning("Vui lòng đăng nhập để theo dõi truyện");
+      return;
+    }
+
+    if (!slug) {
+      console.error("Slug không được rỗng!");
+      return;
+    }
+
+    if (loadingFav) return;
+
+    setLoadingFav(true);
+
+    try {
+      const storyInfo = {
+        _id: uuidv4(),
+        slug,
+        story,
+      };
+
+      await addFavoritesStoryAPI(accessToken, storyInfo, userId);
+
+      setIsFavorite(true);
+      message.success("Đã thêm vào yêu thích");
+    } catch (err) {
+      console.error(err);
+      message.error("Thêm thất bại");
+    } finally {
+      setLoadingFav(false);
+    }
   };
+
   const removeFromFavorites = (e) => {
     e.preventDefault();
     removeFavoritesStory(accessToken, slug, userId, dispatch);
@@ -144,34 +138,11 @@ console.log(story)
   //scoll to top
 
   useEffect(() => {
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-  const handleScroll = () => {
-    if (window.scrollY < 40) {
-      setIsVisible(false);
-    } else {
-      setIsVisible(true);
-    }
-  };
-
-  useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 100) {
-        // Show button when scrolled down more than 100px
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      setIsVisible(window.scrollY > 100);
     };
-
     window.addEventListener("scroll", handleScroll);
-
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
@@ -238,42 +209,46 @@ console.log(story)
   // history
 
   useEffect(() => {
-    if (!chapter) return; // Kiểm tra nếu chapter chưa có, thì không làm gì cả
+    if (!chapter) return;
 
-    // Sau khi chapter đã được lấy về từ API, bạn có thể gọi hàm saveChapterViewHistory
-    saveChapterViewHistory();
-  }, [chapter]);
+    // Lưu vào server
+    saveHistory();
 
-  const saveChapterViewHistory = () => {
+    // Lưu vào localStorage
     const timestamp = new Date().getTime();
-    const currentSlug = slug;
     const currentChapter = chapter?.item?.chapter_name;
     const currentChapterId = id;
     const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() - 7); // Ngày hết hạn là 7 ngày trước đó
+    expirationDate.setDate(expirationDate.getDate() + 7); // Hết hạn sau 7 ngày
 
     const existingHistory = localStorage.getItem("historyChapter");
     let historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
 
-    // Loại bỏ các mục cũ hơn 7 ngày
+    // Xoá mục hết hạn (quá 7 ngày)
+    const now = new Date().getTime();
     historyChapter = historyChapter.filter((item) => {
-      const itemExpirationDate = new Date(item.expirationDate);
-      return itemExpirationDate.getTime() > expirationDate.getTime();
+      return new Date(item.expirationDate).getTime() > now;
     });
 
-    // Thêm mục mới vào lịch sử
-    historyChapter.push({
-      slug: currentSlug,
+    // Cập nhật nếu slug đã tồn tại, không push trùng lặp
+    const existingIndex = historyChapter.findIndex((item) => item.slug === slug);
+    const historyEntry = {
+      slug,
       timestamp,
       expirationDate,
       currentChapter,
       currentChapterId,
-      story: story,
-    });
+      story,
+    };
 
-    // Cập nhật localStorage
+    if (existingIndex !== -1) {
+      historyChapter[existingIndex] = historyEntry;
+    } else {
+      historyChapter.push(historyEntry);
+    }
+
     localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
-  };
+  }, [chapter]);
 
   // Rest of your component code...
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -281,27 +256,27 @@ console.log(story)
     setIsModalOpen(true);
   };
   const handleOk = async () => {
-  if (!isErorr.trim()) {
-    message.warning("Vui lòng nhập nội dung lỗi!");
-    return;
-  }
+    if (!isErorr.trim()) {
+      message.warning("Vui lòng nhập nội dung lỗi!");
+      return;
+    }
 
-  try {
-    const userID = userId;
-    const userName = nameUser;
-    const nameErr = isErorr;
-    const storyInfo = story?.item?.name;
+    try {
+      const userID = userId;
+      const userName = nameUser;
+      const nameErr = isErorr;
+      const storyInfo = story?.item?.name;
 
-    await addStoryError(userID, userName, nameErr, storyInfo, accessToken);
+      await addStoryError(userID, userName, nameErr, storyInfo, accessToken);
 
-    message.success("Đã gửi lỗi thành công!");
+      message.success("Đã gửi lỗi thành công!");
 
-    setIsModalOpen(false);   // đóng modal
-    setIsErorr("");          // reset input
-  } catch (error) {
-    message.error("Gửi lỗi thất bại!");
-  }
-};
+      setIsModalOpen(false);   // đóng modal
+      setIsErorr("");          // reset input
+    } catch (error) {
+      message.error("Gửi lỗi thất bại!");
+    }
+  };
 
   const handleCancel = () => {
     setIsModalOpen(false);
@@ -311,11 +286,10 @@ console.log(story)
       <NavBar />
       <div className="relative">
         <header
-          className={`${
-            isDarkModeEnable
+          className={`${isDarkModeEnable
               ? "bg-bg_dark_light text-text_darkMode"
               : "bg-white"
-          } p-5 h-fit mt-10 w-[90%] m-auto`}
+            } p-5 h-fit mt-10 w-[90%] m-auto`}
         >
           <div>
             <ul className="flex gap-1 text-[#A699A6]">
@@ -359,26 +333,26 @@ console.log(story)
             >
               <FontAwesomeIcon icon={faCircleExclamation} /> Báo lỗi
             </button>
-            {user ? 
-            
-            <Modal
-              title="Nhập nội dung lỗi"
-              open={isModalOpen}
-              onOk={handleOk}
-              onCancel={handleCancel}
-              okButtonProps={{
-    className: "bg-blue-500 text-white hover:bg-blue-600"
-  }}
-            >
-              <div>
-                <Input
-                  placeholder="Nội dung lỗi"
-                  onChange={(e) => setIsErorr(e.target.value)}
-                />
-              </div>
-            </Modal>
-            : 
-              <Modal title="bạn cần đăng nhập để báo lỗi"  open={isModalOpen}  onCancel={handleCancel}>
+            {user ?
+
+              <Modal
+                title="Nhập nội dung lỗi"
+                open={isModalOpen}
+                onOk={handleOk}
+                onCancel={handleCancel}
+                okButtonProps={{
+                  className: "bg-blue-500 text-white hover:bg-blue-600"
+                }}
+              >
+                <div>
+                  <Input
+                    placeholder="Nội dung lỗi"
+                    onChange={(e) => setIsErorr(e.target.value)}
+                  />
+                </div>
+              </Modal>
+              :
+              <Modal title="bạn cần đăng nhập để báo lỗi" open={isModalOpen} onCancel={handleCancel}>
                 <button><a href="/login" className="text-xl">Đăng nhập ngay</a></button>
               </Modal>
             }
@@ -391,9 +365,8 @@ console.log(story)
           </div>
 
           <div
-            className={`${
-              isDarkModeEnable ? "text-white" : "text-slate-500"
-            } flex justify-center items-center gap-2 mt-5 text-sm`}
+            className={`${isDarkModeEnable ? "text-white" : "text-slate-500"
+              } flex justify-center items-center gap-2 mt-5 text-sm`}
           >
             <button
               className="px-3 rounded-full font-semibold text-xl"
@@ -413,9 +386,8 @@ console.log(story)
               {story.item?.chapters[0]?.server_data?.map((chap) => {
                 return (
                   <option
-                    className={`${
-                      isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                    } 
+                    className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
+                      } 
                               rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
                     value={chap.chapter_api_data.split("/").pop()}
                   >
@@ -447,9 +419,8 @@ console.log(story)
         </div>
         <div
           className={`phone:text-sm bg-[#242526] py-1  lg:py-3 w-full fixed flex justify-center  
-              phone:justify-around lg:gap-4 items-center bottom-0 ${
-                isVisible ? "" : "hidden"
-              }`}
+              phone:justify-around lg:gap-4 items-center bottom-0 ${isVisible ? "" : "hidden"
+            }`}
         >
           <Link to={"/"}>
             <button className="lg:py-2 py-1 px-4 bg-[#8BC34A] text-white rounded-md">
@@ -460,11 +431,10 @@ console.log(story)
           </Link>
           <div className="flex justify-center gap-2">
             <button
-              className={`${
-                !getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
+              className={`${!getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
                   ? "bg-[#B3C8F8] cursor-not-allowed"
                   : "bg-primary-color"
-              } px-3 py-1 rounded-full font-semibold text-white text-xl`}
+                } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToPreviousChapter}
               disabled={
                 !getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
@@ -481,9 +451,8 @@ console.log(story)
 
                 return (
                   <option
-                    className={`${
-                      isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                    } 
+                    className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
+                      } 
                               rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
                     value={chap.chapter_api_data.split("/").pop()}
                   >
@@ -493,11 +462,10 @@ console.log(story)
               })}
             </select>
             <button
-              className={`${
-                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
+              className={`${!getNextChapterId(id, story.item?.chapters[0]?.server_data)
                   ? "bg-[#B3C8F8] cursor-not-allowed"
                   : "bg-primary-color"
-              } px-3 py-1 rounded-full font-semibold text-white text-xl`}
+                } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToNextChapter}
               disabled={
                 !getNextChapterId(id, story.item?.chapters[0]?.server_data)
@@ -507,39 +475,37 @@ console.log(story)
             </button>
           </div>
           {isFavorite ? (
-  <button
-    onClick={removeFromFavorites}
-    className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
-      ${
-        isDarkModeEnable
-          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-          : "bg-[#701f2f] hover:bg-[#FF7A95] text-white"
-      }`}
-  >
-    <FontAwesomeIcon icon={faHeart} />
-    <span className="phone:hidden lg:inline">
-      Bỏ theo dõi
-    </span>
-  </button>
-) : (
-  <button
-    disabled={!user}
-    onClick={addToFavorites}
-    className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
-      ${
-        !user
-          ? "bg-gray-400 cursor-not-allowed text-white"
-          : isDarkModeEnable
-            ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-            : "bg-[#FF3860] hover:bg-[#FF7A95] text-white"
-      }`}
-  >
-    <FontAwesomeIcon icon={faHeart} />
-    <span className="phone:hidden lg:inline">
-      Theo dõi
-    </span>
-  </button>
-)}
+            <button
+              onClick={removeFromFavorites}
+              className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
+      ${isDarkModeEnable
+                  ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                  : "bg-[#701f2f] hover:bg-[#FF7A95] text-white"
+                }`}
+            >
+              <FontAwesomeIcon icon={faHeart} />
+              <span className="phone:hidden lg:inline">
+                Bỏ theo dõi
+              </span>
+            </button>
+          ) : (
+            <button
+              disabled={!user}
+              onClick={addToFavorites}
+              className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
+      ${!user
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : isDarkModeEnable
+                    ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
+                    : "bg-[#FF3860] hover:bg-[#FF7A95] text-white"
+                }`}
+            >
+              <FontAwesomeIcon icon={faHeart} />
+              <span className="phone:hidden lg:inline">
+                Theo dõi
+              </span>
+            </button>
+          )}
 
         </div>
       </div>

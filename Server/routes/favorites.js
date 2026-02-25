@@ -4,7 +4,7 @@ const { verifyToken } = require("../controllers/verifyToken");
 
 
 router.post('/add', verifyToken, favoritesController.addFavorite)
-router.post('/delete',favoritesController.deleteFavorites)
+router.post('/delete', verifyToken, favoritesController.deleteFavorites)
 router.get('/get-all', favoritesController.getAllFavorites)
 router.get('/get-single/:userId', favoritesController.getUserFavorites)
 

@@ -44,16 +44,18 @@ const favoriteRouter = require('./routes/favorites')
 const readHistoryRouter = require('./routes/history');
 const storyErrorRouter = require('./routes/storyErorr');
 const contactRoute = require("./routes/contact");
+const commentRouter = require('./routes/comment');
 
 app.use("/api/contact", contactRoute);
+app.use('/api/comment', commentRouter);
 app.use('/api/story', storiesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', usersRouter);
 app.use('/api/genre', genresRouter);
 app.use('/api/noti', notificationRouter);
-app.use('/api/favorites',favoriteRouter)
-app.use('/api/history',readHistoryRouter)
-app.use('/api/error',storyErrorRouter)
+app.use('/api/favorites', favoriteRouter)
+app.use('/api/history', readHistoryRouter)
+app.use('/api/error', storyErrorRouter)
 
 
 // Passport Routes

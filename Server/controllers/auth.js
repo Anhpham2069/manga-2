@@ -2,8 +2,12 @@ const User = require("../models/users");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 const dotenv = require("dotenv");
+const { OAuth2Client } = require("google-auth-library");
+const { v4: uuidv4 } = require("uuid");
 
 dotenv.config();
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 let refreshTokens = [];
 
@@ -38,39 +42,39 @@ const authController = {
       const savedUser = await newUser.save();
 
       // Trả về phản hồi thành công
-      res.status(200).json({savedUser, message: "Đăng ký thành công" });
+      res.status(200).json({ savedUser, message: "Đăng ký thành công" });
     } catch (error) {
       // Xử lý lỗi đúng cách
       console.error("Error during registration:", error);
       res.status(500).json({ message: "Đã xảy ra lỗi trong quá trình đăng ký" });
     }
-},
+  },
 
   //access token
-   generateAccessToken: (user) =>{
+  generateAccessToken: (user) => {
     return jwt.sign(
-      { 
-        id: user.id, 
+      {
+        id: user.id,
         admin: user.admin
       },
       process.env.JWT_ACCESS_KEY,
       { expiresIn: "30d" },
 
-      );
+    );
   },
-  generateRefreshToken: (user) =>{
+  generateRefreshToken: (user) => {
     return jwt.sign(
-      { 
-        id: user.id, 
+      {
+        id: user.id,
         admin: user.admin
       },
       process.env.JWT_REFRESH_KEY,
       { expiresIn: "10d" },
 
-      );
+    );
   },
 
-// login
+  // login
 
   loginUser: async (req, res) => {
     try {
@@ -86,13 +90,13 @@ const authController = {
       );
       if (!validPassword) {
         return res.status(404).json("Wrong password");
-        
+
       }
       if (user && validPassword) {
         //Generate access token
         const accessToken = authController.generateAccessToken(user);
         //Generate refresh token
-        
+
         const { password, ...others } = user._doc;
         res.status(200).json({ ...others, accessToken });
       }
@@ -119,7 +123,7 @@ const authController = {
       refreshTokens.push(newRefreshToken);
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure:false,
+        secure: false,
         path: "/",
         sameSite: "strict",
       });
@@ -188,6 +192,57 @@ const authController = {
       res.status(200).json({ message: "Đổi mật khẩu thành công" });
     } catch (error) {
       res.status(500).json(error);
+    }
+  },
+
+  // Google Login
+  googleLogin: async (req, res) => {
+    try {
+      const { credential } = req.body;
+
+      // Verify Google ID token
+      const ticket = await googleClient.verifyIdToken({
+        idToken: credential,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+
+      const payload = ticket.getPayload();
+      const { sub: googleId, email, name } = payload;
+
+      // Find user by googleId or email
+      let user = await User.findOne({ googleId });
+
+      if (!user) {
+        // Check if a user with this email already exists
+        user = await User.findOne({ email });
+
+        if (user) {
+          // Link Google account to existing user
+          user.googleId = googleId;
+          await user.save();
+        } else {
+          // Create new user
+          const uniqueUsername = name
+            ? name.replace(/\s+/g, "").slice(0, 15) + uuidv4().slice(0, 5)
+            : "gg_" + uuidv4().slice(0, 12);
+
+          user = new User({
+            username: uniqueUsername,
+            email,
+            googleId,
+          });
+          await user.save();
+        }
+      }
+
+      // Generate access token (same as normal login)
+      const accessToken = authController.generateAccessToken(user);
+
+      const { password, ...others } = user._doc;
+      res.status(200).json({ ...others, accessToken });
+    } catch (error) {
+      console.error("Google login error:", error);
+      res.status(500).json({ message: "Đăng nhập Google thất bại" });
     }
   },
 };
