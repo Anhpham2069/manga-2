@@ -1,137 +1,133 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import NavBar from "../components/layout/Navbar";
 import Footer from "../components/layout/footer";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../components/layout/DarkModeSlice";
-
+import { getHistoryByUser } from "../services/apiStoriesRequest";
 
 const History = () => {
-
   const isDarkModeEnable = useSelector(selectDarkMode);
+  const user = useSelector((state) => state?.auth.login.currentUser);
+  const userId = user?._id;
+  const navigate = useNavigate();
+
   const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const getHistory = () => {  
-      const currentTime = new Date().getTime();
-      const existingHistory = localStorage.getItem("historyChapter");
-      if (existingHistory) {
-        let history = JSON.parse(existingHistory);
-        
-        // Logic to keep only the most recent entry for each slug
-        const historyBySlug = {};
-        history.forEach(item => {
-          if (!historyBySlug[item.slug] || new Date(item.timestamp).getTime() > new Date(historyBySlug[item.slug].timestamp).getTime()) {
-            historyBySlug[item.slug] = item;
-          }
-        });
-  
-        // Convert object values back to array
-        history = Object.values(historyBySlug);
-  
-        // Sort by timestamp
-        history.sort((a, b) => b.timestamp - a.timestamp);
-  
-        // Filter out items older than 7 days
-        const filteredHistory = history.filter(item => {
-          const lastUpdatedTime = new Date(item.timestamp).getTime();
-          const timeDifference = currentTime - lastUpdatedTime;
-          const millisecondsPerDay = 1000 * 60 * 60 * 24;
-          const daysDifference = Math.floor(timeDifference / millisecondsPerDay);
-          return daysDifference < 7; // Keep items updated within the last 7 days
-        });
-  
-        // Set the filtered history
-        setHistory(filteredHistory);
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    const fetchHistory = async () => {
+      setLoading(true);
+      try {
+        if (userId) {
+          // Lấy lịch sử từ server theo userId
+          const data = await getHistoryByUser(userId);
+          setHistory(data || []);
+        }
+      } catch (error) {
+        console.error("Error fetching history:", error);
+      } finally {
+        setLoading(false);
       }
     };
-    getHistory();
-  }, []);
-  
-  
-  
-console.log(history)
+
+    fetchHistory();
+  }, [userId, user, navigate]);
+
   return (
     <div>
-    <NavBar />
-    <div className="p-5 bg-bg_light">
-      <h2 className="font-bold text-3xl border-b-2 bg-white p-5 text-primary-color">
-       Lịch sử
-      </h2>
-      <div className="p-5 bg-white flex flex-col gap-2">
-        {history?.map((item, index) => {
-          const timeAgo = formatDistanceToNow(new Date(item.expirationDate), {
-            addSuffix: true,
-            locale: vi,
-          });
-          const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
-          return (
-            <div className="flex w-full p-2 justify-between items-center relative border-b-2">
-              <div className="flex  gap-5 h-full w-full">
-                <div className="relative h-full flex">
-                  <Link to={`/detail/${item.slug}`}>
-                    <img
-                  
-                      src={item.story?.seoOnPage?.seoSchema?.image}
-                      alt="anh"
-                      className="w-32 tablet:h-36 phone:h-20"
-                    />
-                  </Link>
-                </div>
-                <div className="flex flex-col gap-5">
-                  <p
-                    className={`${
-                      isDarkModeEnable ? "text-[#8a8282]" : "text-black "
-                    } phone:text-sm font-bold tablet:text-3xl`}
-                  >
-                    {item.story.item?.name}
-                  </p>
-                  <div className="flex flex-wrap ">
-                    {item.story.breadCrumb?.map((cate, index) => {
-                      return (
-                        <Link to={`/category/${cate.slug}`}>
-                          <div className="cursor-pointer">
-                            <p
-                              key={index}
-                              className={`mr-1 p-1 rounded-md font-medium border-slate-300 border-2 w-fit  tablet:text-sm hover:text-blue-400 phone:text-xs`}
-                            >
-                              {cate?.name}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                  <div>
-                    <p className="font-medium">Đã đọc <span className="text-gray-400 italic"></span>  </p>
-                    <Link to={`/detail/${item.slug}/view/${item.currentChapterId}`}>
-                      <p className="font-medium text-gray-400 italic"> Đọc tiếp chapter:  <span cla>{item.currentChapter}</span> </p>
-                    </Link>
-                    {/* http://localhost:3000/detail/vuu-vat/view/658c4c2be120ddf21990fb70 */}
-                  </div>
-                </div>
-                {/* <button
-                  className="text-4xl text-red-500 hover:text-red-700 flex-1 flex justify-end items-center"
+      <NavBar />
+      <div className="p-5 bg-bg_light min-h-screen">
+        <h2 className="font-bold text-3xl border-b-2 bg-white p-5 text-primary-color rounded-md shadow-sm">
+          Lịch sử đọc truyện
+        </h2>
+        <div className="p-5 bg-white flex flex-col gap-2 mt-4 rounded-md shadow-sm">
+          {loading ? (
+            <p className="text-center text-gray-500 py-10">Đang tải...</p>
+          ) : history.length === 0 ? (
+            <p className="text-center text-gray-500 py-10">
+              Bạn chưa có lịch sử đọc truyện nào 📚
+            </p>
+          ) : (
+            history.map((item) => {
+              let timeAgo = "";
+              try {
+                timeAgo = formatDistanceToNow(new Date(item.timestamp), {
+                  addSuffix: true,
+                  locale: vi,
+                });
+                timeAgo = timeAgo.replace(/^khoảng\s/, "");
+              } catch {
+                timeAgo = "";
+              }
+
+              return (
+                <div
+                  key={item._id}
+                  className={`flex w-full p-3 justify-between items-center relative border-b-2 ${isDarkModeEnable ? "bg-bg_dark_light" : ""
+                    }`}
                 >
-                  <DeleteFilled />
-                </button> */}
-              </div>
-            </div>
-          );
-        })}
+                  <div className="flex gap-5 h-full w-full">
+                    <div className="relative h-full flex shrink-0">
+                      <Link to={`/detail/${item.slug}`}>
+                        <img
+                          src={item.storyInfo?.seoOnPage?.seoSchema?.image}
+                          alt="anh"
+                          className="w-24 h-32 object-cover rounded-lg"
+                        />
+                      </Link>
+                    </div>
+                    <div className="flex flex-col gap-2 flex-1">
+                      <Link to={`/detail/${item.slug}`}>
+                        <p
+                          className={`${isDarkModeEnable ? "text-[#8a8282]" : "text-black"
+                            } phone:text-sm font-bold tablet:text-xl hover:text-primary-color transition`}
+                        >
+                          {item.storyInfo?.item?.name}
+                        </p>
+                      </Link>
+                      <div className="flex flex-wrap gap-1">
+                        {item.storyInfo?.breadCrumb?.slice(1).map((cate, idx) => (
+                          <Link key={idx} to={`/category/${cate.slug}`}>
+                            <span className="text-xs px-2 py-1 border rounded-full hover:bg-primary-color hover:text-white transition">
+                              {cate?.name}
+                            </span>
+                          </Link>
+                        ))}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-500">
+                          Đã đọc chapter: <span className="text-primary-color font-semibold">{item.chapter}</span>
+                        </p>
+                        {item.chapterId && (
+                          <Link to={`/detail/${item.slug}/view/${item.chapterId}`}>
+                            <p className="font-medium text-sm text-primary-color hover:underline">
+                              Đọc tiếp chapter {item.chapter} →
+                            </p>
+                          </Link>
+                        )}
+                      </div>
+                      {timeAgo && (
+                        <p className="text-xs text-gray-400 italic">{timeAgo}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
+      <Footer />
     </div>
-    <Footer />
-  </div>
   );
 };
 
 export default History;
-
-// <li key={index}>
-//   {/* Here you can display whatever information you want from the history item */}
-//   <Link to={`/detail/${item.slug}`}>Truyện: {item.slug}</Link> -{" "}
-//   {new Date(item.timestamp).toLocaleString()}
-// </li>

@@ -70,3 +70,45 @@ exports.getReadHistoryByUser = async (req, res) => {
     res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
   }
 };
+
+// Bảng xếp hạng truyện theo lượt đọc (ngày / tuần / tháng)
+exports.getRanking = async (req, res) => {
+  try {
+    const { period } = req.query; // 'day', 'week', 'month'
+
+    const now = new Date();
+    let dateFilter = new Date();
+
+    switch (period) {
+      case 'day':
+        dateFilter.setDate(now.getDate() - 1);
+        break;
+      case 'week':
+        dateFilter.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        dateFilter.setMonth(now.getMonth() - 1);
+        break;
+      default:
+        dateFilter.setDate(now.getDate() - 7); // mặc định tuần
+    }
+
+    const ranking = await ReadHistory.aggregate([
+      { $match: { timestamp: { $gte: dateFilter } } },
+      {
+        $group: {
+          _id: '$slug',
+          totalViews: { $sum: '$readCount' },
+          storyInfo: { $first: '$storyInfo' },
+        },
+      },
+      { $sort: { totalViews: -1 } },
+      { $limit: 20 },
+    ]);
+
+    res.status(200).json(ranking);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });
+  }
+};

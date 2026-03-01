@@ -19,6 +19,7 @@ import Login from "./pages/login";
 import Register from "./pages/register";
 import NotFoundPage from "./pages/notFound";
 import ContactUs from "./pages/contact_us";
+import Ranking from "./pages/ranking";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
         <Route exact path="/login" element={<Login />} />
         <Route exact path="/register" element={<Register />} />
         <Route exact path="/contact" element={<ContactUs />} />
+        <Route exact path="/ranking" element={<Ranking />} />
 
         <Route path="/genres/:genre" element={<StoryListByGenre />} />
 

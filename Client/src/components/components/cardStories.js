@@ -10,12 +10,12 @@ const CardStories = ({
   title,
   img,
   time,
-  views = 1000,
-  saves = 100,
+  views = 0,
+  saves = 0,
   nomarl,
   hot,
   chapter,
-  viewMode = "grid", // 👈 THÊM
+  viewMode = "grid",
 }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
 
@@ -31,17 +31,11 @@ const CardStories = ({
               className="w-full h-full object-cover hover:scale-110 transition"
             />
           </div>
-
           <div className="flex flex-col justify-between flex-1">
             <div>
-              <h3
-                className={`font-semibold text-lg line-clamp-2 ${
-                  isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"
-                }`}
-              >
+              <h3 className={`font-semibold text-lg line-clamp-2 ${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"}`}>
                 {title}
               </h3>
-
               <div className="flex items-center gap-4 text-sm text-gray-500 mt-2">
                 <span className="flex items-center gap-1">
                   <FontAwesomeIcon icon={faEye} /> {views}
@@ -51,7 +45,6 @@ const CardStories = ({
                 </span>
               </div>
             </div>
-
             <div className="flex items-center justify-between mt-3">
               <span className="text-xs text-gray-400">{time}</span>
               <span className="bg-[#FF4500] text-white text-xs px-3 py-1 rounded-full">
@@ -64,46 +57,57 @@ const CardStories = ({
     );
   }
 
-  // ================= GRID MODE (GIỐNG BẠN) =================
+  // ================= GRID MODE =================
   return (
-    <figure className="w-full h-80 cursor-pointer my-5">
-      <div className="relative h-[75%] w-full overflow-hidden rounded-sm">
+    <figure className="w-full cursor-pointer mb-4">
+      <div className="relative w-full overflow-hidden rounded-md" style={{ paddingBottom: "140%" }}>
         <Link to={`/detail/${slug}`}>
           <img
             src={img}
             alt={title}
-            className="w-full h-full border-2 border-gray-200 object-cover transition-all duration-500 hover:scale-125"
+            className="absolute inset-0 w-full h-full object-cover transition-all duration-500 hover:scale-110"
           />
         </Link>
 
-        {nomarl && (
-          <>
-            <button className="absolute top-1 left-1 bg-primary-color text-white text-xs px-2 py-1 rounded-md">
-              {time}
-            </button>
-            <button className="absolute top-1 right-1 bg-[#FF4500] text-white text-xs px-2 py-1 rounded-md">
-              Chương {chapter}
-            </button>
-          </>
+        {/* Time badge - top left */}
+        {nomarl && time && (
+          <span className="absolute top-1.5 left-1.5 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
+            {time}
+          </span>
         )}
 
+        {/* Hot badge */}
         {hot && (
-          <button className="absolute top-1 right-1 bg-[#FF4500] text-white text-xs px-2 py-1 rounded-md uppercase">
+          <span className="absolute top-1.5 right-1.5 bg-[#FF4500] text-white text-[10px] px-1.5 py-0.5 rounded font-medium uppercase z-10">
             Hot
-          </button>
+          </span>
         )}
+
+        {/* View & Save counts - bottom overlay */}
+        <div className="absolute bottom-0 left-0 right-0 flex items-center px-2 py-1.5 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
+          <div className="flex items-center gap-3 text-white text-[11px] font-medium">
+            <span className="flex items-center gap-1">
+              <FontAwesomeIcon icon={faEye} className="text-[10px]" />
+              {views?.toLocaleString?.() || 0}
+            </span>
+            <span className="flex items-center gap-1">
+              <FontAwesomeIcon icon={faBookmark} className="text-[10px]" />
+              {saves?.toLocaleString?.() || 0}
+            </span>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-2">
+      {/* Title */}
+      <div className="mt-1.5 px-0.5">
         <Link to={`/detail/${slug}`}>
-          <h3
-            className={`line-clamp-2 ${
-              isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"
-            } font-medium`}
-          >
+          <h3 className={`line-clamp-1 text-[13px] ${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"} font-medium leading-tight`}>
             {title}
           </h3>
         </Link>
+        {chapter && (
+          <p className="text-[12px] text-gray-500 mt-0.5">Chapter {chapter}</p>
+        )}
       </div>
     </figure>
   );

@@ -143,12 +143,33 @@ export const getAllHistory = async (dispatch) => {
     console.log(error);
   }
 };
-export const getLastChapter = async (slug) => {
+export const getLastChapter = async (slug, userId) => {
   try {
-    const res = await axios.get(`${apiURL}/api/history/last/${slug}`);
+    const params = userId ? `?userId=${userId}` : '';
+    const res = await axios.get(`${apiURL}/api/history/last/${slug}${params}`);
     return res.data;
   } catch (error) {
     console.log(error);
+  }
+};
+
+export const getHistoryByUser = async (userId) => {
+  try {
+    const res = await axios.get(`${apiURL}/api/history/user/${userId}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
+  }
+};
+
+export const getRanking = async (period = 'week') => {
+  try {
+    const res = await axios.get(`${apiURL}/api/history/ranking?period=${period}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return [];
   }
 };
 
@@ -178,9 +199,9 @@ export const addStoryError = async (
   userName,
   nameErr,
   storyInfo,
-  accessToken
+  accessToken,
+  chapterInfo
 ) => {
-  console.log(userID, userName, nameErr, storyInfo, accessToken);
   try {
     const res = await axios.post(
       `${apiURL}/api/error/add`,
@@ -189,21 +210,46 @@ export const addStoryError = async (
         userName,
         nameErr,
         storyInfo,
+        chapterInfo: chapterInfo || "",
       },
       {
         headers: { token: `Bearer ${accessToken}` },
       }
     );
+    return res.data;
   } catch (error) {
     console.log(error);
+    throw error;
   }
 };
+
 export const getAllErorr = async () => {
   try {
     const res = await axios.get(`${apiURL}/api/error/get-all`);
     return res.data;
   } catch (error) {
     console.log(error);
+    return [];
+  }
+};
+
+export const deleteStoryError = async (id) => {
+  try {
+    const res = await axios.delete(`${apiURL}/api/error/delete/${id}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+
+export const updateStoryErrorStatus = async (id, status) => {
+  try {
+    const res = await axios.put(`${apiURL}/api/error/update-status/${id}`, { status });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };
 
@@ -232,5 +278,36 @@ export const getCommentsByStory = async (slug) => {
   } catch (error) {
     console.log(error);
     return [];
+  }
+};
+
+// story views (tất cả người dùng, kể cả chưa đăng nhập)
+
+export const incrementStoryView = async (slug, storyName) => {
+  try {
+    const res = await axios.post(`${apiURL}/api/views/increment`, { slug, storyName });
+    return res.data;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+export const getStoryViewCount = async (slug) => {
+  try {
+    const res = await axios.get(`${apiURL}/api/views/get/${slug}`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return { viewCount: 0 };
+  }
+};
+
+export const getTotalStoryViews = async () => {
+  try {
+    const res = await axios.get(`${apiURL}/api/views/total`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return { totalViews: 0 };
   }
 };

@@ -83,6 +83,17 @@ const favoritesSlice = createSlice({
 
     getCountHistorySuccess: (state, action) => {
       state.countHistory.alLCountHistory = action.payload
+    },
+
+    // Reset toàn bộ khi logout
+    resetFavorites: (state) => {
+      state.favorites.allFavorites = [];
+      state.favorites.isFetching = false;
+      state.favorites.error = false;
+      state.countFavorites.alLCountFavorites = [];
+      state.countFavorites.isFetching = false;
+      state.countFavorites.error = false;
+      state.countHistory.alLCountHistory = null;
     }
 
   },
@@ -101,6 +112,7 @@ export const {
   getCountFavoritesSuccess,
   getCountFavoritesFail,
   getCountHistorySuccess,
+  resetFavorites,
 } = favoritesSlice.actions;
 
 export default favoritesSlice.reducer;

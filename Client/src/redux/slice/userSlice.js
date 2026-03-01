@@ -1,20 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 const userSlice = createSlice({
-    name:"user",
-    initialState:{
+    name: "user",
+    initialState: {
         users: {
-            allUsers:null,
-            isFetching:false,
-            error:false
+            allUsers: null,
+            isFetching: false,
+            error: false
         },
-        msg:"",
+        msg: "",
     },
-    reducers:{
-        getUsersStart: (state)=>{
+    reducers: {
+        getUsersStart: (state) => {
             state.users.isFetching = true;
         },
-        getUsersSuccess: (state,action) =>{
+        getUsersSuccess: (state, action) => {
             state.users.isFetching = false;
             state.users.allUsers = action.payload;
         },
@@ -22,18 +22,36 @@ const userSlice = createSlice({
             state.users.isFetching = false;
             state.users.error = true;
         },
-        deleteUserStart: (state)=>{
+        deleteUserStart: (state) => {
             state.users.isFetching = true;
         },
-        deleteUsersSuccess: (state,action)=>{
+        deleteUsersSuccess: (state, action) => {
             state.users.isFetching = false;
             state.msg = action.payload;
         },
-        deleteUserFailed: (state,action)=>{
+        deleteUserFailed: (state, action) => {
             state.users.isFetching = false;
             state.users.error = true;
             state.msg = action.payload;
-        } 
+        },
+        updateUserStart: (state) => {
+            state.users.isFetching = true;
+        },
+        updateUserSuccess: (state, action) => {
+            state.users.isFetching = false;
+            // Cập nhật user trong danh sách
+            if (state.users.allUsers) {
+                const index = state.users.allUsers.findIndex(u => u._id === action.payload._id);
+                if (index !== -1) {
+                    state.users.allUsers[index] = action.payload;
+                }
+            }
+        },
+        updateUserFailed: (state, action) => {
+            state.users.isFetching = false;
+            state.users.error = true;
+            state.msg = action.payload;
+        },
     }
 })
 
@@ -43,7 +61,10 @@ export const {
     getUsersFailed,
     deleteUserStart,
     deleteUsersSuccess,
-    deleteUserFailed
+    deleteUserFailed,
+    updateUserStart,
+    updateUserSuccess,
+    updateUserFailed,
 } = userSlice.actions;
 
 export default userSlice.reducer;

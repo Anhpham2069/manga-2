@@ -1,99 +1,256 @@
-import { SaveOutlined } from "@ant-design/icons";
-import { Select } from "antd";
-import React, { useState } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import { useSelector } from "react-redux";
+import React, { useState, useEffect } from "react";
+import {
+  SaveOutlined,
+  DeleteOutlined,
+  EditOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  PlusOutlined,
+  NotificationOutlined,
+} from "@ant-design/icons";
+import { Button, Table, Tag, Modal, Input, Switch, message, Space, Tooltip } from "antd";
+import {
+  getAllAnnouncements,
+  createAnnouncement,
+  updateAnnouncement,
+  deleteAnnouncement,
+  toggleAnnouncement,
+} from "./fetchApi";
+
+const { TextArea } = Input;
 
 const AdminNotificationForm = () => {
-  const stories = useSelector((state) => state.stories.stories);
-  console.log(stories);
+  const [announcements, setAnnouncements] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ title: "", message: "" });
 
-  const [formData, setFormData] = useState({
-    time: new Date(),
-    storyName: "", // Lưu tên truyện thay vì storyId
-    chapterName: "",
-  });
-
-  const handleChange = (name, value) => {
-    setFormData({ ...formData, [name]: value });
+  // Fetch all announcements
+  const fetchAnnouncements = async () => {
+    setLoading(true);
+    const data = await getAllAnnouncements();
+    setAnnouncements(data || []);
+    setLoading(false);
   };
 
-  const handleDateChange = (date) => {
-    setFormData({ ...formData, time: date });
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  // Open modal for create
+  const handleCreate = () => {
+    setEditingId(null);
+    setFormData({ title: "", message: "" });
+    setIsModalOpen(true);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Open modal for edit
+  const handleEdit = (record) => {
+    setEditingId(record._id);
+    setFormData({ title: record.title || "", message: record.message });
+    setIsModalOpen(true);
+  };
 
-    // Gửi yêu cầu lên server để lưu thông tin
-    fetch("URL_SERVER_API", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+  // Submit form (create or update)
+  const handleSubmit = async () => {
+    if (!formData.message.trim()) {
+      message.error("Vui lòng nhập nội dung thông báo!");
+      return;
+    }
+
+    if (editingId) {
+      const updated = await updateAnnouncement(editingId, formData);
+      if (updated) {
+        message.success("Đã cập nhật thông báo!");
+      }
+    } else {
+      const created = await createAnnouncement(formData);
+      if (created) {
+        message.success("Đã tạo thông báo mới!");
+      }
+    }
+
+    setIsModalOpen(false);
+    setFormData({ title: "", message: "" });
+    setEditingId(null);
+    fetchAnnouncements();
+  };
+
+  // Delete
+  const handleDelete = (id) => {
+    Modal.confirm({
+      title: "Xác nhận xóa",
+      content: "Bạn có chắc chắn muốn xóa thông báo này?",
+      okText: "Xóa",
+      cancelText: "Hủy",
+      okType: "danger",
+      onOk: async () => {
+        await deleteAnnouncement(id);
+        message.success("Đã xóa thông báo!");
+        fetchAnnouncements();
       },
-      body: JSON.stringify(formData),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Notification data sent successfully:", data);
-        // Reset form or perform other actions if needed
-        setFormData({
-          time: new Date(),
-          storyName: "",
-          chapterName: "",
-        });
-      })
-      .catch((error) =>
-        console.error("Error sending notification data:", error)
-      );
+    });
   };
+
+  // Toggle active
+  const handleToggle = async (id) => {
+    await toggleAnnouncement(id);
+    fetchAnnouncements();
+  };
+
+  const columns = [
+    {
+      title: "Tiêu đề",
+      dataIndex: "title",
+      key: "title",
+      render: (text) => text || <span className="text-gray-400 italic">Không có tiêu đề</span>,
+    },
+    {
+      title: "Nội dung",
+      dataIndex: "message",
+      key: "message",
+      ellipsis: true,
+      width: "35%",
+    },
+    {
+      title: "Trạng thái",
+      dataIndex: "isActive",
+      key: "isActive",
+      width: 130,
+      render: (isActive, record) => (
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={isActive}
+            onChange={() => handleToggle(record._id)}
+            checkedChildren={<CheckCircleOutlined />}
+            unCheckedChildren={<CloseCircleOutlined />}
+          />
+          <Tag color={isActive ? "green" : "default"}>
+            {isActive ? "Hiển thị" : "Ẩn"}
+          </Tag>
+        </div>
+      ),
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      width: 180,
+      render: (date) =>
+        new Date(date).toLocaleDateString("vi-VN", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+    },
+    {
+      title: "Hành động",
+      key: "actions",
+      width: 120,
+      render: (_, record) => (
+        <Space>
+          <Tooltip title="Sửa">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              className="text-blue-500 hover:text-blue-700"
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Xóa">
+            <Button
+              type="text"
+              icon={<DeleteOutlined />}
+              className="text-red-500 hover:text-red-700"
+              onClick={() => handleDelete(record._id)}
+              danger
+            />
+          </Tooltip>
+        </Space>
+      ),
+    },
+  ];
 
   return (
-    <form className="max-w-md mx-auto mt-8 p-8 bg-gray-100 rounded-lg shadow-lg">
-      <label className="flex flex-col mb-4">
-        <span className="text-gray-700">Thời gian ra chap mới:</span>
-        <DatePicker
-          selected={formData.time}
-          onChange={handleDateChange}
-          showTimeSelect
-          timeFormat="HH:mm"
-          timeIntervals={15}
-          dateFormat="MMMM d, yyyy h:mm aa"
-          className="mt-1 p-2 block w-full rounded-md border border-gray-300"
-        />
-      </label>
-      <label className="block mb-4">
-        <span className="text-gray-700">Tên truyện:</span>
-        <Select
-          onChange={(value) => handleChange("storyName", value)}
-          className="mt-1 w-full "
-          
+    <div className="p-4">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          <NotificationOutlined className="text-blue-500" />
+          Quản lý thông báo
+        </h2>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          size="large"
+          onClick={handleCreate}
+          className="bg-blue-500 hover:bg-blue-600"
         >
-          {stories.map((story) => (
-            <Select.Option key={story._id} value={story.sTitle}>
-              {story.sTitle}
-            </Select.Option>
-          ))}
-        </Select>
-      </label>
-      <label className="block mb-4">
-        <span className="text-gray-700">Tên chap:</span>
-        <input
-          type="text"
-          name="chapterName"
-          value={formData.chapterName}
-          onChange={(e) => handleChange("chapterName", e.target.value)}
-          className="mt-1 p-2 block w-full rounded-md border border-gray-300"
-        />
-      </label>
-      <button
-        type="submit"
-        className="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 focus:outline-none focus:shadow-outline-blue"
+          Tạo thông báo
+        </Button>
+      </div>
+
+      {/* Table */}
+      <Table
+        columns={columns}
+        dataSource={announcements}
+        rowKey="_id"
+        loading={loading}
+        pagination={{ pageSize: 10 }}
+        bordered
+        locale={{ emptyText: "Chưa có thông báo nào" }}
+      />
+
+      {/* Create/Edit Modal */}
+      <Modal
+        title={
+          <span className="text-lg font-semibold">
+            {editingId ? "Sửa thông báo" : "Tạo thông báo mới"}
+          </span>
+        }
+        open={isModalOpen}
+        onOk={handleSubmit}
+        onCancel={() => {
+          setIsModalOpen(false);
+          setFormData({ title: "", message: "" });
+          setEditingId(null);
+        }}
+        okText={editingId ? "Cập nhật" : "Tạo"}
+        cancelText="Hủy"
+        width={600}
       >
-        <SaveOutlined /> Lưu thông báo
-      </button>
-    </form>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Tiêu đề (không bắt buộc)
+          </label>
+          <Input
+            placeholder="Nhập tiêu đề thông báo..."
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            size="large"
+            className="mb-4"
+          />
+
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nội dung thông báo <span className="text-red-500">*</span>
+          </label>
+          <TextArea
+            placeholder="Nhập nội dung thông báo sẽ hiển thị cho người dùng..."
+            value={formData.message}
+            onChange={(e) =>
+              setFormData({ ...formData, message: e.target.value })
+            }
+            rows={4}
+            showCount
+            maxLength={500}
+            className="mb-2"
+          />
+        </div>
+      </Modal>
+    </div>
   );
 };
 

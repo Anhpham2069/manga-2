@@ -16,34 +16,32 @@ const HomeLayout = () => {
 
   return (
     <div
-      className={`${
-        isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
-      } flex flex-col`}
+      className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
+        } flex flex-col`}
     >
       <NavBar />
-      <div className="max-w-[1000px] mx-auto w-full">
-            <div className="pt-3 lg:px-14 tablet:px-6">
-              <Slider />
-            </div>
+      <div className="max-w-[90%] mx-auto w-full">
+        <div className="pt-3 lg:px-14 tablet:px-6">
+          <Slider />
+        </div>
 
-            <div className="lg:pt-10 tablet:px-6 lg:px-14">
-              <ScheduleList />
-            </div>
+        <div className="lg:pt-10 tablet:px-6 lg:px-14">
+          <ScheduleList />
+        </div>
 
-            {/* ===== FILTER MENU ===== */}
-            <div className={`${
-              isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
-            } lg:px-14 tablet:px-6 mt-8`}>
-              <StoryFilterMenu
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
-                setSlug={setSlug}
-              />
-            </div>
-      
-          {/* ===== FEATURED ===== */}
-          <Featured dark={isDarkModeEnable} slug={slug} />
-      </div>  
+        {/* ===== FILTER MENU ===== */}
+        <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
+          } lg:px-14 tablet:px-6 mt-8`}>
+          <StoryFilterMenu
+            activeFilter={activeFilter}
+            setActiveFilter={setActiveFilter}
+            setSlug={setSlug}
+          />
+        </div>
+
+        {/* ===== FEATURED ===== */}
+        <Featured dark={isDarkModeEnable} slug={slug} />
+      </div>
       <Footer />
     </div>
   );

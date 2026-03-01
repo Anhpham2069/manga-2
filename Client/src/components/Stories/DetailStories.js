@@ -44,6 +44,9 @@ import {
   removeFavoritesStory,
   addComment,
   getCommentsByStory,
+  getStorybyCategory,
+  getStoryViewCount,
+  getNumberSaveStory,
 } from "../../services/apiStoriesRequest";
 
 const DetailStories = () => {
@@ -73,11 +76,15 @@ const DetailStories = () => {
   const [story, setStory] = useState({});
   const [isFavorite, setIsFavorite] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [readHistory, setReadHistory] = useState();
+  const [readHistory, setReadHistory] = useState(null);
+  const [readHistoryChapterId, setReadHistoryChapterId] = useState(null);
   const [loadingFav, setLoadingFav] = useState(false);
   const [comment, setComment] = useState("");
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
+  const [recommendStories, setRecommendStories] = useState([]);
+  const [storyViewCount, setStoryViewCount] = useState(0);
+  const [storyFavCount, setStoryFavCount] = useState(0);
 
   // Fetch comments
   const fetchComments = async () => {
@@ -94,6 +101,21 @@ const DetailStories = () => {
 
   useEffect(() => {
     fetchComments();
+  }, [slug]);
+
+  // Fetch view count and fav count for this story
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const viewRes = await getStoryViewCount(slug);
+        setStoryViewCount(viewRes?.viewCount || 0);
+        const saveRes = await getNumberSaveStory();
+        if (saveRes) {
+          setStoryFavCount(saveRes[slug] || 0);
+        }
+      } catch (error) { console.log(error); }
+    };
+    fetchCounts();
   }, [slug]);
 
   const handleSubmitComment = async () => {
@@ -118,19 +140,34 @@ const DetailStories = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchReadProgress = async () => {
       try {
-        const res = await getLastChapter(slug);
-        if (res) {
-          const chapterCurrent = res.chapter;
-          setReadHistory(chapterCurrent);
+        // Ưu tiên lấy từ server nếu đã đăng nhập
+        if (userId) {
+          const res = await getLastChapter(slug, userId);
+          if (res && res.chapter) {
+            setReadHistory(res.chapter);
+            setReadHistoryChapterId(res.chapterId || null);
+            return;
+          }
+        }
+
+        // Fallback: lấy từ localStorage cho user chưa đăng nhập
+        const localHistory = localStorage.getItem("historyChapter");
+        if (localHistory) {
+          const parsed = JSON.parse(localHistory);
+          const found = parsed.find((item) => item.slug === slug);
+          if (found) {
+            setReadHistory(found.currentChapter);
+            setReadHistoryChapterId(found.currentChapterId || null);
+          }
         }
       } catch (error) {
         console.log(error);
       }
     };
-    fetchData();
-  }, [slug]);
+    fetchReadProgress();
+  }, [slug, userId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -138,6 +175,19 @@ const DetailStories = () => {
         const res = await getDetailStory(slug);
         if (res.data) {
           setStory(res.data.data);
+          // Fetch recommend stories by first category
+          const categories = res.data.data?.item?.category;
+          if (categories && categories.length > 0) {
+            try {
+              const catSlug = categories[0].slug;
+              const catRes = await getStorybyCategory(catSlug);
+              if (catRes?.items) {
+                // Filter out current story
+                const filtered = catRes.items.filter((item) => item.slug !== slug);
+                setRecommendStories(filtered.slice(0, 6));
+              }
+            } catch (e) { console.log(e); }
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -247,15 +297,20 @@ const DetailStories = () => {
   const hasChapters = chapterLength > 0;
 
   const currentChapterRef = useRef(null);
+  const hasScrolledRef = useRef(false);
 
+  // Auto-scroll tới chương đang đọc — chỉ 1 lần duy nhất
   useEffect(() => {
-    if (currentChapterRef.current) {
-      currentChapterRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+    if (readHistory && currentChapterRef.current && !hasScrolledRef.current) {
+      hasScrolledRef.current = true;
+      setTimeout(() => {
+        currentChapterRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 300);
     }
-  }, []);
+  }, [readHistory, filteredChapters]);
 
   const scrollToCurrentChapter = (e) => {
     e.preventDefault();
@@ -302,9 +357,13 @@ const DetailStories = () => {
               {/* Nút đọc ngay */}
               {hasChapters ? (
                 <Link
-                  to={`view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data
-                    ?.split("/")
-                    .pop()}`}
+                  to={
+                    readHistoryChapterId
+                      ? `view/${readHistoryChapterId}`
+                      : `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data
+                        ?.split("/")
+                        .pop()}`
+                  }
                 >
                   <button
                     className={`${isDarkModeEnable
@@ -312,7 +371,7 @@ const DetailStories = () => {
                       : "bg-primary-color text-white hover:opacity-90"
                       } mt-5 w-full py-3 rounded-lg uppercase font-semibold transition duration-200`}
                   >
-                    Đọc ngay
+                    {readHistory ? `Đọc tiếp Ch.${readHistory}` : "Đọc ngay"}
                   </button>
                 </Link>
               ) : (
@@ -363,7 +422,7 @@ const DetailStories = () => {
                     <FontAwesomeIcon icon={faEye} />
                     Lượt xem
                   </span>
-                  <p className="mt-1">10.000</p>
+                  <p className="mt-1">{storyViewCount.toLocaleString()}</p>
                 </div>
 
                 <div className="flex flex-col">
@@ -371,7 +430,7 @@ const DetailStories = () => {
                     <FontAwesomeIcon icon={faHeart} />
                     Theo dõi
                   </span>
-                  <p className="mt-1">1000</p>
+                  <p className="mt-1">{storyFavCount.toLocaleString()}</p>
                 </div>
 
                 <div className="flex flex-col">
@@ -540,14 +599,14 @@ const DetailStories = () => {
                             ref={isCurrentChapter ? currentChapterRef : null}
                             className={`relative p-3 rounded-lg border transition-all duration-300 text-center
                               ${isCurrentChapter
-                                ? "bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white font-semibold shadow-lg animate-pulse scale-105"
+                                ? "bg-blue-500 text-white font-semibold shadow-lg shadow-blue-200 border-blue-400 ring-2 ring-blue-300 ring-offset-2 scale-[1.03]"
                                 : "hover:bg-primary-color hover:text-white"
                               }
                             `}
                           >
                             {isCurrentChapter && (
-                              <span className="absolute -top-2 -right-2 text-xl animate-bounce">
-                                🔥
+                              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
+                                Đang đọc
                               </span>
                             )}
                             Chapter {chap.chapter_name}
@@ -568,7 +627,7 @@ const DetailStories = () => {
           className={`${isDarkModeEnable
             ? "bg-bg_dark_light text-text_darkMode"
             : "bg-white"
-            } h-fit mt-40 m-auto laptop:w-[90%] shadow-lg `}
+            } h-fit mt-20 m-auto laptop:w-[90%] shadow-lg `}
         >
           <div className="py-1 h-12 flex items-center justify-between px-4 text-primary-color border-b-[1px] border-[#F0F0F0] ">
             <button className=" text-lg font-semibold h-4/5  flex items-center justify-center rounded-lg">
@@ -591,29 +650,24 @@ const DetailStories = () => {
             </div>
           </div>
           <div
-            className="container-trendStrories h-fit relative p-4 flex overflow-x-scroll scroll-none w-full transition-transform duration-300"
+            className="container-trendStrories h-fit relative p-4 flex gap-4 overflow-x-scroll scroll-none w-full transition-transform duration-300"
             ref={containerRef}
           >
-            {favorites?.map((item) => {
-              // const timeAgo = formatDistanceToNow(new Date(item.createdAt), {
-              //   addSuffix: true,
-              //   locale: vi,
-              // });
-              // const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
-              // const newestChapter = layChapterMoiNhat(item);
-              return (
+            {recommendStories.length > 0 ? (
+              recommendStories.map((item) => (
                 <CardStories
                   key={item._id}
                   id={item._id}
-                  title={item.story.item.name}
-                  img={item.story?.seoOnPage.seoSchema.image}
+                  title={item.name}
+                  img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                   slug={item.slug}
-                  // time={trimmedTimeAgo}
-                  chapter={item.story.item.chapters[0]?.server_data?.length}
+                  chapter={item.chaptersLatest?.[0]?.chapter_name}
                   nomarl
                 />
-              );
-            })}
+              ))
+            ) : (
+              <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>
+            )}
           </div>
         </div>
 

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { CaretDownOutlined } from "@ant-design/icons";
-import { Popover, Modal, Drawer } from "antd";
+import { Popover, Drawer } from "antd";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-// import {faSun,} from "@fortawesome/free-regular-svg-icons"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMagnifyingGlass,
@@ -23,562 +22,389 @@ import "../HomeComponent/style.css";
 import TooltipComponent from "../components/tooltip";
 import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode, toggleDarkMode } from "../layout/DarkModeSlice";
-import { selectSearchTerm } from "../../redux/slice/searchSlice";
 import axios from "axios";
 import { logOut } from "../../services/apiLoginRequest";
 import { createAxios } from "../../createInstance";
 import { logoutSuccess } from "../../redux/slice/authSlice";
+import AnnouncementBanner from "../components/AnnouncementBanner";
 
 const NavBar = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate()
-
-
-  const searchTerm = useSelector(selectSearchTerm);
+  const navigate = useNavigate();
   const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state.auth.login.currentUser);
 
-  
-  const accessToken = user?.accessToken
-  const id = user?._id
+  const accessToken = user?.accessToken;
+  const id = user?._id;
 
-  
-  // const [isOpen,setIsOpen] = useState(false)
+  // States
   const [openCategory, setOpenCategory] = useState(false);
-  const [openRating, setOpenRating] = useState(false);
-  const [darkMode, setDarkmode] = useState(false);
-  // const [isOpen,setIsOpen] = useState(false)
-  const [isModalLoginOpen, setIsModalLoginOpen] = useState(false);
-  const [isModalRegisterOpen, setIsModalRegisterOpen] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [placement, setPlacement] = useState("left");
-
-
-  const [genres, setGenres] = useState();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
   const [showResults, setShowResults] = useState(false);
-  const [resultsMobile, setResultsMobile] = useState(false);
 
-  // Thêm hàm để xử lý khi input bị focus và blur
-  const handleInputFocus = () => {
-    setShowResults(true);
-  };
-  const handleInputBlur = () => {
-    setShowResults(false);
-  };
-  const handleInputChange = (event) => {
-    setKeyword(event.target.value);
-  };
-
-  // Thêm useEffect để gọi API mỗi khi từ khóa tìm kiếm thay đổi
+  // Debounce search
   useEffect(() => {
-    const fetchData = async () => {
-      if (keyword.trim() !== "") {
-        setIsLoading(true);
-        try {
-          const response = await axios.get(
-            "https://otruyenapi.com/v1/api/tim-kiem",
-            {
-              params: {
-                keyword,
-              },
-            }
-          );
-          setSearchResults(response.data.data);
-          setResultsMobile(response.data.data)
-        } catch (error) {
-          console.error("Error fetching search results:", error);
-          setError(
-            "An error occurred while searching. Please try again later."
-          );
-        } finally {
-          setIsLoading(false);
-        }
-      } else {
-        setSearchResults([]);
-        setResultsMobile([]) // Nếu từ khóa tìm kiếm là rỗng, đặt kết quả tìm kiếm thành rỗng
+    if (keyword.trim() === "") {
+      setSearchResults([]);
+      return;
+    }
+    const debounceTimer = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get(
+          "https://otruyenapi.com/v1/api/tim-kiem",
+          { params: { keyword } }
+        );
+        setSearchResults(response.data.data);
+      } catch (error) {
+        console.error("Error fetching search results:", error);
+      } finally {
+        setIsLoading(false);
       }
-    };
-
-    fetchData();
+    }, 400);
+    return () => clearTimeout(debounceTimer);
   }, [keyword]);
-  const handleSubmit = async (event) => {
+
+  const handleSubmit = (event) => {
     event.preventDefault();
-
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await axios.get(
-        "https://otruyenapi.com/v1/api/tim-kiem",
-        {
-          params: {
-            keyword,
-          },
-        }
-      );
-
-      setSearchResults(response.data.data); 
-      setResultsMobile(response.data.data)
-      // Assuming data is in the response body
-    } catch (error) {
-      console.error("Error fetching search results:", error);
-      setError("An error occurred while searching. Please try again later.");
-    } finally {
-      setIsLoading(false);
+    if (keyword.trim()) {
+      setShowResults(false);
+      navigate(`/search/${keyword}`);
     }
   };
 
   const clearInput = () => {
     setKeyword("");
     setSearchResults([]);
-    setResultsMobile()
-    setShowResults(true);
   };
 
-  // genres
-  useEffect(() => {
-    const fetchDataGenres = async () => {
-      const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
-      // console.log(res)
-      if (res.data) {
-        setGenres(res.data.data);
-      }
-    };
-    fetchDataGenres();
-  }, []);
-  // dark mode
-  const handleToggleDarkMode = () => {
-    dispatch(toggleDarkMode());
-  };
+  const handleToggleDarkMode = () => dispatch(toggleDarkMode());
 
-  const handleOpenChange = (newOpen) => {
-    setOpenCategory(newOpen);
-  };
-  const handleOpenChangeRating = (newOpen) => {
-    setOpenRating(newOpen);
-  };
+  let axiosJWT = createAxios(user, dispatch, logoutSuccess);
+  const handleLogout = () => logOut(dispatch, id, navigate, accessToken);
 
-  // open drawer
-  const showDrawer = () => {
-    setOpen(true);
-  };
-  const onClose = () => {
-    setOpen(false);
-  };
-  const onChange = (e) => {
-    setPlacement(e.target.value);
-  };
-  // logout
-let axiosJWT = createAxios(user,dispatch,logoutSuccess)
+  // Lấy chữ cái đầu
+  const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "A");
 
-const handleLogout = () =>{
-  logOut(dispatch,id,navigate, accessToken);
-}
+  // ======= Search Input (dùng chung cho desktop + drawer) =======
+  const renderSearchInput = (isMobile) => (
+    <div className="relative">
+      <form onSubmit={handleSubmit}>
+        <div className="relative">
+          <button
+            type="submit"
+            className={`absolute top-1/2 -translate-y-1/2 left-3 ${isLoading ? "animate-spin" : ""
+              }`}
+          >
+            <FontAwesomeIcon
+              color="grey"
+              icon={isLoading ? faSpinner : faMagnifyingGlass}
+            />
+          </button>
+          <input
+            className={`rounded-full outline-none text-sm font-medium pl-9 pr-9 ${isMobile
+              ? "w-full h-11 bg-gray-100 text-gray-700 placeholder-gray-400"
+              : "w-64 h-9 bg-white text-gray-700 placeholder-gray-400"
+              }`}
+            type="text"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            placeholder="Tìm truyện..."
+            onFocus={() => setShowResults(true)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+          />
+          {keyword && (
+            <button
+              type="button"
+              className="absolute top-1/2 -translate-y-1/2 right-3"
+              onClick={clearInput}
+            >
+              <FontAwesomeIcon color="grey" icon={faClose} />
+            </button>
+          )}
+        </div>
+      </form>
+      {/* Search Results Dropdown */}
+      {showResults && searchResults?.items?.length > 0 && (
+        <div className="absolute z-50 top-full left-0 w-full mt-1 bg-white rounded-lg border border-gray-200 shadow-xl overflow-hidden">
+          {searchResults.items?.slice(0, 8).map((rs, index) => (
+            <Link to={`/detail/${rs.slug}`} key={rs._id}>
+              <div className="flex h-16 w-full p-2 hover:bg-blue-50 transition-colors border-b border-gray-50 last:border-0">
+                <img
+                  className="h-full rounded object-cover"
+                  src={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}
+                  alt={rs.name}
+                />
+                <p className="flex-1 text-gray-800 font-semibold text-sm px-3 py-1 line-clamp-2">
+                  {rs.name}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  // ======= User Menu Popover Content =======
+  const UserMenuContent = () => (
+    <div className="flex flex-col gap-1 min-w-[180px] p-1">
+      {user ? (
+        <>
+          <div className="px-3 py-2 border-b border-gray-100 mb-1">
+            <p className="font-bold text-gray-800">{user?.username}</p>
+            <p className="text-xs text-gray-400">
+              {user.admin ? "Quản trị viên" : "Thành viên"}
+            </p>
+          </div>
+          <Link to="/user">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+              <FontAwesomeIcon icon={faCircleUser} className="w-4" /> Tài khoản
+            </button>
+          </Link>
+          <Link to="/favorites">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+              <FontAwesomeIcon icon={faBookmark} className="w-4" /> Theo dõi
+            </button>
+          </Link>
+          <Link to="/history">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+              <FontAwesomeIcon icon={faClockRotateLeft} className="w-4" /> Lịch
+              sử
+            </button>
+          </Link>
+          {user.admin && (
+            <Link to="/admin">
+              <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+                <FontAwesomeIcon icon={faFaceSmile} className="w-4" /> Admin
+              </button>
+            </Link>
+          )}
+          <div className="border-t border-gray-100 mt-1 pt-1">
+            <button
+              className="w-full text-left px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-md transition-colors flex items-center gap-2"
+              onClick={handleLogout}
+            >
+              <FontAwesomeIcon icon={faRightFromBracket} className="w-4" /> Đăng
+              xuất
+            </button>
+          </div>
+        </>
+      ) : (
+        <>
+          <Link to="/login">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+              <FontAwesomeIcon icon={faUser} className="w-4" /> Đăng nhập
+            </button>
+          </Link>
+          <Link to="/register">
+            <button className="w-full text-left px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-blue-500 rounded-md transition-colors flex items-center gap-2">
+              <FontAwesomeIcon icon={faUserPlus} className="w-4" /> Đăng ký
+            </button>
+          </Link>
+        </>
+      )}
+    </div>
+  );
 
   return (
     <>
-      <div
-        className={`${
-          isDarkModeEnable ? "bg-[#3A64C2]" : "bg-regal-blue"
-        }  w-full h-16 text-white  flex items-center `}
+      <AnnouncementBanner />
+
+      {/* ======= MAIN NAVBAR ======= */}
+      <nav
+        className={`w-full h-16 text-white flex items-center transition-colors duration-300 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-regal-blue"
+          }`}
       >
-        <div className="px-14 flex items-center w-full max-lg:justify-between">
-          <div className="lg:hidden">
-            <FontAwesomeIcon icon={faBars} onClick={showDrawer} />
-          </div>
-          <div className="m-auto">
-            <NavLink to={"/"}>
-    <div class="flex items-center">
-  <div class="px-6 py-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg">
-    <h1 class="text-2xl font-extrabold text-white tracking-wide">
-      Truyện <span class="text-yellow-300">3s</span>
-    </h1>
-  </div>
-</div>
+        <div className="max-w-[90%] mx-auto w-full flex items-center justify-between">
+          {/* Mobile hamburger */}
+          <button
+            className="lg:hidden text-xl p-2 hover:bg-white/10 rounded-lg transition-colors"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <FontAwesomeIcon icon={faBars} />
+          </button>
 
-
-              {/* <img src="https://www.vectorstock.com/royalty-free-vector/anime-high-quality-logo-ideal-for-t-shirt-vector-51421942"></img> */}
-            </NavLink>
-          </div>
-          <div className="">
-            <Drawer
-              title="Đọc truyện 5s fake"
-              placement={placement}
-              closable={false}
-              onClose={onClose}
-              open={open}
-              key={placement}
-            >
-              <div className="relative pb-5">
-              <form onSubmit={handleSubmit}>
-                <div className=" relative">
-                  {isLoading ? (
-                    <button className="absolute text-black top-4 left-2">
-                      <FontAwesomeIcon
-                        color="grey"
-                        size="lg"
-                        icon={faSpinner}
-                      />
-                    </button>
-                  ) : (
-                    <Link to={`/search/${keyword}`}>
-                      <button
-                        type="submit"
-                        className="absolute text-black top-4 left-2"
-                      >
-                        <FontAwesomeIcon
-                          color="grey"
-                          size="lg"
-                          icon={faMagnifyingGlass}
-                        />
-                      </button>
-                    </Link>
-                  )}
-
-                  <input
-                    className="w-full h-12 rounded-full outline-none text-base font-bold text-black bg-[#E6F4FF] pl-9"
-                    type="text"
-                    id="keyword"
-                    name="keyword"
-                    value={keyword}
-                    onChange={handleInputChange}
-                    placeholder="Tìm truyện..."
-                    required
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                  {keyword && ( // Hiển thị nút "X" chỉ khi ô input không trống
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 px-3 py-2  text-black rounded-r flex items-center justify-center"
-                      onClick={clearInput} // Sử dụng sự kiện onClick để xóa nội dung ô input
-                    >
-                      <FontAwesomeIcon color="grey" size="lg" icon={faClose} />
-                    </button>
-                  )}
-                </div>
-              </form>
-              {error && <p className="error-message">{error}</p>}
-              {showResults && searchResults?.items?.length > 0 && (
-                <div className=" absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg">
-                  {searchResults.items?.slice(0,10).map((rs, index) => {
-                    return (
-                      <Link to={`/detail/${rs.slug}`} key={rs._id}>
-                        <div className="flex h-20 w-full p-2 hover:bg-[#F1F1F2] hover:border-r-4 border-indigo-500">
-                          <img
-                            className="h-full"
-                            src={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}
-                            alt="anh"
-                          />
-                          <p
-                            className="flex-1 text-black font-bold px-4 py-2 cursor-pointer "
-                            
-                          >
-                            {rs.name}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+          {/* Logo */}
+          <NavLink to="/" className="flex-shrink-0">
+            <div className="flex items-center">
+              <div className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg hover:shadow-xl transition-shadow">
+                <h1 className="text-xl font-extrabold text-white tracking-wide">
+                  Truyện <span className="text-yellow-300">3s</span>
+                </h1>
               </div>
-              <ul className="flex flex-col gap-6 text-base font-bold pb-4">
-                <Popover
-                  content={<TooltipComponent sx />}
-                  trigger="click"
-                  placement="bottomLeft"
-                  open={openCategory}
-                  onOpenChange={handleOpenChange}
-                >
-                  <li className="border-b-[1px] border-gray-200 pb-2">
-                    Thể Loại <CaretDownOutlined />
-                  </li>
-                </Popover>
-                <Popover
-                  content={<TooltipComponent />}
-                  placement="bottomLeft"
-                  trigger="click"
-                  open={openRating}
-                  onOpenChange={handleOpenChangeRating}
-                >
-                  <li className="border-b-[1px] border-gray-200 pb-2">
-                    Xếp hạng <CaretDownOutlined />
-                  </li>
-                </Popover>
-                <Link to={"/filter"}>
-                  <li className="border-b-[1px] border-gray-200 pb-2">
-                    Tìm kiếm nâng cao
-                  </li>
-                </Link>
-                <li className="border-b-[1px] border-gray-200 pb-2">
-                  Theo dõi
-                </li>
-                <li className="border-b-[1px] border-gray-200 pb-2">Lịch sử</li>
-              </ul>
-              
-              <div className="flex justify-center items-center h-full">
-                <img src="https://doctruyen5s.top/uploads/images/logo.png"></img>
-              </div>
-            </Drawer>
-          </div>
-          <div className=" phone:hidden lg:flex items-center text-text-color flex-1 font-bold text-[15px]">
-            <div className=" pl-12 flex-row hover:text-white">
-              <Popover
-                content={<TooltipComponent sx />}
-                trigger="click"
-                placement="bottomLeft"
-                open={openCategory}
-                onOpenChange={handleOpenChange}
-              >
-                <div>
-                  <p className="text flex">
-                    Thể loại{" "}
-                    <span className="mt-0">
-                      <CaretDownOutlined />
-                    </span>
-                  </p>
-                </div>
-              </Popover>
             </div>
+          </NavLink>
+
+          {/* Desktop Nav Links */}
+          <div className="phone:hidden lg:flex items-center gap-1 flex-1 ml-8 font-semibold text-sm">
             <Popover
-              content={<TooltipComponent />}
-              placement="bottomLeft"
+              content={<TooltipComponent sx />}
               trigger="click"
-              open={openRating}
-              onOpenChange={handleOpenChangeRating}
+              placement="bottomLeft"
+              open={openCategory}
+              onOpenChange={setOpenCategory}
             >
-              <div className="px-7 flex hover:text-white cursor-pointer">
-                <p className="text">
-                  Xếp hạng{" "}
-                  <span>
-                    <CaretDownOutlined />
-                  </span>
-                </p>
-              </div>
+              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-1">
+                Thể loại <CaretDownOutlined />
+              </button>
             </Popover>
-            <Link to={"/filter"}>
-              <div className="hover:text-white cursor-pointer">
-                <p className="text"> Tìm kiếm nâng cao</p>
-              </div>
+            <Link to="/ranking">
+              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+                Xếp hạng
+              </button>
             </Link>
-            <Link to={"/contact"}>
-              <div className="hover:text-white cursor-pointer px-7">
-                <p className="text"> Liên hệ</p>
-              </div>
+            <Link to="/filter">
+              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+                Tìm kiếm nâng cao
+              </button>
+            </Link>
+            <Link to="/contact">
+              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+                Liên hệ
+              </button>
             </Link>
           </div>
-          <div className="flex items-center ">
-            <div
-              className="cursor-pointer phone:hidden lg:block"
+
+          {/* Right side actions */}
+          <div className="flex items-center gap-2">
+            {/* Dark mode toggle */}
+            <button
+              className="phone:hidden lg:flex w-9 h-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
               onClick={handleToggleDarkMode}
             >
-              {isDarkModeEnable ? (
-                <FontAwesomeIcon icon={faMoon} color="grey" size="xl" />
-              ) : (
-                <FontAwesomeIcon icon={faSun} size="xl" />
-              )}
-            </div>
-            {/* search */}
-            <div className="relative">
-              <form onSubmit={handleSubmit}>
-                <div className="phone:hidden lg:block relative mx-4">
-                  {isLoading ? (
-                    <button className="absolute text-black top-2 left-2">
-                      <FontAwesomeIcon
-                        color="grey"
-                        size="lg"
-                        icon={faSpinner}
-                      />
-                    </button>
-                  ) : (
-                    <Link to={`/search/${keyword}`}>
-                      <button
-                        type="submit"
-                        className="absolute text-black top-2 left-2"
-                      >
-                        <FontAwesomeIcon
-                          color="grey"
-                          size="lg"
-                          icon={faMagnifyingGlass}
-                        />
-                      </button>
-                    </Link>
-                  )}
+              <FontAwesomeIcon
+                icon={isDarkModeEnable ? faMoon : faSun}
+                className={isDarkModeEnable ? "text-yellow-300" : "text-white"}
+              />
+            </button>
 
-                  <input
-                    className="w-64 h-9 rounded-full outline-none text-sm text-black bg-[#F5F8FA] pl-9"
-                    type="text"
-                    id="keyword"
-                    name="keyword"
-                    value={keyword}
-                    onChange={handleInputChange}
-                    placeholder="Tìm truyện..."
-                    required
-                    onFocus={handleInputFocus}
-                    onBlur={handleInputBlur}
-                  />
-                  {keyword && ( // Hiển thị nút "X" chỉ khi ô input không trống
-                    <button
-                      type="button"
-                      className="absolute inset-y-0 right-0 px-3 py-2  text-black rounded-r flex items-center justify-center"
-                      onClick={clearInput} // Sử dụng sự kiện onClick để xóa nội dung ô input
-                    >
-                      <FontAwesomeIcon color="grey" size="lg" icon={faClose} />
-                    </button>
-                  )}
-                </div>
-              </form>
-              {error && <p className="error-message">{error}</p>}
-              {/* {searchResults.length === 0 && !isLoading && showResults && (
-                <div className="absolute z-10 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg" >
-                  Không có kết quả.</div>
-                )} */}
-              {showResults && searchResults?.items?.length > 0 && (
-                <div className=" absolute z-50 top-full left-0 w-full mt-1 bg-white border border-gray-300 shadow-lg">
-                  {searchResults.items?.slice(0,10).map((rs, index) => {
-                    return (
-                      <Link to={`/detail/${rs.slug}`} key={rs._id}>
-                        <div className="flex h-20 w-full p-2 hover:bg-[#F1F1F2] hover:border-r-4 border-indigo-500">
-                          <img
-                            className="h-full"
-                            src={`https://img.otruyenapi.com//uploads/${searchResults.seoOnPage.og_image?.[index]}`}
-                            alt="anh"
-                          />
-                          <p
-                            className="flex-1 text-black font-bold px-4 py-2 cursor-pointer "
-                            
-                          >
-                            {rs.name}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* <Popover content={<SearchResultItem result={searchResults}/>}> */}
-
-              {/* <div className='phone:hidden lg:block relative mx-4'>
-                  <button 
-                  // onClick={handleSearch} 
-                  className='absolute text-black top-2 left-2'><FontAwesomeIcon color='grey' size='lg' icon={faMagnifyingGlass} /></button>
-                 <Popover
-                //   content={ searchResult?.map(result => (
-                //     <SearchResultItem key={result.id} result={result} />
-                // ))}
-                 >
-                    <input className='w-64 h-9 rounded-full outline-none text-sm text-black bg-[#F5F8FA] pl-9'
-                      placeholder='Tìm truyện...'
-                      type="text" 
-                      value={keyword}
-                      onChange={(e) => setKeyword(e.target.value)} 
-                    />
-                 </Popover>
-                </div> */}
+            {/* Desktop search */}
+            <div className="phone:hidden lg:block">
+              {renderSearchInput(false)}
             </div>
 
-            {/* login */}
+            {/* User avatar / menu */}
             <Popover
-              placement="bottomLeft"
+              placement="bottomRight"
               trigger="click"
-              content={
-                <div className=" text-emerald-950 font-bold flex  flex-col justify-start items-start text-base">
-                  {user ? (
-                    <>
-                        <Link to={'/user'}>
-                          <button className="text-red-950">Hi: {user?.username}</button>
-                        </Link>
-                        <Link to={'/user'}>  
-                        <button
-                          className="text2 mt-3 hover:text-gray-500"
-                        >
-                          {" "}
-                          <FontAwesomeIcon icon={faCircleUser} /> Tài khoản
-                        </button>
-                        </Link>
-                        <Link to={"/favorites"}>
-                          <button
-                            className="text2 mt-3 hover:text-gray-500"
-                          >
-                            <FontAwesomeIcon icon={faBookmark} /> Theo dõi
-                          </button>
-                        </Link>
-                      <Link to={'/history'}>
-                        <button
-                          className="text2 mt-3 hover:text-gray-500"
-                        >
-                          <FontAwesomeIcon icon={faClockRotateLeft} /> Lịch sử
-                        </button>
-                      </Link>
-                      {user.admin && 
-                        <Link to={'/admin'}>
-                          <button
-                            className="text2 mt-3 hover:text-gray-500"
-                          >
-                            <FontAwesomeIcon icon={faFaceSmile} /> Admin
-                          </button>
-                        </Link>
-                      }
-                      <button
-                        className="text2 mt-3 hover:text-gray-500"
-                        onClick={handleLogout}
-                      >
-                        <FontAwesomeIcon icon={faRightFromBracket} /> Đăng xuất
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        className="text2 hover:text-gray-500"
-                      >
-                      <Link to={'/login'}>
-                        <FontAwesomeIcon icon={faUser} /> Đăng nhập
-                      </Link>
-                      </button>
-                      <button
-                        className="text2 mt-3 hover:text-gray-500"
-                      
-                      >
-                        <Link to={'/register'}>
-                          <FontAwesomeIcon icon={faUserPlus} /> Đăng kí
-                        </Link>
-                      </button>
-                    </>
-                  )}
-                </div>
-              }
+              content={<UserMenuContent />}
             >
-              {user? 
-                <div className="flex justify-center items-center bg-orange-400 shadow-lg  px-3 rounded-full">
-                  <p className=" phone:text-sm font-bold text-white tablet:text-lg  p-1 cursor-pointer hover:text-slate-200">
-A
-                  </p>
-                </div>
-              :
-              
-              <span className="cursor-pointer border-solid border-2 rounded-full w-10 h-10 flex items-center justify-center bg-white">
-                <FontAwesomeIcon
-                  icon={faUser}
-                  size="lg"
-                  className="text-regal-blue bg-re"
-                />
-              </span>
-              }
+              {user ? (
+                <button
+                  className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+                  }}
+                >
+                  {getInitial(user?.username)}
+                </button>
+              ) : (
+                <button className="w-9 h-9 rounded-lg border-2 border-white/30 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors">
+                  <FontAwesomeIcon icon={faUser} className="text-sm" />
+                </button>
+              )}
             </Popover>
-
-           
           </div>
         </div>
-      </div>
-      <div className="bg-[#5383EE] w-full h-9 text-center flex justify-center items-center text-white">
+      </nav>
+
+      {/* ======= SUB BAR ======= */}
+      <div
+        className={`w-full py-2 text-center text-sm font-medium transition-colors duration-300 ${isDarkModeEnable
+          ? "bg-[#334155] text-gray-300"
+          : "bg-[#5383EE] text-white"
+          }`}
+      >
         <p>Click quảng cáo để ủng hộ mình các bạn nhé :3</p>
       </div>
+
+      {/* ======= MOBILE DRAWER ======= */}
+      <Drawer
+        title={
+          <div className="flex items-center gap-2">
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
+              style={{
+                background:
+                  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              }}
+            >
+              M
+            </div>
+            <span className="font-bold text-gray-800">
+              Truyện <span className="text-yellow-500">3s</span>
+            </span>
+          </div>
+        }
+        placement="left"
+        onClose={() => setDrawerOpen(false)}
+        open={drawerOpen}
+        width={300}
+      >
+        {/* Mobile search */}
+        <div className="pb-5">
+          {renderSearchInput(true)}
+        </div>
+
+        {/* Mobile menu */}
+        <nav className="flex flex-col gap-1">
+          <Popover
+            content={<TooltipComponent sx />}
+            trigger="click"
+            placement="bottomLeft"
+            open={openCategory}
+            onOpenChange={setOpenCategory}
+          >
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors flex items-center justify-between">
+              Thể Loại <CaretDownOutlined />
+            </button>
+          </Popover>
+          <Link to="/ranking" onClick={() => setDrawerOpen(false)}>
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+              Xếp hạng
+            </button>
+          </Link>
+          <Link to="/filter" onClick={() => setDrawerOpen(false)}>
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+              Tìm kiếm nâng cao
+            </button>
+          </Link>
+          <Link to="/favorites" onClick={() => setDrawerOpen(false)}>
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+              Theo dõi
+            </button>
+          </Link>
+          <Link to="/history" onClick={() => setDrawerOpen(false)}>
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+              Lịch sử
+            </button>
+          </Link>
+          <Link to="/contact" onClick={() => setDrawerOpen(false)}>
+            <button className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-colors">
+              Liên hệ
+            </button>
+          </Link>
+        </nav>
+
+        {/* Mobile dark mode */}
+        <div className="mt-4 pt-4 border-t border-gray-100">
+          <button
+            onClick={handleToggleDarkMode}
+            className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 rounded-lg transition-colors flex items-center gap-2"
+          >
+            <FontAwesomeIcon
+              icon={isDarkModeEnable ? faMoon : faSun}
+              className={isDarkModeEnable ? "text-yellow-500" : "text-amber-500"}
+            />
+            {isDarkModeEnable ? "Chế độ sáng" : "Chế độ tối"}
+          </button>
+        </div>
+      </Drawer>
     </>
   );
 };

@@ -10,6 +10,7 @@ import {
   registerStart,
   registerSuccess,
 } from "../redux/slice/authSlice";
+import { resetFavorites } from "../redux/slice/favoritesSlice";
 
 export const loginUser = async (user, dispatch, navigate) => {
   dispatch(loginStart());
@@ -52,10 +53,12 @@ export const logOut = async (dispatch, id, navigate, accessToken) => {
       }
     );
     dispatch(logoutSuccess());
+    dispatch(resetFavorites());
     navigate("/login");
   } catch (err) {
     // Token hết hạn hoặc lỗi -> vẫn đăng xuất ở client
     dispatch(logoutSuccess());
+    dispatch(resetFavorites());
     navigate("/login");
   }
 };

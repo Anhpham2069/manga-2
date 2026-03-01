@@ -10,406 +10,242 @@ import {
   faBookmark,
   faEye,
   faCalendarDay,
-  faSave,
 } from "@fortawesome/free-solid-svg-icons";
 import CardStories from "../components/cardStories";
-import { Data } from "../../services/Data";
 import { useDispatch, useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
+import { getNumberSaveStory, getStoriesByList, getRanking } from "../../services/apiStoriesRequest";
 import axios from "axios";
-import { getAllHistory, getNumberSaveStory, getStoriesByList } from "../../services/apiStoriesRequest";
+
+const apiURL = process.env.REACT_APP_API_URL;
 
 const Featured = ({ dark }) => {
-
-  const dispatch = useDispatch()
-
+  const dispatch = useDispatch();
   const isDarkModeEnable = useSelector(selectDarkMode);
-  // sate
+
   const [storiesData, setStoriesData] = useState([]);
   const [storiesFT, setStoriesFT] = useState([]);
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("truyen-moi");
-  const [selectedButton, setSelectedButton] = useState("homnay");
-  const [readHistory, setReadHistory] = useState();
-  const [saveStory,setSaveStory] = useState()
-  const [activeFilter, setActiveFilter] = useState("latest");
+  const [selectedButton, setSelectedButton] = useState("tuannay");
+  const [rankingData, setRankingData] = useState([]);
+  const [saveStory, setSaveStory] = useState();
+  const [rankingViewsMap, setRankingViewsMap] = useState({});
+  const [gridViewsMap, setGridViewsMap] = useState({});
 
+  // Fetch ranking + StoryView batch
+  useEffect(() => {
+    const periodMap = { homnay: "day", tuannay: "week", thangnay: "month" };
+    const fetchRanking = async () => {
+      try {
+        const res = await getRanking(periodMap[selectedButton] || "week");
+        setRankingData(res || []);
+        // Fetch real views from StoryView
+        const slugs = (res || []).map((item) => item._id);
+        if (slugs.length > 0) {
+          try {
+            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+            setRankingViewsMap(viewsRes.data || {});
+          } catch (e) { console.log(e); }
+        }
+      } catch (error) { console.log(error); }
+    };
+    fetchRanking();
+  }, [selectedButton]);
+
+  // Fetch save counts
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllHistory(dispatch)
-        if (res) {
-          setReadHistory(res);
-        }
-      } catch (error) {
-        console.log(error);
-      }
+        const res = await getNumberSaveStory(dispatch);
+        if (res) setSaveStory(res);
+      } catch (error) { console.log(error); }
     };
     fetchData();
   }, []);
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await getNumberSaveStory(dispatch)
-        if (res) {
-          setSaveStory(res);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    fetchData();
-  }, []);
-  console.log(readHistory)
 
-const fetchData = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.get(
-        `https://otruyenapi.com/v1/api/danh-sach/${slug}`
-      );
-
-      if (res.data?.data) {
-        setStoriesData(res.data.data);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-  console.log(saveStory)
+  // Fetch stories list + views
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await getStoriesByList(slug)
+        const res = await getStoriesByList(slug);
         if (res.data) {
           setStoriesData(res.data);
+          // Fetch views batch
+          const slugs = res.data.items?.map((item) => item.slug) || [];
+          if (slugs.length > 0) {
+            try {
+              const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+              setGridViewsMap(viewsRes.data || {});
+            } catch (e) { console.log(e); }
+          }
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
+      } catch (error) { console.error(error); }
+      finally { setLoading(false); }
     };
     fetchData();
   }, [slug]);
 
+  // Fetch upcoming
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await getStoriesByList("sap-ra-mat");
         setStoriesFT(res.data);
-      } catch (error) {
-        console.log(error);
-      }
+      } catch (error) { console.log(error); }
     };
     fetchData();
   }, []);
-  const handleSectionClick = (sectionSlug) => {
-    setSlug(sectionSlug);
-  };
-
-  const handleClick = (button) => {
-    setSelectedButton(button);
-  };
-  const renderList = () => {
-  const today = new Date();
-
-  // Lấy ngày hiện tại không có giờ phút giây
-  const currentDate = new Date(
-    today.getFullYear(),
-    today.getMonth(),
-    today.getDate()
-  );
-
-  switch (selectedButton) {
-    case "homnay":
-      return readHistory?.slice(0, 10).filter((story) => {
-        const storyDate = new Date(story.timestamp);
-
-        return (
-          storyDate.getFullYear() === currentDate.getFullYear() &&
-          storyDate.getMonth() === currentDate.getMonth() &&
-          storyDate.getDate() === currentDate.getDate()
-        );
-      });
-
-    case "tuannay":
-      // 🔥 Lấy thứ hiện tại (0 = CN, 1 = T2, ...)
-      const dayOfWeek = currentDate.getDay();
-
-      // Nếu là Chủ Nhật (0) thì lùi 6 ngày, còn lại lùi (dayOfWeek - 1)
-      const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-      const firstDayOfWeek = new Date(currentDate);
-      firstDayOfWeek.setDate(currentDate.getDate() - diffToMonday);
-      firstDayOfWeek.setHours(0, 0, 0, 0);
-
-      return readHistory?.slice(0, 10).filter((story) => {
-        const storyDate = new Date(story.timestamp);
-        return storyDate >= firstDayOfWeek && storyDate <= currentDate;
-      });
-
-    case "thangnay":
-      // 🔥 Ngày 1 của tháng
-      const firstDayOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth(),
-        1
-      );
-
-      return readHistory?.slice(0, 10).filter((story) => {
-        const storyDate = new Date(story.timestamp);
-        return storyDate >= firstDayOfMonth && storyDate <= currentDate;
-      });
-
-    default:
-      return [];
-  }
-};
-
-
-  const filterOptions = [
-  { label: "Latest Updated", value: "truyen-moi", color: "bg-green-200 text-green-800" },
-  { label: "🔥 Most Viewed", value: "xem-nhieu", color: "bg-purple-200 text-purple-800" },
-  { label: "✅ Completed", value: "hoan-thanh", color: "bg-blue-200 text-blue-800" },
-  { label: "New Release", value: "sap-ra-mat", color: "bg-yellow-200 text-yellow-800" },
-  { label: "Action", value: "action", color: "bg-gray-200 text-gray-800" },
-  { label: "Comedy", value: "comedy", color: "bg-gray-200 text-gray-800" },
-  { label: "Drama", value: "drama", color: "bg-gray-200 text-gray-800" },
-];
 
   return (
-    <div className="phone:flex-row lg:flex tablet:mx-6 lg:mx-14  mt-4 ">
+    <div className="flex flex-col lg:flex-row gap-5 mt-4 px-3 tablet:px-6 lg:px-14">
       <Helmet>
         <title>Trang chủ - Đọc truyện 5s</title>
-        <meta
-          name="description"
-          content="Khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s. Đọc những câu chuyện mới, tìm những câu chuyện đã hoàn thành và khám phá những bản phát hành sắp tới."
-        />
+        <meta name="description" content="Khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s." />
       </Helmet>
-      
-      <div
-        className={`${
-          isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-        } lg:w-[70%] pl-3.5 shadow-lg `}
-      >
-        <div className="flex border-b-2 border-gray-200 w-full py-2 font-semibold">
-          <div className="h-12 flex items-center phone:h-14 phone:w-full ">
-            <FontAwesomeIcon
-              icon={faStarOfLife}
-              color="#5383EE"
-              className="transition transform hover:rotate-180"
-            />
-            <button
-              className={`${
-                slug == "truyen-moi"
-                  ? "bg-primary-color text-white"
-                  : "bg-white text-primary-color"
-              } 
-                 mr-7 ml-4  flex justify-center items-center rounded-sm h-5/6 p-2`}
-              onClick={() => handleSectionClick("truyen-moi")}
-            >
-              MỚI CẬP NHẬT
-            </button>
-            <button
-              className={`${
-                slug == "hoan-thanh"
-                  ? "bg-primary-color text-white"
-                  : "bg-white text-primary-color"
-              } 
-                      mr-7 ml-4 flex justify-center items-center rounded-sm h-5/6 p-2  uppercase`}
-              onClick={() => handleSectionClick("hoan-thanh")}
-            >
-              <p>Truyện đã hoàn thành</p>
-            </button>
-          </div>
+
+      {/* ========== LEFT: Story Grid ========== */}
+      <div className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} flex-1 shadow-md rounded-md overflow-hidden`}>
+        {/* Tabs */}
+        <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-200">
+          <FontAwesomeIcon icon={faStarOfLife} color="#5383EE" className="mr-2 text-sm" />
+          <TabButton active={slug === "truyen-moi"} onClick={() => setSlug("truyen-moi")} isDark={isDarkModeEnable}>
+            MỚI CẬP NHẬT
+          </TabButton>
+          <TabButton active={slug === "hoan-thanh"} onClick={() => setSlug("hoan-thanh")} isDark={isDarkModeEnable}>
+            HOT
+          </TabButton>
         </div>
-        <div className=" grid  phone:grid-cols-2 phone:gap-2 tablet:grid-cols-4 lg:grid-cols-3 desktop:grid-cols-4 lg:gap-4 mt-3 place-items-center">
-          {storiesData.items?.map((item, index) => {
-            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), {
-              addSuffix: true,
-              locale: vi,
-            });
+
+        {/* Grid */}
+        <div className="grid grid-cols-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-4 gap-x-3 gap-y-0 p-3">
+          {storiesData.items?.map((item) => {
+            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-              <>
-                <CardStories
-                  key={item._id}
-                  id={item._id}
-                  title={item.name}
-                   img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                  slug={item.slug}
-                  time={trimmedTimeAgo}
-                  chapter={item.chaptersLatest?.[0]?.chapter_name}
-                  nomarl
-                />
-              </>
+              <CardStories
+                key={item._id}
+                id={item._id}
+                title={item.name}
+                img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                slug={item.slug}
+                time={trimmedTimeAgo}
+                chapter={item.chaptersLatest?.[0]?.chapter_name}
+                views={gridViewsMap[item.slug] || 0}
+                saves={saveStory?.[item.slug] || 0}
+                nomarl
+              />
             );
           })}
         </div>
-        <div className="w-full my-10 flex justify-center items-center hover:text-primary-color">
+
+        <div className="w-full py-4 flex justify-center">
           <Link to="/all-stories">
-            <button className="w-24 mb-4 h-10 border-[1px] border-gray-300">
+            <button className="px-6 py-2 border border-gray-300 rounded hover:bg-primary-color hover:text-white transition text-sm">
               Xem Thêm
             </button>
           </Link>
         </div>
       </div>
-      <div className="h-fit lg:ml-6 lg:w-[28%]">
-        <div
-          className={` ${
-            isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
-          } shadow-lg h-fit `}
-        >
-          <div className="w-full uppercase text-primary-color p-3 border-b-2 border-gray-200">
-            <FontAwesomeIcon icon={faFire} className="mr-2" />
-            Xem nhiều
+
+      {/* ========== RIGHT: Sidebar ========== */}
+      <div className="w-full lg:w-[280px] shrink-0 flex flex-col gap-4">
+
+        {/* Xem nhiều */}
+        <div className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} shadow-md rounded-md overflow-hidden`}>
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-200">
+            <FontAwesomeIcon icon={faFire} className="text-orange-500" />
+            <span className="uppercase text-primary-color font-bold text-sm">Xem nhiều</span>
           </div>
-          <div className="p-3">
-            <div
-              className={` ${
-                isDarkModeEnable
-                  ? "bg-[#333333] text-text_darkMode"
-                  : "bg-[#F1F1F1]"
-              } m-auto flex justify-center items-center h-10 rounded-md font-normal`}
-            >
-              <FilterButton
-                text="Hôm nay"
-                isSelected={selectedButton === "homnay"}
-                onClick={() => handleClick("homnay")}
-                isDarkModeEnable
-              />
-              <FilterButton
-                text="Tuần này"
-                isSelected={selectedButton === "tuannay"}
-                onClick={() => handleClick("tuannay")}
-                isDarkModeEnable
-              />
-              <FilterButton
-                text="Tháng này"
-                isSelected={selectedButton === "thangnay"}
-                onClick={() => handleClick("thangnay")}
-                isDarkModeEnable
-              />
-            </div>
-            <div>
-              {renderList()
-                ?.sort((a, b) => b.readCount - a.readCount)
-                .map((item, index) => {
-                  let displayValues = 0
-                  if(saveStory?.hasOwnProperty(item.slug)){
-                    displayValues = saveStory[item.slug];
-                  }
-                  return (
-                    <div
-                      key={index}
-                      className="flex p-3 justify-start cursor-pointer border-b-2 border-gray-200"
-                    >
-                      <img
-                        src={`https://img.otruyenapi.com/uploads/${item.storyInfo?.seoOnPage.og_image[0]}`}
-                        alt="anh"
-                        className="h-20"
-                      />
-                      <div className="ml-4 flex flex-col justify-around">
-                        <div className="flex-1">
-                          <Link to={`/detail/${item.slug}`}>
-                            <p>{item.storyInfo.item.name}</p>
-                          </Link>
-                          <div className="flex justify-between gap-1 items-center text-xs">
-                            {/* <p className="font-semibold text-[#888888] mr-1 ">
-                              Thể loại:
-                            </p> */}
-                            <div className="flex flex-1">
-                              {item?.category
-                                ?.slice(0, 3)
-                                .map((cate, index) => {
-                                  return (
-                                    <p
-                                      key={index}
-                                      className={`mr-1 rounded-xl  text-primary-color text-sm hover:text-blue-400`}
-                                    >
-                                      {cate.name}
-                                    </p>
-                                  );
-                                })}
-                            </div>
-                          </div>
-                          <div className="flex flex-col justify-center items-start font-light text-sm">
-                            <p>
-                              <FontAwesomeIcon icon={faEye} />{" "}
-                              {item.readCount.toLocaleString()}{" "}
-                            </p>
-                            <p>
-                              <FontAwesomeIcon icon={faBookmark} />{" "}
-                                {displayValues}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex font-light text-sm">
-                          {/* <p className="mr-2">
-                          <FontAwesomeIcon icon={faBookmark} /> {item.saves}
-                        </p>
-                        <p>
-                          <FontAwesomeIcon icon={faEye} />{" "}
-                          {item.views.toLocaleString()}{" "}
-                        </p> */}
-                        </div>
+
+          {/* Period filter */}
+          <div className={`flex mx-3 mt-3 rounded overflow-hidden border ${isDarkModeEnable ? "border-[#555] bg-[#333]" : "border-gray-200 bg-white"}`}>
+            {[
+              { key: "homnay", label: "Hôm nay" },
+              { key: "tuannay", label: "Tuần này" },
+              { key: "thangnay", label: "Tháng này" },
+            ].map((btn) => (
+              <button
+                key={btn.key}
+                onClick={() => setSelectedButton(btn.key)}
+                className={`flex-1 py-1.5 text-xs font-medium transition ${selectedButton === btn.key
+                  ? "bg-primary-color text-white"
+                  : isDarkModeEnable
+                    ? "text-text_darkMode hover:bg-[#444]"
+                    : "text-gray-600 hover:bg-gray-100"
+                  }`}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Ranking list */}
+          <div className="py-2">
+            {rankingData.length === 0 ? (
+              <p className="text-center text-gray-400 py-4 text-sm">Chưa có dữ liệu</p>
+            ) : (
+              rankingData.slice(0, 8).map((item, index) => {
+                const favCount = saveStory?.[item._id] || 0;
+                return (
+                  <Link to={`/detail/${item._id}`} key={index}
+                    className={`flex gap-2.5 px-3 py-2 transition ${isDarkModeEnable ? "hover:bg-[#333]" : "hover:bg-gray-50"}`}
+                  >
+                    <img
+                      src={`https://img.otruyenapi.com/uploads/${item.storyInfo?.seoOnPage?.og_image?.[0]}`}
+                      alt=""
+                      className="w-[50px] h-[65px] object-cover rounded shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-[13px] leading-tight line-clamp-1">
+                        {item.storyInfo?.item?.name}
+                      </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5">Thể loại: </p>
+                      <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
+                        <span className="flex items-center gap-0.5">
+                          <FontAwesomeIcon icon={faEye} className="text-[9px]" />
+                          {(rankingViewsMap[item._id] || 0).toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-0.5">
+                          <FontAwesomeIcon icon={faBookmark} className="text-[9px]" />
+                          {favCount}
+                        </span>
                       </div>
                     </div>
-                  );
-                })}
-            </div>
+                  </Link>
+                );
+              })
+            )}
           </div>
         </div>
-        {/* new strories */}
-        <div
-          className={`${
-            isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
-          } h-fit shadow-lg mt-10`}
-        >
-          <div className="w-full font-medium uppercase text-primary-color p-3 border-b-2 border-gray-200">
-            <FontAwesomeIcon icon={faCalendarDay} className="mr-2" />
-            Truyện sắp ra mắt
+
+        {/* Truyện sắp ra mắt */}
+        <div className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} shadow-md rounded-md overflow-hidden`}>
+          <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-200">
+            <FontAwesomeIcon icon={faCalendarDay} className="text-primary-color" />
+            <span className="uppercase text-primary-color font-bold text-sm">Truyện sắp ra mắt</span>
           </div>
-          {storiesFT.items?.slice(0, 10).map((item, index) => {
-            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), {
-              addSuffix: true,
-              locale: vi,
-            });
+          {storiesFT.items?.slice(0, 6).map((item, index) => {
+            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
             return (
-              <div
-                key={item._id}
-                className="flex p-3 justify-start  border-b-2 border-gray-200"
+              <Link to={`/detail/${item.slug}`} key={item._id}
+                className={`flex gap-2.5 px-3 py-2.5 border-b transition ${isDarkModeEnable ? "border-[#333] hover:bg-[#333]" : "border-gray-100 hover:bg-gray-50"}`}
               >
                 <img
-                  src={`https://img.otruyenapi.com${storiesFT.seoOnPage.og_image?.[index]}`}
-                  alt="anh"
-                  className="h-20"
+                  src={`https://img.otruyenapi.com${storiesFT.seoOnPage?.og_image?.[index]}`}
+                  alt=""
+                  className="w-[50px] h-[65px] object-cover rounded shrink-0"
                 />
-                <div className="ml-4 w-full h-full flex flex-col justify-around">
-                  <div className="flex-1">
-                    <Link to={`/detail/${item.slug}`}>
-                      <p className="text-lg cursor-pointer">{item.name}</p>
-                    </Link>
-                    <div className="flex text-base italic">
-                      <p>Chapter {item.chaptersLatest?.[0]?.chapter_name || ""}</p>
-                    </div>
-                  </div>
-                  <div className="flex justify-end text-sm">
-                    <p className="mr-2 text-gray-400 italic">
-                      {trimmedTimeAgo}
-                    </p>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <p className="font-semibold text-[13px] line-clamp-1 leading-tight">{item.name}</p>
+                  <div className="flex justify-between items-center mt-1">
+                    <span className="text-xs text-gray-500">Ch. {item.chaptersLatest?.[0]?.chapter_name || ""}</span>
+                    <span className="text-[11px] text-gray-400 italic">{trimmedTimeAgo}</span>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -417,18 +253,18 @@ const fetchData = async () => {
     </div>
   );
 };
-const FilterButton = ({ text, isSelected, onClick, isDarkModeEnable }) => (
+
+const TabButton = ({ active, onClick, children, isDark }) => (
   <button
     onClick={onClick}
-    className={`h-8 w-24 rounded-sm ${
-      isDarkModeEnable ? "  border-none" : ""
-    } ${
-      isSelected
-        ? "bg-primary-color text-text_darkMode"
-        : "border-2 border-gray-300"
-    }`}
+    className={`px-4 py-1.5 rounded text-sm font-bold transition ${active
+      ? "bg-primary-color text-white"
+      : isDark
+        ? "text-primary-color"
+        : "text-primary-color hover:bg-gray-100"
+      }`}
   >
-    {text}
+    {children}
   </button>
 );
 

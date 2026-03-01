@@ -1,13 +1,14 @@
 const mongoose = require("mongoose");
 
+const announcementSchema = new mongoose.Schema(
+  {
+    title: { type: String, default: "" },
+    message: { type: String, required: true },
+    isActive: { type: Boolean, default: true },
+  },
+  { timestamps: true }
+);
 
-const notificationSchema = new mongoose.Schema({
-    time: { type: Date, required: true },
-    storyName: { type: String, required: true },
-    chapterName: { type: String, required: true },
-  });
-  
-  
-const NotificationModel = mongoose.model("Noti", notificationSchema);
+const AnnouncementModel = mongoose.model("Announcement", announcementSchema);
 
-module.exports = NotificationModel;
+module.exports = AnnouncementModel;

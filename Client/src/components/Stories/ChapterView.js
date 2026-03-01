@@ -23,6 +23,7 @@ import {
   getDetailStory,
   addFavoritesStoryAPI,
   removeFavoritesStory,
+  incrementStoryView,
 } from "../../services/apiStoriesRequest";
 
 const ReadStories = () => {
@@ -80,7 +81,7 @@ const ReadStories = () => {
     try {
       const currentChapter = chapter?.item.chapter_name;
       const currentChapterId = id;
-      await axios.post("http://localhost:8000/api/history/save", {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/history/save`, {
         chapterId: currentChapterId,
         userId,
         slug,
@@ -211,43 +212,46 @@ const ReadStories = () => {
   useEffect(() => {
     if (!chapter) return;
 
-    // Lưu vào server
-    saveHistory();
+    // Tăng lượt xem cho TẤT CẢ người dùng (kể cả chưa đăng nhập)
+    incrementStoryView(slug, story?.item?.name || "");
 
-    // Lưu vào localStorage
-    const timestamp = new Date().getTime();
-    const currentChapter = chapter?.item?.chapter_name;
-    const currentChapterId = id;
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + 7); // Hết hạn sau 7 ngày
-
-    const existingHistory = localStorage.getItem("historyChapter");
-    let historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
-
-    // Xoá mục hết hạn (quá 7 ngày)
-    const now = new Date().getTime();
-    historyChapter = historyChapter.filter((item) => {
-      return new Date(item.expirationDate).getTime() > now;
-    });
-
-    // Cập nhật nếu slug đã tồn tại, không push trùng lặp
-    const existingIndex = historyChapter.findIndex((item) => item.slug === slug);
-    const historyEntry = {
-      slug,
-      timestamp,
-      expirationDate,
-      currentChapter,
-      currentChapterId,
-      story,
-    };
-
-    if (existingIndex !== -1) {
-      historyChapter[existingIndex] = historyEntry;
+    if (userId) {
+      // Đã đăng nhập → lưu vào server (mỗi user có history riêng)
+      saveHistory();
     } else {
-      historyChapter.push(historyEntry);
-    }
+      // Chưa đăng nhập → lưu vào localStorage làm fallback
+      const timestamp = new Date().getTime();
+      const currentChapter = chapter?.item?.chapter_name;
+      const currentChapterId = id;
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 7);
 
-    localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
+      const existingHistory = localStorage.getItem("historyChapter");
+      let historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
+
+      const now = new Date().getTime();
+      historyChapter = historyChapter.filter((item) => {
+        return new Date(item.expirationDate).getTime() > now;
+      });
+
+      const existingIndex = historyChapter.findIndex((item) => item.slug === slug);
+      const historyEntry = {
+        slug,
+        timestamp,
+        expirationDate,
+        currentChapter,
+        currentChapterId,
+        story,
+      };
+
+      if (existingIndex !== -1) {
+        historyChapter[existingIndex] = historyEntry;
+      } else {
+        historyChapter.push(historyEntry);
+      }
+
+      localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
+    }
   }, [chapter]);
 
   // Rest of your component code...
@@ -266,8 +270,9 @@ const ReadStories = () => {
       const userName = nameUser;
       const nameErr = isErorr;
       const storyInfo = story?.item?.name;
+      const chapterInfo = chapter?.item?.chapter_name || "";
 
-      await addStoryError(userID, userName, nameErr, storyInfo, accessToken);
+      await addStoryError(userID, userName, nameErr, storyInfo, accessToken, chapterInfo);
 
       message.success("Đã gửi lỗi thành công!");
 
@@ -287,8 +292,8 @@ const ReadStories = () => {
       <div className="relative">
         <header
           className={`${isDarkModeEnable
-              ? "bg-bg_dark_light text-text_darkMode"
-              : "bg-white"
+            ? "bg-bg_dark_light text-text_darkMode"
+            : "bg-white"
             } p-5 h-fit mt-10 w-[90%] m-auto`}
         >
           <div>
@@ -432,8 +437,8 @@ const ReadStories = () => {
           <div className="flex justify-center gap-2">
             <button
               className={`${!getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
-                  ? "bg-[#B3C8F8] cursor-not-allowed"
-                  : "bg-primary-color"
+                ? "bg-[#B3C8F8] cursor-not-allowed"
+                : "bg-primary-color"
                 } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToPreviousChapter}
               disabled={
@@ -463,8 +468,8 @@ const ReadStories = () => {
             </select>
             <button
               className={`${!getNextChapterId(id, story.item?.chapters[0]?.server_data)
-                  ? "bg-[#B3C8F8] cursor-not-allowed"
-                  : "bg-primary-color"
+                ? "bg-[#B3C8F8] cursor-not-allowed"
+                : "bg-primary-color"
                 } px-3 py-1 rounded-full font-semibold text-white text-xl`}
               onClick={handleChangeToNextChapter}
               disabled={

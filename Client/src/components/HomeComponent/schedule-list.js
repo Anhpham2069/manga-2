@@ -29,17 +29,15 @@ const ScheduleList = () => {
 
   return (
     <div
-      className={`${
-        isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-      } h-fit p-5  w-full shadow-lg `}
+      className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
+        } h-fit p-5  w-full shadow-lg `}
     >
       <div className="phone:flex-row  h-full lg:flex phone:text-xs tablet:text-sm">
         <div
-          className={`${
-            isDarkModeEnable
-              ? "bg-[#3A64C2] text-text_darkMode "
-              : "bg-primary-color"
-          } text-white lg:w-2/12 phone:w-full phone:text-sm  tablet:text-lg text-center  phone:rounded-3xl lg:rounded-lg'`}
+          className={`${isDarkModeEnable
+            ? "bg-[#3A64C2] text-text_darkMode "
+            : "bg-primary-color"
+            } text-white lg:w-2/12 phone:w-full phone:text-sm  tablet:text-lg text-center  phone:rounded-3xl lg:rounded-lg'`}
         >
           <p className="phone:p-2  tablet:p-4 font-semibold">
             Lịch Ra truyện Ngày: {formattedDate}{" "}
@@ -61,28 +59,25 @@ const ScheduleList = () => {
                   [{hour}:{minute}]
                 </p>
                 <div className="flex">
-                 <Link to={`detail/${item.slug}/view/${item.chaptersLatest?.[0]?.chapter_name || ""?.split("/").pop()}`}>
-                    <p
-                      className={`${
-                        isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"
-                      } font-semibold pl-1`}
-                    >
-                      {item.chaptersLatest?.[0]?.filename || ""
-                        .slice(0, item.chaptersLatest?.[0]?.filename || "".indexOf("["))
-                        .trim()}
+                  <Link to={`detail/${item.slug}/view/${item.chaptersLatest?.[0]?.chapter_name || ""?.split("/").pop()}`}>
+                    <p className="pl-1">
+                      <span className={`${isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"} font-medium`}>
+                        {(() => {
+                          const fn = item.chaptersLatest?.[0]?.filename || "";
+                          const bracketIdx = fn.indexOf("[");
+                          return bracketIdx > -1 ? fn.slice(0, bracketIdx).trim() : fn;
+                        })()}
+                      </span>
+                      {" "}
+                      <span className={`${isDarkModeEnable ? "text-white" : "text-black"} font-bold`}>
+                        {(() => {
+                          const fn = item.chaptersLatest?.[0]?.filename || "";
+                          const bracketIdx = fn.indexOf("[");
+                          return bracketIdx > -1 ? fn.slice(bracketIdx).trim() : "";
+                        })()}
+                      </span>
                     </p>
                   </Link>
-                  <p
-                    className={`${
-                      isDarkModeEnable ? "text-text_darkMode" : "text-slate-900"
-                    } font-semibold pl-1`}
-                  >
-                    {" "}
-                    -{" "}
-                    {item.chaptersLatest?.[0]?.filename
-                      .slice(item.chaptersLatest?.[0]?.filename.indexOf("["))
-                      .trim()}
-                  </p>
                 </div>
               </div>
             );

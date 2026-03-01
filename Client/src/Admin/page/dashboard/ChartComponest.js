@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -7,13 +6,14 @@ import {
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from "chart.js";
-import { Bar, Line } from "react-chartjs-2";
-import { fakerDE_CH as faker } from "@faker-js/faker";
-import { getAllHistory } from "../../../services/apiStoriesRequest";
+import { Bar, Line, Doughnut } from "react-chartjs-2";
+import { getAllHistory, getRanking } from "../../../services/apiStoriesRequest";
 
 ChartJS.register(
   CategoryScale,
@@ -21,194 +21,239 @@ ChartJS.register(
   PointElement,
   LineElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler
 );
 
-const options = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: "top",
-    },
-    title: {
-      display: true,
-      text: "Biểu đồ số lượt đọc truyện",
-    },
-  },
-};
-export const optionsBarChart = {
-  responsive: true,
-  plugins: {
-    legend: {
-      position: 'top',
-    },
-    title: {
-      display: true,
-      text: 'Biểu đồ cột số lượt đọc truyện của 1 truyện',
-    },
-  },
-};
+// Màu sắc nhất quán
+const COLORS = [
+  "rgba(59, 130, 246, 0.7)",   // blue
+  "rgba(16, 185, 129, 0.7)",   // green
+  "rgba(245, 158, 11, 0.7)",   // amber
+  "rgba(239, 68, 68, 0.7)",    // red
+  "rgba(139, 92, 246, 0.7)",   // purple
+  "rgba(236, 72, 153, 0.7)",   // pink
+  "rgba(20, 184, 166, 0.7)",   // teal
+  "rgba(249, 115, 22, 0.7)",   // orange
+  "rgba(99, 102, 241, 0.7)",   // indigo
+  "rgba(34, 197, 94, 0.7)",    // emerald
+];
 
-const today = new Date();
-const yesterday = new Date(today);
-yesterday.setDate(today.getDate() - 1);
-const tomorrow = new Date(today);
-tomorrow.setDate(today.getDate() + 1);
-
-const todayFormatted = formatDate(today);
-const yesterdayFormatted = formatDate(yesterday);
-const tomorrowFormatted = formatDate(tomorrow);
-
-function formatDate(date) {
-  const day = date.getDate();
-  const month = date.getMonth() + 1; // Lưu ý: Tháng bắt đầu từ 0
-  const year = date.getFullYear();
-
-  return `${year}-${month}-${day}`;
-}
+const BORDER_COLORS = COLORS.map((c) => c.replace("0.7", "1"));
 
 function ChartComponent() {
-
-  const [viewOption, setViewOption] = useState("week");
-  const [sortByOption, setSortByOption] = useState("highest");
-  const [backgroundColor, setBackgroundColor] = useState([]);
-
-  const [data, setData] = useState({
-    labels: [],
-    datasets: [
-      {
-        label: "Lượt đọc",
-        data: [],
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 1,
-      },
-    ],
-  });
-  const [story, setStory] = useState({
-    labels: [],
-    datasets: [
-      {
-        label: "Lượt đọc",
-        data: [],
-        fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 1,
-        backgroundColor: backgroundColor,
-      },
-    ],
-  });
+  const [readsByDay, setReadsByDay] = useState({ labels: [], data: [] });
+  const [topStories, setTopStories] = useState({ labels: [], data: [] });
+  const [categoryData, setCategoryData] = useState({ labels: [], data: [] });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getAllHistory()
-        if (res) {
-          const readHistory = res;
-          console.log(readHistory)
+        const history = await getAllHistory();
+        if (!history || history.length === 0) return;
 
-          // Initialize an object to store daily read counts
-          const dailyReadCounts = {};
-
-          // Process data to calculate daily read counts
-          readHistory.forEach((entry) => {
-            const date = new Date(entry.timestamp);
-            let timeFrame = '';
-
-            if (viewOption === "week") {
-              timeFrame = date.toLocaleDateString("vi-VN", { weekday: "long" });
-            } else if (viewOption === "month") {
-              timeFrame = date.toLocaleDateString("vi-VN", { month: "long" });
-            }
-
-            if (!dailyReadCounts[timeFrame]) {
-              dailyReadCounts[timeFrame] = 0;
-            }
-
-            dailyReadCounts[timeFrame] += entry.readCount;
-          });
-
-          // Extract labels and data from dailyReadCounts
-          const labelData = Object.keys(dailyReadCounts);
-          const readCounts = labelData.map(
-            (dayOfWeek) => dailyReadCounts[dayOfWeek]
+        // --- 1. Biểu đồ lượt đọc 7 ngày gần nhất ---
+        const last7Days = [];
+        const dayLabels = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          d.setHours(0, 0, 0, 0);
+          last7Days.push(d);
+          dayLabels.push(
+            d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })
           );
-          setData((prevState) => ({
-            ...prevState,
-            labels: labelData.reverse(),
-            datasets: [
-              {
-                ...prevState.datasets[0], // Maintain other dataset properties
-                data: readCounts,
-              },
-            ],
-          }));
-
-           // Process data based on sortByOption
-           if (sortByOption === "highest") {
-            readHistory.sort((a, b) => b.readCount - a.readCount);
-          } else if (sortByOption === "lowest") {
-            readHistory.sort((a, b) => a.readCount - b.readCount);
-          }
-
-          console.log(readHistory)
-          const nameStory = readHistory.slice(0, 10).map((i) => i.storyInfo.item.name.slice(0, 10));
-          const readCountStory = readHistory.slice(0, 10).map((i) => i.readCount);
-
-          setStory((prevState) => ({
-            ...prevState,
-            labels: nameStory,
-            datasets: [
-              {
-                ...prevState.datasets[0],
-                data: readCountStory,
-                backgroundColor: backgroundColor,
-              },
-            ],
-          }));
         }
+
+        const dailyCounts = last7Days.map((day) => {
+          const nextDay = new Date(day);
+          nextDay.setDate(nextDay.getDate() + 1);
+          return history
+            .filter((item) => {
+              const t = new Date(item.timestamp);
+              return t >= day && t < nextDay;
+            })
+            .reduce((sum, item) => sum + (item.readCount || 0), 0);
+        });
+
+        setReadsByDay({ labels: dayLabels, data: dailyCounts });
+
+        // --- 2. Biểu đồ thể loại (từ storyInfo.breadCrumb) ---
+        const categoryCount = {};
+        history.forEach((item) => {
+          const categories = item.storyInfo?.breadCrumb || item.storyInfo?.item?.category || [];
+          categories.forEach((cat) => {
+            if (cat.name && cat.name !== "Truyện Tranh") {
+              categoryCount[cat.name] = (categoryCount[cat.name] || 0) + (item.readCount || 1);
+            }
+          });
+        });
+
+        const sortedCategories = Object.entries(categoryCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8);
+
+        setCategoryData({
+          labels: sortedCategories.map(([name]) => name),
+          data: sortedCategories.map(([, count]) => count),
+        });
       } catch (error) {
         console.log(error);
       }
     };
     fetchData();
-  }, [viewOption,sortByOption,backgroundColor]);
+  }, []);
 
+  // --- 3. Biểu đồ top truyện xem nhiều từ ranking API ---
   useEffect(() => {
-    const colorArray = []; // Tạo mảng chứa các màu sắc
-    for (let i = 0; i < 10; i++) {
-      colorArray.push(`rgba(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, 0.5)`);
-    }
-    setBackgroundColor(colorArray); // Gán mảng màu sắc cho state backgroundColor
-  }, []); 
+    const fetchRanking = async () => {
+      try {
+        const ranking = await getRanking("week");
+        if (ranking && ranking.length > 0) {
+          const top10 = ranking.slice(0, 10);
+          setTopStories({
+            labels: top10.map((item) =>
+              (item.storyInfo?.item?.name || item._id || "").slice(0, 15)
+            ),
+            data: top10.map((item) => item.totalViews || 0),
+          });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchRanking();
+  }, []);
 
+  // Chart configs
+  const lineChartData = {
+    labels: readsByDay.labels,
+    datasets: [
+      {
+        label: "Lượt đọc",
+        data: readsByDay.data,
+        borderColor: "rgb(59, 130, 246)",
+        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        fill: true,
+        tension: 0.4,
+        pointBackgroundColor: "rgb(59, 130, 246)",
+        pointBorderColor: "#fff",
+        pointBorderWidth: 2,
+        pointRadius: 5,
+      },
+    ],
+  };
 
-  const handleViewChange = (event) => {
-    setViewOption(event.target.value);
+  const lineChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: "Lượt đọc 7 ngày gần nhất",
+        font: { size: 16, weight: "bold" },
+        padding: { bottom: 20 },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0 },
+        grid: { color: "rgba(0,0,0,0.05)" },
+      },
+      x: {
+        grid: { display: false },
+      },
+    },
   };
-  const handleSortByChange = (event) => {
-    setSortByOption(event.target.value);
+
+  const barChartData = {
+    labels: topStories.labels,
+    datasets: [
+      {
+        label: "Lượt xem tuần này",
+        data: topStories.data,
+        backgroundColor: COLORS.slice(0, topStories.data.length),
+        borderColor: BORDER_COLORS.slice(0, topStories.data.length),
+        borderWidth: 1,
+        borderRadius: 6,
+      },
+    ],
   };
+
+  const barChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: "Top 10 truyện xem nhiều nhất tuần",
+        font: { size: 16, weight: "bold" },
+        padding: { bottom: 20 },
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: { precision: 0 },
+        grid: { color: "rgba(0,0,0,0.05)" },
+      },
+      x: {
+        grid: { display: false },
+        ticks: { maxRotation: 45, minRotation: 45 },
+      },
+    },
+  };
+
+  const doughnutChartData = {
+    labels: categoryData.labels,
+    datasets: [
+      {
+        data: categoryData.data,
+        backgroundColor: COLORS.slice(0, categoryData.data.length),
+        borderColor: "#fff",
+        borderWidth: 2,
+        hoverOffset: 8,
+      },
+    ],
+  };
+
+  const doughnutChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: "right",
+        labels: { padding: 15, usePointStyle: true, pointStyle: "circle" },
+      },
+      title: {
+        display: true,
+        text: "Phân bố thể loại đọc nhiều",
+        font: { size: 16, weight: "bold" },
+        padding: { bottom: 10 },
+      },
+    },
+  };
+
   return (
-    <div className="w-full h-full mt-5 flex flex-col gap-5">
-      <div className="bg-white "><div>
-        <select value={viewOption} onChange={handleViewChange}>
-          <option value="week">Tuần</option>
-          <option value="month">Tháng</option>
-        </select>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      {/* Line Chart - Lượt đọc 7 ngày */}
+      <div className="bg-white rounded-xl shadow-md p-5 lg:col-span-2">
+        <Line options={lineChartOptions} data={lineChartData} height={80} />
       </div>
-        <Line options={options} data={data} />
+
+      {/* Bar Chart - Top truyện */}
+      <div className="bg-white rounded-xl shadow-md p-5">
+        <Bar options={barChartOptions} data={barChartData} />
       </div>
-      <div className="bg-white ">
-      <div>
-          <select value={sortByOption} onChange={handleSortByChange}>
-            <option value="highest">Lượt xem cao nhất</option>
-            <option value="lowest">Lượt xem thấp nhất</option>
-          </select>
+
+      {/* Doughnut Chart - Thể loại */}
+      <div className="bg-white rounded-xl shadow-md p-5 flex items-center justify-center">
+        <div className="w-full max-w-md">
+          <Doughnut options={doughnutChartOptions} data={doughnutChartData} />
         </div>
-        <Bar options={optionsBarChart} data={story} />
       </div>
     </div>
   );

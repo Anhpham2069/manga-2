@@ -1,8 +1,13 @@
-// routes/notificationRoutes.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const notificationController = require('../controllers/noti');
+const announcementController = require("../controllers/noti");
 
-router.post('/noti', notificationController.createNotification);
+// CRUD routes
+router.post("/noti", announcementController.createAnnouncement);
+router.get("/noti", announcementController.getAllAnnouncements);
+router.get("/noti/active", announcementController.getActiveAnnouncement);
+router.put("/noti/:id", announcementController.updateAnnouncement);
+router.delete("/noti/:id", announcementController.deleteAnnouncement);
+router.patch("/noti/:id/toggle", announcementController.toggleAnnouncement);
 
 module.exports = router;
