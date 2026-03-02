@@ -20,7 +20,7 @@ const HomeLayout = () => {
         } flex flex-col`}
     >
       <NavBar />
-      <div className="max-w-[75%] mx-auto w-full">
+      <div className="max-w-[95%] tablet:max-w-[90%] laptop:max-w-[75%] mx-auto w-full">
         <div className="pt-3 lg:px-14 tablet:px-6">
           <Slider />
         </div>
