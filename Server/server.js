@@ -2,12 +2,15 @@
 
 const express = require('express');
 const connectDB = require('./config/db');
+const passport = require('passport');
 const cors = require('cors');
+const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
 const app = express();
 
 dotenv.config();
+
 
 // Connect to MongoDB
 connectDB();
@@ -16,11 +19,20 @@ connectDB();
 app.use(express.json());
 app.use(cookieParser());
 app.use(cors());
+// app.use(session({
+//   secret: 'your-secret-key',
+//   resave: true,
+//   saveUninitialized: true,
+// }));
+// Sử dụng middleware cors
 
-// Debug/health check route
-app.get('/', (req, res) => {
-  res.json({ status: 'Server is running', timestamp: new Date() });
-});
+// Passport middleware
+// app.use(passport.initialize());
+// body-parser middleware
+// app.use(bodyParser.urlencoded({ extended: false }));
+// app.use(bodyParser.json());
+// app.use(express.static("public"));
+// app.use(express.urlencoded({ extended: false }));
 
 // Routes
 const storiesRouter = require('./routes/stories');
@@ -46,6 +58,10 @@ app.use('/api/favorites', favoriteRouter)
 app.use('/api/history', readHistoryRouter)
 app.use('/api/error', storyErrorRouter)
 app.use('/api/views', storyViewRouter)
+
+
+// Passport Routes
+
 
 // Only listen when running locally, not on Vercel
 if (process.env.NODE_ENV !== 'production') {
