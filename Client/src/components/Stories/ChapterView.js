@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { Helmet } from "react-helmet";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Modal, Checkbox, Input, Space, message } from "antd";
+import { Modal, Input, message } from "antd";
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,7 +10,8 @@ import {
   faCircleInfo,
   faHeart,
   faHome,
-  faArrowRight,
+  faChevronLeft,
+  faChevronRight,
   faArrowUp,
 } from "@fortawesome/free-solid-svg-icons";
 import NavBar from "../layout/Navbar";
@@ -26,504 +28,520 @@ import {
   incrementStoryView,
 } from "../../services/apiStoriesRequest";
 
-const ReadStories = () => {
-  const [chapter, setChapter] = useState();
+// ===== CHAPTER NAVIGATION COMPONENT (DRY) =====
+const ChapterNav = ({ chapters, currentId, slug, onPrev, onNext, onChange, prevId, nextId, variant = "header" }) => {
+  const isDark = useSelector(selectDarkMode);
 
-  const { id, slug } = useParams();
-  const dispatch = useDispatch();
-  // /658c4c2be120ddf21990fb70
-  const isDarkModeEnable = useSelector(selectDarkMode);
-  const [story, setStory] = useState([]);
-  const [activeBtn, setActiveBtn] = useState(false);
-  const navigate = useNavigate();
-  const [isVisible, setIsVisible] = useState(true);
+  const isBottom = variant === "bottom";
+  const btnBase = isBottom
+    ? "px-3 py-1 rounded-full font-semibold text-white text-lg transition-all duration-200"
+    : "px-3 py-1 rounded-full font-semibold text-lg transition-all duration-200";
+
+  const prevDisabled = !prevId;
+  const nextDisabled = !nextId;
+
+  return (
+    <div className="flex justify-center items-center gap-3">
+      <button
+        className={`${btnBase} ${prevDisabled
+          ? "bg-gray-400/50 cursor-not-allowed text-gray-300"
+          : isBottom
+            ? "bg-primary-color hover:bg-blue-600"
+            : isDark ? "text-white hover:text-primary-color" : "text-slate-500 hover:text-primary-color"
+          }`}
+        onClick={onPrev}
+        disabled={prevDisabled}
+        aria-label="Chương trước"
+      >
+        <FontAwesomeIcon icon={faChevronLeft} />
+      </button>
+
+      <select
+        className={`phone:w-36 lg:w-44 py-1.5 px-3 rounded-full text-sm font-medium outline-none transition-all ${isDark
+          ? "bg-[#374151] text-gray-200 border border-[#4b5563]"
+          : "bg-[#f1f5f9] text-gray-600 border border-gray-200"
+          }`}
+        value={currentId}
+        onChange={onChange}
+      >
+        {chapters?.map((chap) => (
+          <option
+            key={chap.chapter_name}
+            value={chap.chapter_api_data.split("/").pop()}
+          >
+            Chapter {chap.chapter_name}
+          </option>
+        ))}
+      </select>
+
+      <button
+        className={`${btnBase} ${nextDisabled
+          ? "bg-gray-400/50 cursor-not-allowed text-gray-300"
+          : isBottom
+            ? "bg-primary-color hover:bg-blue-600"
+            : isDark ? "text-white hover:text-primary-color" : "text-slate-500 hover:text-primary-color"
+          }`}
+        onClick={onNext}
+        disabled={nextDisabled}
+        aria-label="Chương sau"
+      >
+        <FontAwesomeIcon icon={faChevronRight} />
+      </button>
+    </div>
+  );
+};
+
+// ===== MAIN COMPONENT =====
+const ReadStories = () => {
+  const [chapter, setChapter] = useState(null);
+  const [story, setStory] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
   const [isErorr, setIsErorr] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [loadingFav, setLoadingFav] = useState(false);
-  // const [chapters,setChapters] = useState([])
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [imagesLoaded, setImagesLoaded] = useState(0);
+
+  const { id, slug } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state?.auth.login.currentUser);
-  const favorites = useSelector(
-    (state) => state.favorite.favorites?.allFavorites,
-  );
+  const favorites = useSelector((state) => state.favorite.favorites?.allFavorites);
   const userId = user?._id;
-  const nameUser = user?.username;
-  const accessToken = user?.accessToken
+  const accessToken = user?.accessToken;
+
+  // ===== DERIVED DATA (useMemo) =====
+  const serverData = useMemo(
+    () => story?.item?.chapters?.[0]?.server_data || [],
+    [story]
+  );
+
+  const currentIndex = useMemo(() => {
+    if (!serverData.length) return -1;
+    return serverData.findIndex(
+      (chap) => chap.chapter_api_data.split("/").pop() === id
+    );
+  }, [serverData, id]);
+
+  const prevChapterId = useMemo(() => {
+    if (currentIndex <= 0) return null;
+    return serverData[currentIndex - 1]?.chapter_api_data.split("/").pop();
+  }, [serverData, currentIndex]);
+
+  const nextChapterId = useMemo(() => {
+    if (currentIndex === -1 || currentIndex >= serverData.length - 1) return null;
+    return serverData[currentIndex + 1]?.chapter_api_data.split("/").pop();
+  }, [serverData, currentIndex]);
+
+  const chapterImages = useMemo(
+    () => chapter?.item?.chapter_image || [],
+    [chapter]
+  );
+
+  const chapterPath = chapter?.item?.chapter_path || "";
+  const totalImages = chapterImages.length;
+
+  // ===== FETCH STORY DATA =====
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await getDetailStory(slug);
-      if (res.data) {
-        setStory(res.data.data);
+    const fetchStory = async () => {
+      try {
+        const res = await getDetailStory(slug);
+        if (res?.data) setStory(res.data.data);
+      } catch (error) {
+        console.error("Error fetching story:", error);
       }
     };
-    fetchData();
-  }, []);
+    fetchStory();
+  }, [slug]);
 
-  // Check isFavorite khi favorites thay đổi
+  // ===== FETCH CHAPTER DATA =====
   useEffect(() => {
-    if (favorites && favorites.length > 0) {
-      const isFav = favorites.some((fav) => fav.slug === slug);
-      setIsFavorite(isFav);
+    const fetchChapter = async () => {
+      try {
+        const res = await axios.get(
+          `https://sv1.otruyencdn.com/v1/api/chapter/${id}`
+        );
+        if (res.data) {
+          setChapter(res.data.data);
+          setImagesLoaded(0);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      } catch (error) {
+        console.error("Error fetching chapter:", error);
+      }
+    };
+    fetchChapter();
+  }, [id]);
+
+  // ===== CHECK FAVORITE =====
+  useEffect(() => {
+    if (favorites?.length > 0) {
+      setIsFavorite(favorites.some((fav) => fav.slug === slug));
     }
   }, [favorites, slug]);
+
+  // ===== SCROLL VISIBILITY =====
   useEffect(() => {
-    const fetchData = async () => {
-      const res = await axios.get(
-        `https://sv1.otruyencdn.com/v1/api/chapter/${id}`
-      );
-      if (res.data) {
-        setChapter(res.data.data);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    };
-    fetchData();
-  }, [id, activeBtn]);
-  const saveHistory = async () => {
-    try {
-      const currentChapter = chapter?.item.chapter_name;
-      const currentChapterId = id;
-      await axios.post(`${process.env.REACT_APP_API_URL}/api/history/save`, {
-        chapterId: currentChapterId,
-        userId,
-        slug,
-        storyInfo: story,
-        chapter: currentChapter,
-      });
-    } catch (error) {
-      console.error("Error saving chapter view history:", error);
-    }
-  };
-  const addToFavorites = async (e) => {
-    e.preventDefault();
-
-    if (!user) {
-      message.warning("Vui lòng đăng nhập để theo dõi truyện");
-      return;
-    }
-
-    if (!slug) {
-      console.error("Slug không được rỗng!");
-      return;
-    }
-
-    if (loadingFav) return;
-
-    setLoadingFav(true);
-
-    try {
-      const storyInfo = {
-        _id: uuidv4(),
-        slug,
-        story,
-      };
-
-      await addFavoritesStoryAPI(accessToken, storyInfo, userId);
-
-      setIsFavorite(true);
-      message.success("Đã thêm vào yêu thích");
-    } catch (err) {
-      console.error(err);
-      message.error("Thêm thất bại");
-    } finally {
-      setLoadingFav(false);
-    }
-  };
-
-  const removeFromFavorites = (e) => {
-    e.preventDefault();
-    removeFavoritesStory(accessToken, slug, userId, dispatch);
-    setIsFavorite(false);
-    message.warning("đã bỏ theo dõi ");
-  };
-
-
-  //scoll to top
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 100);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setIsVisible(window.scrollY > 100);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // ===== KEYBOARD NAVIGATION =====
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT") return;
+      if (e.key === "ArrowLeft" && prevChapterId) {
+        navigate(`/detail/${slug}/view/${prevChapterId}`);
+      } else if (e.key === "ArrowRight" && nextChapterId) {
+        navigate(`/detail/${slug}/view/${nextChapterId}`);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [prevChapterId, nextChapterId, slug, navigate]);
 
-  //previus and next chapter
-
-  const getNextChapterId = (currentChapterId, chapters) => {
-    console.log(currentChapterId);
-    const currentIndex = story.item?.chapters[0]?.server_data?.findIndex(
-      (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
-    );
-    if (currentIndex === -1) {
-      return null;
-    }
-
-    const nextIndex = currentIndex + 1;
-
-    if (nextIndex >= 0 && nextIndex < chapters.length) {
-      return chapters[nextIndex].chapter_api_data.split("/").pop();
-    } else {
-      return null;
-    }
-  };
-  const getPreviousChapterId = (currentChapterId, chapters) => {
-    const currentIndex = story.item?.chapters[0]?.server_data?.findIndex(
-      (chap) => chap.chapter_api_data.split("/").pop() === currentChapterId
-    );
-    if (currentIndex === -1) {
-      return null;
-    }
-    const previousIndex = currentIndex - 1;
-    if (previousIndex >= 0 && previousIndex < chapters.length) {
-      return chapters[previousIndex].chapter_api_data.split("/").pop();
-    } else {
-      return null;
-    }
-  };
-
-  const handleChangeToPreviousChapter = () => {
-    const previousChapterId = getPreviousChapterId(
-      id,
-      story.item?.chapters[0]?.server_data
-    );
-    if (previousChapterId) {
-      navigate(`/detail/${slug}/view/${previousChapterId}`);
-    }
-  };
-  const handleChangeToNextChapter = () => {
-    const nextChapterId = getNextChapterId(
-      id,
-      story.item?.chapters[0]?.server_data
-    );
-    if (nextChapterId) {
-      navigate(`/detail/${slug}/view/${nextChapterId}`);
-    }
-  };
-  const handleChangeChapter = (e) => {
-    const id = e.target.value;
-    navigate(`/detail/${slug}/view/${id}`);
-  };
-
-  // history
-
+  // ===== SAVE HISTORY & INCREMENT VIEW =====
   useEffect(() => {
     if (!chapter) return;
 
-    // Tăng lượt xem cho TẤT CẢ người dùng (kể cả chưa đăng nhập)
     incrementStoryView(slug, story?.item?.name || "");
 
     if (userId) {
-      // Đã đăng nhập → lưu vào server (mỗi user có history riêng)
+      // Server history
+      const saveHistory = async () => {
+        try {
+          await axios.post(`${process.env.REACT_APP_API_URL}/api/history/save`, {
+            chapterId: id,
+            userId,
+            slug,
+            storyInfo: story,
+            chapter: chapter?.item?.chapter_name,
+          });
+        } catch (error) {
+          console.error("Error saving history:", error);
+        }
+      };
       saveHistory();
     } else {
-      // Chưa đăng nhập → lưu vào localStorage làm fallback
-      const timestamp = new Date().getTime();
-      const currentChapter = chapter?.item?.chapter_name;
-      const currentChapterId = id;
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 7);
-
+      // LocalStorage fallback
+      const now = Date.now();
+      const expirationDate = new Date(now + 7 * 24 * 60 * 60 * 1000);
       const existingHistory = localStorage.getItem("historyChapter");
       let historyChapter = existingHistory ? JSON.parse(existingHistory) : [];
 
-      const now = new Date().getTime();
-      historyChapter = historyChapter.filter((item) => {
-        return new Date(item.expirationDate).getTime() > now;
-      });
+      // Cleanup expired
+      historyChapter = historyChapter.filter(
+        (item) => new Date(item.expirationDate).getTime() > now
+      );
 
-      const existingIndex = historyChapter.findIndex((item) => item.slug === slug);
-      const historyEntry = {
+      const entry = {
         slug,
-        timestamp,
+        timestamp: now,
         expirationDate,
-        currentChapter,
-        currentChapterId,
+        currentChapter: chapter?.item?.chapter_name,
+        currentChapterId: id,
         story,
       };
 
-      if (existingIndex !== -1) {
-        historyChapter[existingIndex] = historyEntry;
-      } else {
-        historyChapter.push(historyEntry);
-      }
+      const idx = historyChapter.findIndex((item) => item.slug === slug);
+      if (idx !== -1) historyChapter[idx] = entry;
+      else historyChapter.push(entry);
 
       localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
     }
   }, [chapter]);
 
-  // Rest of your component code...
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const showModal = () => {
-    setIsModalOpen(true);
-  };
-  const handleOk = async () => {
-    if (!isErorr.trim()) {
-      message.warning("Vui lòng nhập nội dung lỗi!");
-      return;
-    }
+  // ===== PRELOAD NEXT CHAPTER IMAGES =====
+  useEffect(() => {
+    if (!nextChapterId) return;
+    const preloadNextChapter = async () => {
+      try {
+        const res = await axios.get(
+          `https://sv1.otruyencdn.com/v1/api/chapter/${nextChapterId}`
+        );
+        if (res.data?.data?.item?.chapter_image) {
+          const path = res.data.data.item.chapter_path;
+          // Preload first 3 images of next chapter
+          res.data.data.item.chapter_image.slice(0, 3).forEach((img) => {
+            const link = document.createElement("link");
+            link.rel = "prefetch";
+            link.href = `https://sv1.otruyencdn.com/${path}/${img.image_file}`;
+            document.head.appendChild(link);
+          });
+        }
+      } catch (e) { /* silent */ }
+    };
+    preloadNextChapter();
+  }, [nextChapterId]);
 
+  // ===== HANDLERS (useCallback) =====
+  const handlePrev = useCallback(() => {
+    if (prevChapterId) navigate(`/detail/${slug}/view/${prevChapterId}`);
+  }, [prevChapterId, slug, navigate]);
+
+  const handleNext = useCallback(() => {
+    if (nextChapterId) navigate(`/detail/${slug}/view/${nextChapterId}`);
+  }, [nextChapterId, slug, navigate]);
+
+  const handleChangeChapter = useCallback(
+    (e) => navigate(`/detail/${slug}/view/${e.target.value}`),
+    [slug, navigate]
+  );
+
+  const scrollToTop = useCallback(
+    () => window.scrollTo({ top: 0, behavior: "smooth" }),
+    []
+  );
+
+  const addToFavorites = useCallback(async (e) => {
+    e.preventDefault();
+    if (!user) { message.warning("Vui lòng đăng nhập để theo dõi truyện"); return; }
+    if (!slug || loadingFav) return;
+    setLoadingFav(true);
     try {
-      const userID = userId;
-      const userName = nameUser;
-      const nameErr = isErorr;
-      const storyInfo = story?.item?.name;
-      const chapterInfo = chapter?.item?.chapter_name || "";
+      await addFavoritesStoryAPI(accessToken, { _id: uuidv4(), slug, story }, userId);
+      setIsFavorite(true);
+      message.success("Đã thêm vào yêu thích");
+    } catch {
+      message.error("Thêm thất bại");
+    } finally {
+      setLoadingFav(false);
+    }
+  }, [user, slug, loadingFav, accessToken, story, userId]);
 
-      await addStoryError(userID, userName, nameErr, storyInfo, accessToken, chapterInfo);
+  const removeFromFavorites = useCallback((e) => {
+    e.preventDefault();
+    removeFavoritesStory(accessToken, slug, userId, dispatch);
+    setIsFavorite(false);
+    message.warning("Đã bỏ theo dõi");
+  }, [accessToken, slug, userId, dispatch]);
 
+  const handleReportError = useCallback(async () => {
+    if (!isErorr.trim()) { message.warning("Vui lòng nhập nội dung lỗi!"); return; }
+    try {
+      await addStoryError(userId, user?.username, isErorr, story?.item?.name, accessToken, chapter?.item?.chapter_name || "");
       message.success("Đã gửi lỗi thành công!");
-
-      setIsModalOpen(false);   // đóng modal
-      setIsErorr("");          // reset input
-    } catch (error) {
+      setIsModalOpen(false);
+      setIsErorr("");
+    } catch {
       message.error("Gửi lỗi thất bại!");
     }
+  }, [isErorr, userId, user, story, accessToken, chapter]);
+
+  // ===== NAV PROPS (shared between header & bottom) =====
+  const navProps = {
+    chapters: serverData,
+    currentId: id,
+    slug,
+    onPrev: handlePrev,
+    onNext: handleNext,
+    onChange: handleChangeChapter,
+    prevId: prevChapterId,
+    nextId: nextChapterId,
   };
 
-  const handleCancel = () => {
-    setIsModalOpen(false);
-  };
+  // ===== RENDER =====
   return (
-    <div className="bg-[#333333]">
+    <div className={isDarkModeEnable ? "bg-[#1a1a2e]" : "bg-[#f0f0f0]"}>
+      <Helmet>
+        <title>
+          {chapter?.item?.comic_name && chapter?.item?.chapter_name
+            ? `${chapter.item.comic_name} - Chapter ${chapter.item.chapter_name} - DocTruyen5s`
+            : "Đọc truyện - DocTruyen5s"}
+        </title>
+        <meta
+          name="description"
+          content={`Đọc ${chapter?.item?.comic_name || "truyện"} Chapter ${chapter?.item?.chapter_name || ""} online miễn phí tại DocTruyen5s.`}
+        />
+        <meta property="og:title" content={`${chapter?.item?.comic_name || "Truyện"} - Chapter ${chapter?.item?.chapter_name || ""}`} />
+        <meta property="og:type" content="article" />
+      </Helmet>
+
       <NavBar />
+
       <div className="relative">
+        {/* ===== HEADER ===== */}
         <header
-          className={`${isDarkModeEnable
-            ? "bg-bg_dark_light text-text_darkMode"
-            : "bg-white"
-            } p-5 h-fit mt-10 w-[90%] m-auto`}
+          className={`${isDarkModeEnable ? "bg-[#16213e] text-gray-200" : "bg-white text-gray-700"
+            } mt-4 w-[92%] lg:w-[85%] mx-auto rounded-xl shadow-lg p-5 lg:p-6`}
         >
-          <div>
-            <ul className="flex gap-1 text-[#A699A6]">
-              <Link to={"/"}>
-                <li className="hover:text-primary-color cursor-pointer">
-                  Trang chủ &gt;{" "}
-                </li>
-              </Link>
-              <Link to={`/detail/${id}`}>
-                <li className="hover:text-primary-color cursor-pointer">
-                  {chapter?.item.comic_name} &gt;
-                </li>
-              </Link>
-              <li className="hover:text-primary-color cursor-pointer">
-                {chapter?.item.chapter_name}
-              </li>
-            </ul>
-          </div>
-
-          <div className="m-auto text-center text-2xl font-semibold  mt-5">
-            <a className="hover:text-primary-color" href="#">
-              {chapter?.item.comic_name}{" "}
-            </a>
-            <span className="text-[#999999]">
-              {" "}
-              - Chapter {chapter?.item.chapter_name}
+          {/* Breadcrumb */}
+          <nav className="flex flex-wrap gap-1 text-sm text-gray-400">
+            <Link to="/" className="hover:text-primary-color transition">Trang chủ</Link>
+            <span>&gt;</span>
+            <Link to={`/detail/${slug}`} className="hover:text-primary-color transition">
+              {chapter?.item?.comic_name}
+            </Link>
+            <span>&gt;</span>
+            <span className="text-primary-color font-medium">
+              Chapter {chapter?.item?.chapter_name}
             </span>
-          </div>
-          {/* <div className="text-[#999999]  text-center">
-            Nếu không xem được truyện vui lòng đổi "SERVER ẢNH" bên dưới
-          </div> */}
-          {/* <div className='text-white w-full flex justify-center gap-2 mt-3'>
-              <button className={`${active ? "bg-[#E59FF3]": " bg-primary-color"} px-2 py-1 rounded-md`}>Server 1</button>
-              <button className="px-2 py-1 rounded-md bg-primary-color">Server 2</button>
-              <button className="px-2 py-1 rounded-md bg-primary-color">Server 3</button>
-            </div> */}
-          <div className="w-full flex justify-center mt-5 text-white">
-            <button
-              onClick={showModal}
-              className=" px-2 py-1 rounded-md bg-[#F0AD4E]"
-            >
-              <FontAwesomeIcon icon={faCircleExclamation} /> Báo lỗi
-            </button>
-            {user ?
+          </nav>
 
-              <Modal
-                title="Nhập nội dung lỗi"
-                open={isModalOpen}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                okButtonProps={{
-                  className: "bg-blue-500 text-white hover:bg-blue-600"
-                }}
-              >
-                <div>
-                  <Input
-                    placeholder="Nội dung lỗi"
-                    onChange={(e) => setIsErorr(e.target.value)}
-                  />
-                </div>
-              </Modal>
-              :
-              <Modal title="bạn cần đăng nhập để báo lỗi" open={isModalOpen} onCancel={handleCancel}>
-                <button><a href="/login" className="text-xl">Đăng nhập ngay</a></button>
-              </Modal>
-            }
+          {/* Title */}
+          <div className="text-center mt-4">
+            <Link to={`/detail/${slug}`} className="hover:text-primary-color transition">
+              <h1 className="text-xl lg:text-2xl font-bold">
+                {chapter?.item?.comic_name}
+              </h1>
+            </Link>
+            <p className={`text-sm mt-1 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+              Chapter {chapter?.item?.chapter_name}
+            </p>
           </div>
 
-          <div className="bg-[#BDE5F8] w-[95%] m-auto mt-3 py-2 text-primary-color text-center">
-            {" "}
-            <FontAwesomeIcon icon={faCircleInfo} /> Sử dụng mũi tên trái (←)
-            hoặc phải (→) để chuyển chương
+          {/* Actions */}
+          <div className="flex flex-wrap justify-center gap-3 mt-4">
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-all"
+            >
+              <FontAwesomeIcon icon={faCircleExclamation} className="mr-1.5" />
+              Báo lỗi
+            </button>
           </div>
 
-          <div
-            className={`${isDarkModeEnable ? "text-white" : "text-slate-500"
-              } flex justify-center items-center gap-2 mt-5 text-sm`}
-          >
-            <button
-              className="px-3 rounded-full font-semibold text-xl"
-              onClick={handleChangeToPreviousChapter}
-              disabled={
-                !getPreviousChapterId(id, story?.item?.chapters[0]?.server_data)
-              }
+          {/* Error Modal */}
+          {user ? (
+            <Modal
+              title="Nhập nội dung lỗi"
+              open={isModalOpen}
+              onOk={handleReportError}
+              onCancel={() => setIsModalOpen(false)}
+              okButtonProps={{ className: "bg-blue-500 text-white hover:bg-blue-600" }}
             >
-              <FontAwesomeIcon icon={faArrowRight} rotation={180} size="sm" />
-            </button>
-
-            <select
-              className="bg-[#DDDDDD] phone:w-32 lg:w-40 py-1 px-2 rounded-full text-[#777]"
-              value={chapter?.item._id}
-              onChange={handleChangeChapter}
-            >
-              {story.item?.chapters[0]?.server_data?.map((chap) => {
-                return (
-                  <option
-                    className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                      } 
-                              rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
-                    value={chap.chapter_api_data.split("/").pop()}
-                  >
-                    <p>Chapter {chap.chapter_name}</p>
-                  </option>
-                );
-              })}
-            </select>
-            <button
-              className="px-3 rounded-full font-semibold text-xl"
-              onClick={handleChangeToNextChapter}
-              disabled={
-                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
-              }
-            >
-              <FontAwesomeIcon icon={faArrowRight} size="sm" />
-            </button>
-          </div>
-        </header>
-        <div className=" w-full flex flex-col justify-center mt-32">
-          {chapter?.item.chapter_image.map((i) => (
-            <img
-              loading="lazy"
-              className="phone:mx-5 laptop:mx-40 desktop:mx-60"
-              src={`https://sv1.otruyencdn.com/${chapter.item.chapter_path}/${i.image_file}`}
-              alt="anh"
-            ></img>
-          ))}
-        </div>
-        <div
-          className={`phone:text-sm bg-[#242526] py-1  lg:py-3 w-full fixed flex justify-center  
-              phone:justify-around lg:gap-4 items-center bottom-0 ${isVisible ? "" : "hidden"
-            }`}
-        >
-          <Link to={"/"}>
-            <button className="lg:py-2 py-1 px-4 bg-[#8BC34A] text-white rounded-md">
-              {" "}
-              <FontAwesomeIcon icon={faHome} />{" "}
-              <span className="phone:hidden lg:inline">Trang chủ</span>
-            </button>
-          </Link>
-          <div className="flex justify-center gap-2">
-            <button
-              className={`${!getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
-                ? "bg-[#B3C8F8] cursor-not-allowed"
-                : "bg-primary-color"
-                } px-3 py-1 rounded-full font-semibold text-white text-xl`}
-              onClick={handleChangeToPreviousChapter}
-              disabled={
-                !getPreviousChapterId(id, story.item?.chapters[0]?.server_data)
-              }
-            >
-              <FontAwesomeIcon icon={faArrowRight} rotation={180} />
-            </button>
-            <select
-              className="bg-[#DDDDDD] phone:w-32 lg:w-40 py-1 px-2 rounded-full text-[#777]"
-              value={chapter?.item._id}
-              onChange={handleChangeChapter}
-            >
-              {story.item?.chapters[0]?.server_data?.map((chap) => {
-
-                return (
-                  <option
-                    className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                      } 
-                              rounded-md border-[1px] border-bd-color transition flex-row justify-start items-center p-4 hover:bg-primary-color hover:text-white`}
-                    value={chap.chapter_api_data.split("/").pop()}
-                  >
-                    <p>Chapter {chap.chapter_name}</p>
-                  </option>
-                );
-              })}
-            </select>
-            <button
-              className={`${!getNextChapterId(id, story.item?.chapters[0]?.server_data)
-                ? "bg-[#B3C8F8] cursor-not-allowed"
-                : "bg-primary-color"
-                } px-3 py-1 rounded-full font-semibold text-white text-xl`}
-              onClick={handleChangeToNextChapter}
-              disabled={
-                !getNextChapterId(id, story.item?.chapters[0]?.server_data)
-              }
-            >
-              <FontAwesomeIcon icon={faArrowRight} />
-            </button>
-          </div>
-          {isFavorite ? (
-            <button
-              onClick={removeFromFavorites}
-              className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
-      ${isDarkModeEnable
-                  ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                  : "bg-[#701f2f] hover:bg-[#FF7A95] text-white"
-                }`}
-            >
-              <FontAwesomeIcon icon={faHeart} />
-              <span className="phone:hidden lg:inline">
-                Bỏ theo dõi
-              </span>
-            </button>
+              <Input
+                placeholder="Mô tả lỗi bạn gặp phải..."
+                value={isErorr}
+                onChange={(e) => setIsErorr(e.target.value)}
+              />
+            </Modal>
           ) : (
-            <button
-              disabled={!user}
-              onClick={addToFavorites}
-              className={`py-1 px-4 rounded-md flex items-center gap-2 transition-all duration-200
-      ${!user
-                  ? "bg-gray-400 cursor-not-allowed text-white"
-                  : isDarkModeEnable
-                    ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                    : "bg-[#FF3860] hover:bg-[#FF7A95] text-white"
-                }`}
+            <Modal
+              title="Bạn cần đăng nhập để báo lỗi"
+              open={isModalOpen}
+              onCancel={() => setIsModalOpen(false)}
+              footer={null}
             >
-              <FontAwesomeIcon icon={faHeart} />
-              <span className="phone:hidden lg:inline">
-                Theo dõi
-              </span>
-            </button>
+              <Link to="/login" className="text-primary-color font-semibold hover:underline">
+                Đăng nhập ngay →
+              </Link>
+            </Modal>
           )}
 
+          {/* Keyboard tip */}
+          <div
+            className={`mt-4 py-2 px-4 rounded-lg text-center text-xs font-medium ${isDarkModeEnable
+              ? "bg-blue-900/30 text-blue-300"
+              : "bg-blue-50 text-primary-color"
+              }`}
+          >
+            <FontAwesomeIcon icon={faCircleInfo} className="mr-1.5" />
+            Sử dụng phím ← → hoặc nút bấm để chuyển chương
+          </div>
+
+          {/* Navigation */}
+          <div className="mt-4">
+            <ChapterNav {...navProps} variant="header" />
+          </div>
+        </header>
+
+        {/* ===== CHAPTER IMAGES ===== */}
+        <div className="w-full flex flex-col items-center mt-6 mb-20">
+          {/* Loading progress */}
+          {totalImages > 0 && imagesLoaded < totalImages && (
+            <div className={`w-[90%] lg:w-[70%] mb-4 text-center text-sm ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+              Đang tải ảnh: {imagesLoaded}/{totalImages}
+              <div className={`mt-1 h-1 rounded-full overflow-hidden ${isDarkModeEnable ? "bg-gray-700" : "bg-gray-200"}`}>
+                <div
+                  className="h-full bg-primary-color rounded-full transition-all duration-300"
+                  style={{ width: `${(imagesLoaded / totalImages) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {chapterImages.map((img, index) => (
+            <img
+              key={`${id}-${index}`}
+              loading={index < 3 ? "eager" : "lazy"}
+              className="w-full max-w-[900px] px-2 lg:px-0 select-none"
+              src={`https://sv1.otruyencdn.com/${chapterPath}/${img.image_file}`}
+              alt={`${chapter?.item?.comic_name} - Chapter ${chapter?.item?.chapter_name} - Trang ${index + 1}`}
+              onLoad={() => setImagesLoaded((prev) => prev + 1)}
+              draggable={false}
+            />
+          ))}
+
+          {/* End-of-chapter navigation */}
+          {chapter && (
+            <div className={`w-[90%] lg:w-[60%] mt-10 p-6 rounded-2xl text-center ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-lg"}`}>
+              <p className={`text-sm mb-4 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                — Hết Chapter {chapter?.item?.chapter_name} —
+              </p>
+              <ChapterNav {...navProps} variant="bottom" />
+            </div>
+          )}
         </div>
-      </div>
-      <div className="fixed bottom-16 right-10">
-        {isVisible && (
+
+        {/* ===== FIXED BOTTOM BAR ===== */}
+        <div
+          className={`fixed bottom-0 left-0 right-0 z-50 transition-all duration-300 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-full opacity-0"
+            }`}
+        >
+          <div className={`${isDarkModeEnable ? "bg-[#16213e]/95 border-t border-[#334155]" : "bg-white/95 border-t border-gray-200"
+            } backdrop-blur-md py-2 lg:py-3 px-4 flex justify-center items-center gap-3 lg:gap-5`}
+          >
+            <Link to="/">
+              <button className="py-1.5 px-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-all">
+                <FontAwesomeIcon icon={faHome} />
+                <span className="phone:hidden lg:inline ml-1.5">Trang chủ</span>
+              </button>
+            </Link>
+
+            <ChapterNav {...navProps} variant="bottom" />
+
+            {/* Favorite button */}
+            {isFavorite ? (
+              <button
+                onClick={removeFromFavorites}
+                className="py-1.5 px-4 rounded-lg flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white text-sm font-medium transition-all"
+              >
+                <FontAwesomeIcon icon={faHeart} />
+                <span className="phone:hidden lg:inline">Bỏ theo dõi</span>
+              </button>
+            ) : (
+              <button
+                disabled={!user}
+                onClick={addToFavorites}
+                className={`py-1.5 px-4 rounded-lg flex items-center gap-1.5 text-sm font-medium transition-all ${!user
+                  ? "bg-gray-400 cursor-not-allowed text-white"
+                  : "bg-pink-500 hover:bg-pink-600 text-white"
+                  }`}
+              >
+                <FontAwesomeIcon icon={faHeart} />
+                <span className="phone:hidden lg:inline">Theo dõi</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Scroll to top */}
+        <div className={`fixed bottom-20 right-6 z-50 transition-all duration-300 ${isVisible ? "opacity-100 scale-100" : "opacity-0 scale-75 pointer-events-none"}`}>
           <button
             onClick={scrollToTop}
-            className="bounce bg-gray-800 shadow-md text-white py-3 px-4 rounded-full focus:outline-none"
+            className={`w-11 h-11 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110 ${isDarkModeEnable
+              ? "bg-[#334155] text-white hover:bg-[#475569]"
+              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+              }`}
           >
             <FontAwesomeIcon icon={faArrowUp} />
           </button>
-        )}
+        </div>
       </div>
+
       <Footer />
     </div>
   );

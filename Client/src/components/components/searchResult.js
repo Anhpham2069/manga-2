@@ -1,4 +1,5 @@
-import React,{useState} from 'react'
+import React, { useState } from 'react'
+import { Helmet } from 'react-helmet'
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,7 +9,7 @@ import { Data } from '../../services/Data';
 import CardStories from '../components/cardStories';
 // icon
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import {faFire,faBookmark,faEye} from "@fortawesome/free-solid-svg-icons"
+import { faFire, faBookmark, faEye } from "@fortawesome/free-solid-svg-icons"
 // layout
 import NavBar from '../layout/Navbar'
 import Footer from '../layout/footer'
@@ -19,21 +20,21 @@ import { useParams } from 'react-router-dom';
 import { getAllStories } from '../../services/apiStoriesRequest';
 const SearchResult = () => {
 
-    const dispatch = useDispatch()
+  const dispatch = useDispatch()
 
-    const darkMode = useSelector(selectDarkMode)
-    
-    const {slug,keyword} = useParams()
+  const darkMode = useSelector(selectDarkMode)
+
+  const { slug, keyword } = useParams()
 
 
-    const [storiesData,setStoriesData] = useState([])
-    // sate
-    const [currentPage, setCurrentPage] = useState(1);
+  const [storiesData, setStoriesData] = useState([])
+  // sate
+  const [currentPage, setCurrentPage] = useState(1);
 
-    const [searchResults, setSearchResults] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState(null);
-    
+  const [searchResults, setSearchResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       if (keyword.trim() !== "") {
@@ -58,22 +59,22 @@ const SearchResult = () => {
         setSearchResults([]); // Nếu từ khóa tìm kiếm là rỗng, đặt kết quả tìm kiếm thành rỗng
       }
     };
-  
+
     fetchData();
-  }, [keyword]); 
+  }, [keyword]);
 
 
-  useEffect(()=>{
-    const fetchData =  async ()=>{
+  useEffect(() => {
+    const fetchData = async () => {
       const res = await getAllStories(dispatch)
-      if(res.data){
+      if (res.data) {
         setStoriesData(res.data)
       }
     }
     fetchData()
-  },[])
+  }, [])
   console.log(storiesData)
-    //   phan trang (pagination)
+  //   phan trang (pagination)
   const truyensPerPage = 10;
   const indexOfLastTruyen = currentPage * truyensPerPage;
   const indexOfFirstTruyen = indexOfLastTruyen - truyensPerPage;
@@ -93,58 +94,63 @@ const SearchResult = () => {
     }
   };
   return (
-    <div  className={`${darkMode? "bg-bg_dark text-text_darkMode": "bg-bg_light"}`}>
-        <NavBar />
-            <div className={`
+    <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
+      <Helmet>
+        <title>{`Kết quả tìm kiếm: ${keyword} - DocTruyen5s`}</title>
+        <meta name="description" content={`Kết quả tìm kiếm truyện tranh cho "${keyword}" tại DocTruyen5s.`} />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <NavBar />
+      <div className={`
                 flex phone:flex-col gap-4 w-[95%]  mt-6 m-auto
             `}>
-                <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} phone:w-full w-full h-full p-2`}>
-                    <div className='py-1 h-12 flex items-center  justify-between text-2xl font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] '>
-                                <p>Kết quả tìm kiếm cho: {keyword}</p>
-                    </div>
-                    <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} 
+        <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} phone:w-full w-full h-full p-2`}>
+          <div className='py-1 h-12 flex items-center  justify-between text-2xl font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] '>
+            <p>Kết quả tìm kiếm cho: {keyword}</p>
+          </div>
+          <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} 
                      p-10 grid  phone:grid-cols-2 h-full phone:gap-2 tablet:grid-cols-3 lg:grid-cols-3 desktop:grid-cols-5 lg:gap-4 place-items-center
                     `}>
-                      {!currentTruyens && <div>Không có gì</div>}
-                    {currentTruyens && currentTruyens.map((item,index)=>{
-                            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true,locale: vi  }); 
-                            const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, '');
-                            // const newestChapter = layChapterMoiNhat(item);
-                            return(
-                            <>
-                                <CardStories 
-                                  key={item._id}
-                                  id={item._id}
-                                  title={item.name}
-                                  img={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}  
-                                  slug={item.slug}  
-                                  time={trimmedTimeAgo}  
-                                  // chapter={item.chaptersLatest[0].chapter_name}            
-                                  nomarl                  
-                                  />     
-                                    {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
-                            </>
-                            )
-                        })}
-                    </div>
-                    <div className='p-4 w-full border-t-[1px] mt-10'>
-                      <Pagination
-                          truyensPerPage={truyensPerPage}
-                          totalTruyens={Data.length}
-                          paginate={paginate}
-                          currentPage={currentPage}
-                          nextPage={nextPage}
-                          prevPage={prevPage}
-                      />
-                    </div>
-                </div>
+            {!currentTruyens && <div>Không có gì</div>}
+            {currentTruyens && currentTruyens.map((item, index) => {
+              const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
+              const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, '');
+              // const newestChapter = layChapterMoiNhat(item);
+              return (
+                <>
+                  <CardStories
+                    key={item._id}
+                    id={item._id}
+                    title={item.name}
+                    img={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}
+                    slug={item.slug}
+                    time={trimmedTimeAgo}
+                    // chapter={item.chaptersLatest[0].chapter_name}            
+                    nomarl
+                  />
+                  {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}
+                </>
+              )
+            })}
+          </div>
+          <div className='p-4 w-full border-t-[1px] mt-10'>
+            <Pagination
+              truyensPerPage={truyensPerPage}
+              totalTruyens={Data.length}
+              paginate={paginate}
+              currentPage={currentPage}
+              nextPage={nextPage}
+              prevPage={prevPage}
+            />
+          </div>
+        </div>
 
-                {/* Pho bien */}
-                {/* <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} h-fit shadow-lg flex-1`}> */}
-                       <PopularSection darkMode={darkMode}/>
-                    {/* </div> */}
-            </div>
-        <Footer />
+        {/* Pho bien */}
+        {/* <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} h-fit shadow-lg flex-1`}> */}
+        <PopularSection darkMode={darkMode} />
+        {/* </div> */}
+      </div>
+      <Footer />
     </div>
   )
 }
@@ -163,10 +169,10 @@ const Pagination = ({ truyensPerPage, totalTruyens, paginate, currentPage, nextP
         </a>
       </li>
       {pageNumbers.map(number => (
-        <li key={number} 
-            onClick={() => paginate(number)} 
-            className={`page-item ${currentPage === number ? 'active bg-primary-color text-white' : ''} cursor-pointer border-[1px] py-2 px-4`}>
-          <a  href="#" className="page-link">
+        <li key={number}
+          onClick={() => paginate(number)}
+          className={`page-item ${currentPage === number ? 'active bg-primary-color text-white' : ''} cursor-pointer border-[1px] py-2 px-4`}>
+          <a href="#" className="page-link">
             {number}
           </a>
         </li>

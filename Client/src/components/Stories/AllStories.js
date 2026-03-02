@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Helmet } from "react-helmet";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useSelector } from "react-redux";
@@ -76,15 +77,21 @@ const AllStories = () => {
 
   return (
     <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
+      <Helmet>
+        <title>Tất cả truyện - DocTruyen5s</title>
+        <meta name="description" content="Danh sách tất cả truyện tranh mới nhất, đang phát hành, hoàn thành tại DocTruyen5s. Cập nhật liên tục." />
+        <meta property="og:title" content="Tất cả truyện - DocTruyen5s" />
+        <meta property="og:description" content="Danh sách tất cả truyện tranh mới nhất, đang phát hành, hoàn thành tại DocTruyen5s." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <NavBar />
 
       <div className="grid laptop:grid-cols-5 gap-6 w-[95%] mt-6 m-auto">
 
         {/* ===== SIDEBAR ===== */}
         <div
-          className={`col-span-1 h-fit rounded-xl ${
-            darkMode ? "bg-bg_dark_light" : "bg-white shadow"
-          }`}
+          className={`col-span-1 h-fit rounded-xl ${darkMode ? "bg-bg_dark_light" : "bg-white shadow"
+            }`}
         >
           {[
             { label: "Truyện mới", value: "truyen-moi" },
@@ -95,13 +102,12 @@ const AllStories = () => {
             <div
               key={item.value}
               onClick={() => handleSectionClick(item.value)}
-              className={`p-5 cursor-pointer border-r-4 transition ${
-                slug === item.value
+              className={`p-5 cursor-pointer border-r-4 transition ${slug === item.value
                   ? "bg-blue-100 text-blue-600 border-blue-500"
                   : darkMode
-                  ? "hover:bg-gray-700 border-transparent"
-                  : "hover:bg-gray-100 border-transparent"
-              }`}
+                    ? "hover:bg-gray-700 border-transparent"
+                    : "hover:bg-gray-100 border-transparent"
+                }`}
             >
               {item.label}
             </div>
@@ -110,9 +116,8 @@ const AllStories = () => {
 
         {/* ===== MAIN CONTENT ===== */}
         <div
-          className={`laptop:col-span-4 p-5 rounded-xl ${
-            darkMode ? "bg-bg_dark_light" : "bg-white shadow"
-          }`}
+          className={`laptop:col-span-4 p-5 rounded-xl ${darkMode ? "bg-bg_dark_light" : "bg-white shadow"
+            }`}
         >
           <div className="pb-3 text-lg font-semibold border-b">
             All Manga

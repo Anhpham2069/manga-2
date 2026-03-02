@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet";
 import { Link, useNavigate } from "react-router-dom";
 import NavBar from "../components/layout/Navbar";
 import Footer from "../components/layout/footer";
@@ -43,6 +44,11 @@ const History = () => {
 
   return (
     <div>
+      <Helmet>
+        <title>Lịch sử đọc truyện - DocTruyen5s</title>
+        <meta name="description" content="Xem lại lịch sử đọc truyện của bạn tại DocTruyen5s. Tiếp tục đọc từ nơi bạn dừng lại." />
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
       <NavBar />
       <div className="p-5 bg-bg_light min-h-screen">
         <h2 className="font-bold text-3xl border-b-2 bg-white p-5 text-primary-color rounded-md shadow-sm">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Helmet } from "react-helmet";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useSelector } from "react-redux";
@@ -165,6 +166,13 @@ const FilterStories = () => {
       className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"
         } min-h-screen`}
     >
+      <Helmet>
+        <title>Tìm kiếm nâng cao - DocTruyen5s</title>
+        <meta name="description" content="Tìm kiếm và lọc truyện theo thể loại, trạng thái, số chương. Tìm truyện tranh yêu thích của bạn tại DocTruyen5s." />
+        <meta property="og:title" content="Tìm kiếm nâng cao - DocTruyen5s" />
+        <meta property="og:description" content="Tìm kiếm và lọc truyện theo thể loại, trạng thái, số chương tại DocTruyen5s." />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <NavBar />
       <div className="lg:flex gap-5 max-w-[90%] mt-6 mx-auto">
         {/* Main Content */}

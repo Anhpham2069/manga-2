@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
+import { Helmet } from "react-helmet";
 import { NavLink, useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
@@ -7,7 +8,6 @@ import { vi } from "date-fns/locale";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import {faSun,} from "@fortawesome/free-regular-svg-icons"
 import {
   faUser,
   faSignal,
@@ -18,13 +18,13 @@ import {
   faBook,
   faBookTanakh,
   faBookOpen,
-  faArrowRightArrowLeft,
   faStar,
   faCaretRight,
   faCaretLeft,
   faCommentDots,
   faPaperPlane,
   faTags,
+  faArrowDown,
 } from "@fortawesome/free-solid-svg-icons";
 import CardStories from "../components/cardStories";
 import { useDispatch, useSelector } from "react-redux";
@@ -63,12 +63,6 @@ const DetailStories = () => {
   const favorites = useSelector(
     (state) => state.favorite.favorites?.allFavorites,
   );
-  const conutFavorites = useSelector(
-    (state) => state.favorite.countFavorites?.alLCountFavorites,
-  );
-  const countHistory = useSelector(
-    (state) => state.favorite.countHistory?.alLCountHistory,
-  );
   const accessToken = user?.accessToken;
   const userId = user?._id;
 
@@ -85,6 +79,7 @@ const DetailStories = () => {
   const [recommendStories, setRecommendStories] = useState([]);
   const [storyViewCount, setStoryViewCount] = useState(0);
   const [storyFavCount, setStoryFavCount] = useState(0);
+  const [sortAsc, setSortAsc] = useState(false);
 
   // Fetch comments
   const fetchComments = async () => {
@@ -123,12 +118,10 @@ const DetailStories = () => {
       message.warning("Bạn cần đăng nhập để bình luận");
       return;
     }
-
     if (!comment.trim()) {
       message.warning("Vui lòng nhập nội dung bình luận");
       return;
     }
-
     try {
       await addComment(accessToken, slug, userId, user.username, comment);
       message.success("Đã gửi bình luận");
@@ -142,7 +135,6 @@ const DetailStories = () => {
   useEffect(() => {
     const fetchReadProgress = async () => {
       try {
-        // Ưu tiên lấy từ server nếu đã đăng nhập
         if (userId) {
           const res = await getLastChapter(slug, userId);
           if (res && res.chapter) {
@@ -151,8 +143,6 @@ const DetailStories = () => {
             return;
           }
         }
-
-        // Fallback: lấy từ localStorage cho user chưa đăng nhập
         const localHistory = localStorage.getItem("historyChapter");
         if (localHistory) {
           const parsed = JSON.parse(localHistory);
@@ -175,14 +165,12 @@ const DetailStories = () => {
         const res = await getDetailStory(slug);
         if (res.data) {
           setStory(res.data.data);
-          // Fetch recommend stories by first category
           const categories = res.data.data?.item?.category;
           if (categories && categories.length > 0) {
             try {
               const catSlug = categories[0].slug;
               const catRes = await getStorybyCategory(catSlug);
               if (catRes?.items) {
-                // Filter out current story
                 const filtered = catRes.items.filter((item) => item.slug !== slug);
                 setRecommendStories(filtered.slice(0, 6));
               }
@@ -197,39 +185,22 @@ const DetailStories = () => {
     getFavoritesByUser(accessToken, userId, dispatch);
   }, [slug]);
 
-  // Check isFavorite khi favorites thay đổi
+  // Check isFavorite
   useEffect(() => {
     if (favorites && favorites.length > 0) {
       const isFav = favorites.some((fav) => fav.slug === slug);
       setIsFavorite(isFav);
     }
   }, [favorites, slug]);
+
   const addToFavorites = async (e) => {
     e.preventDefault();
-
-    if (!user) {
-      message.warning("Vui lòng đăng nhập để theo dõi truyện");
-      return;
-    }
-
-    if (!slug) {
-      console.error("Slug không được rỗng!");
-      return;
-    }
-
-    if (loadingFav) return;
-
+    if (!user) { message.warning("Vui lòng đăng nhập để theo dõi truyện"); return; }
+    if (!slug || loadingFav) return;
     setLoadingFav(true);
-
     try {
-      const storyInfo = {
-        _id: uuidv4(),
-        slug,
-        story,
-      };
-
+      const storyInfo = { _id: uuidv4(), slug, story };
       await addFavoritesStoryAPI(accessToken, storyInfo, userId);
-
       setIsFavorite(true);
       message.success("Đã thêm vào yêu thích");
     } catch (err) {
@@ -240,56 +211,30 @@ const DetailStories = () => {
     }
   };
 
-  // const addToFavorites = (e) => {
-  //   e.preventDefault();
-  //   console.log(slug);
-  //   if (slug) {
-  //     const id = uuidv4();
-  //     const storyInfo = {
-  //       _id: id,
-  //       slug: slug,
-  //       story: story,
-  //     };
-  //      addFavoritesStory(accessToken, storyInfo, userId, dispatch);
-  //     setIsFavorite(true);
-  //     message.success("Đã thêm vào yêu thích");
-  //   } else {
-  //     console.error("Slug không được rỗng!");
-  //   }
-  // };
-
-
-
   const removeFromFavorites = (e) => {
     e.preventDefault();
     removeFavoritesStory(accessToken, slug, userId, dispatch);
     setIsFavorite(false);
-    message.warning("đã bỏ theo dõi ");
+    message.warning("Đã bỏ theo dõi");
   };
 
   const filteredChapters = story.item?.chapters[0]?.server_data?.filter(
-    (chap) => {
-      return chap.chapter_name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase());
-    },
+    (chap) => chap.chapter_name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const containerRef = useRef(null);
+  const sortedChapters = sortAsc ? [...(filteredChapters || [])].reverse() : filteredChapters;
 
-  const scroll = (scollOffset) => {
-    containerRef.current.scrollLeft += scollOffset;
+  const containerRef = useRef(null);
+  const scroll = (scrollOffset) => {
+    containerRef.current.scrollLeft += scrollOffset;
   };
 
-  // time update story
+  // time update
   let timeUpdate = "";
   if (story.seoOnPage?.updated_time) {
     const epochTime = story.seoOnPage.updated_time;
     const dateFromEpoch = new Date(epochTime);
-    timeUpdate = formatDistanceToNow(dateFromEpoch, {
-      addSuffix: true,
-      locale: vi,
-    });
+    timeUpdate = formatDistanceToNow(dateFromEpoch, { addSuffix: true, locale: vi });
   } else {
     timeUpdate = "N/A";
   }
@@ -299,15 +244,11 @@ const DetailStories = () => {
   const currentChapterRef = useRef(null);
   const hasScrolledRef = useRef(false);
 
-  // Auto-scroll tới chương đang đọc — chỉ 1 lần duy nhất
   useEffect(() => {
     if (readHistory && currentChapterRef.current && !hasScrolledRef.current) {
       hasScrolledRef.current = true;
       setTimeout(() => {
-        currentChapterRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-        });
+        currentChapterRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       }, 300);
     }
   }, [readHistory, filteredChapters]);
@@ -315,301 +256,254 @@ const DetailStories = () => {
   const scrollToCurrentChapter = (e) => {
     e.preventDefault();
     if (currentChapterRef.current) {
-      currentChapterRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      currentChapterRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
+  // ===== INFO ITEMS for sidebar =====
+  const infoItems = [
+    { icon: faUser, label: "Tác giả", value: story.seoOnPage?.seoSchema?.director || "Đang cập nhật" },
+    { icon: faSignal, label: "Trạng thái", value: "Đang tiến hành" },
+    { icon: faEye, label: "Lượt xem", value: storyViewCount.toLocaleString() },
+    { icon: faHeart, label: "Theo dõi", value: storyFavCount.toLocaleString() },
+    { icon: faClock, label: "Đăng vào", value: story?.item?.updatedAt?.slice(0, 10) || "N/A" },
+    { icon: faBusinessTime, label: "Cập nhật", value: timeUpdate },
+  ];
+
   return (
     <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"}`}>
+      <Helmet>
+        <title>{story.item?.name ? `${story.item.name} - DocTruyen5s` : 'DocTruyen5s'}</title>
+        <meta name="description" content={story.seoOnPage?.descriptionHead || `Đọc truyện ${story.item?.name || ''} online miễn phí tại DocTruyen5s`} />
+        <meta name="keywords" content={story.item?.category?.map(c => c.name).join(', ') || 'truyện tranh, manga'} />
+        <meta property="og:title" content={story.item?.name ? `${story.item.name} - DocTruyen5s` : 'DocTruyen5s'} />
+        <meta property="og:description" content={story.seoOnPage?.descriptionHead || `Đọc truyện ${story.item?.name || ''} online miễn phí`} />
+        <meta property="og:image" content={`https://img.otruyenapi.com/uploads/comics/${slug}-thumb.jpg`} />
+        <meta property="og:type" content="book" />
+      </Helmet>
       <NavBar />
       <div className="min-h-screen">
 
+        {/* ===== HERO BANNER ===== */}
+        <div className="relative w-full h-[200px] lg:h-[260px] overflow-hidden">
+          <img
+            src={`https://img.otruyenapi.com/uploads/comics/${slug}-thumb.jpg`}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover blur-sm scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
+        </div>
 
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
-          {/* header */}
-          <div className=" grid phone:grid-cols-1 phone:gap-0  laptop:grid-cols-5 lg:gap-4">
-            <div className="w-full">
-              {/* Ảnh truyện */}
-              <div className="w-full flex justify-center">
+        <div className="max-w-[75%] mx-auto -mt-32 relative z-10 pb-8">
+
+          {/* ===== MAIN 2-COLUMN LAYOUT ===== */}
+          <div className="flex flex-col lg:flex-row gap-6">
+
+            {/* ===== LEFT SIDEBAR ===== */}
+            <div className="w-full lg:w-[260px] lg:min-w-[260px] flex-shrink-0">
+              {/* Cover image */}
+              <div className={`rounded-xl overflow-hidden shadow-lg ${isDarkModeEnable ? "shadow-black/30" : "shadow-gray-300"}`}>
                 <img
-                  className="
-        w-full
-        max-w-xs
-        sm:max-w-sm
-        md:max-w-md
-        lg:max-w-full
-        h-64
-        sm:h-72
-        md:h-80
-        lg:h-96
-        object-cover
-        rounded-lg
-        shadow-md
-      "
+                  className="w-full h-[360px] object-cover"
                   src={`https://img.otruyenapi.com/uploads/comics/${slug}-thumb.jpg`}
-                  alt="anh"
+                  alt={story.item?.name || "Ảnh bìa truyện"}
                 />
               </div>
 
-              {/* Nút đọc ngay */}
+              {/* Rating */}
+              <div className="flex items-center justify-center gap-1.5 mt-3">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <FontAwesomeIcon key={star} icon={faStar} className="text-yellow-400 text-sm" />
+                ))}
+                <span className={`text-xs ml-1 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                  10/10 ({storyFavCount})
+                </span>
+              </div>
+
+              {/* Read button */}
               {hasChapters ? (
                 <Link
                   to={
                     readHistoryChapterId
                       ? `view/${readHistoryChapterId}`
-                      : `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data
-                        ?.split("/")
-                        .pop()}`
+                      : `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data?.split("/").pop()}`
                   }
                 >
-                  <button
-                    className={`${isDarkModeEnable
-                      ? "bg-[#3963C0] text-text_darkMode hover:bg-[#2f4fa0]"
-                      : "bg-primary-color text-white hover:opacity-90"
-                      } mt-5 w-full py-3 rounded-lg uppercase font-semibold transition duration-200`}
-                  >
-                    {readHistory ? `Đọc tiếp Ch.${readHistory}` : "Đọc ngay"}
+                  <button className="mt-4 w-full py-3 rounded-lg uppercase font-bold text-white bg-primary-color hover:opacity-90 transition text-sm tracking-wide">
+                    {readHistory ? `ĐỌC TIẾP CH.${readHistory}` : "ĐỌC NGAY"}
                   </button>
                 </Link>
               ) : (
-                <button
-                  disabled
-                  className="mt-5 w-full py-3 rounded-lg uppercase font-semibold bg-gray-400 text-white cursor-not-allowed"
-                >
+                <button disabled className="mt-4 w-full py-3 rounded-lg uppercase font-bold bg-gray-400 text-white cursor-not-allowed text-sm">
                   Chưa có chương
                 </button>
               )}
 
-              {/* Thông tin truyện */}
-              <aside
-                className={`
-      ${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"}
-      mt-5
-      p-4
-      rounded-lg
-      shadow-sm
-      grid
-      grid-cols-1
-      sm:grid-cols-2
-      lg:grid-cols-2
-      gap-4
-      text-sm
-    `}
-              >
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faUser} />
-                    Tác giả
-                  </span>
-                  <p className="mt-1 break-words">
-                    {story.seoOnPage?.seoSchema.director}
-                  </p>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faSignal} />
-                    Trạng thái
-                  </span>
-                  <p className="mt-1">Đang tiến hành</p>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faEye} />
-                    Lượt xem
-                  </span>
-                  <p className="mt-1">{storyViewCount.toLocaleString()}</p>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faHeart} />
-                    Theo dõi
-                  </span>
-                  <p className="mt-1">{storyFavCount.toLocaleString()}</p>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faClock} />
-                    Đăng vào
-                  </span>
-                  <p className="mt-1">{story?.item?.updatedAt?.slice(0, 10)}</p>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="flex items-center gap-2 font-medium opacity-80">
-                    <FontAwesomeIcon icon={faBusinessTime} />
-                    Cập nhật
-                  </span>
-                  <p className="mt-1">{timeUpdate}</p>
-                </div>
-              </aside>
+              {/* Story info */}
+              <div className={`mt-4 rounded-xl p-4 space-y-3 text-sm ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+                {infoItems.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between">
+                    <span className={`flex items-center gap-2 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                      <FontAwesomeIcon icon={item.icon} className="w-4 text-center" />
+                      {item.label}
+                    </span>
+                    <span className={`font-medium text-right max-w-[140px] truncate ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"}`}>
+                      {item.value}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div
-              className={`${isDarkModeEnable
-                ? "bg-bg_dark_light text-text_darkMode"
-                : "bg-white"
-                } h-fit phone:mt-4 laptop:mt-0  col-span-4  p-7`}
-            >
-              <div>
-                <header>
-                  <p className="font-bold uppercase text-lg">
-                    {story.item?.name}
+            {/* ===== RIGHT CONTENT ===== */}
+            <div className="flex-1 min-w-0">
+              <div className={`rounded-xl p-6 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+
+                {/* Title */}
+                <h1 className={`text-2xl font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"}`}>
+                  {story.item?.name}
+                </h1>
+                {story.seoOnPage?.seoSchema?.name && (
+                  <p className={`text-sm mt-1 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                    Tên khác: {story.seoOnPage.seoSchema.name}
                   </p>
-                  <p>tên khác: {story.seoOnPage?.seoSchema.name}</p>
-                </header>
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {story.item?.category?.map((cate) => {
-                    return (
-                      <NavLink to={`/category/${cate.slug}`} key={cate.id}>
-                        <p
-                          className={`${isDarkModeEnable ? "bg-[#252A34]" : "bg-[#EEF3FD]"
-                            } border-[1px] rounded-md
-                             mr-4 text-primary-color text-sm border-primary-color p-1  hover:bg-primary-color hover:text-white`}
-                        >
-                          {cate.name}
-                        </p>
-                      </NavLink>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="w-full flex flex-col tablet:flex-row items-stretch tablet:items-center gap-3 tablet:gap-5 justify-center mt-5 px-3 tablet:px-0">
-                {/* BẮT ĐẦU ĐỌC */}
-                <Link
-                  to={
-                    hasChapters
-                      ? `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data
-                        ?.split("/")
-                        .pop()}`
-                      : "#"
-                  }
-                  className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md font-medium
-                  ${hasChapters
-                      ? "bg-[#8BC34A] hover:bg-[#B2D786]"
-                      : "bg-gray-400 cursor-not-allowed"
-                    }
-                `}
-                >
-                  <FontAwesomeIcon icon={faBook} />
-                  {hasChapters ? "Bắt đầu đọc" : "Chưa có chương"}
-                </Link>
-
-                {/* CHƯƠNG MỚI NHẤT */}
-                <Link
-                  to={
-                    hasChapters
-                      ? `view/${story.item?.chapters[0]?.server_data[
-                        chapterLength - 1
-                      ]?.chapter_api_data
-                        ?.split("/")
-                        .pop()}`
-                      : "#"
-                  }
-                  className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${hasChapters
-                    ? isDarkModeEnable
-                      ? "bg-[#970DB3] hover:bg-[#701483] text-text_darkMode"
-                      : "bg-[#BD10E0] hover:bg-[#D360EA]"
-                    : "bg-gray-400 cursor-not-allowed text-white"
-                    }`}
-                >
-                  <FontAwesomeIcon icon={faBookTanakh} />
-                  {hasChapters ? "Chương mới nhất" : "Chưa có chương"}
-                </Link>
-
-
-                {/* THEO DÕI */}
-                {isFavorite ? (
-                  <button
-                    onClick={removeFromFavorites}
-                    className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium ${isDarkModeEnable
-                      ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                      : "bg-[#701f2f] hover:bg-[#FF7A95]"
-                      }`}
-                  >
-                    <FontAwesomeIcon icon={faHeart} />
-                    Bỏ Theo Dõi
-                  </button>
-                ) : (
-                  <button
-                    disabled={!user}
-                    onClick={addToFavorites}
-                    className={`flex items-center justify-center gap-2 h-11 phone:w-full tablet:w-52 rounded-md transition-all duration-200 font-medium
-                      ${!user
-                        ? "bg-gray-400 cursor-not-allowed text-white"
-                        : isDarkModeEnable
-                          ? "bg-[#AA0022] hover:bg-[#7D0B22] text-text_darkMode"
-                          : "bg-[#FF3860] hover:bg-[#FF7A95]"
-                      }`}
-                  >
-                    <FontAwesomeIcon icon={faHeart} />
-                    Theo Dõi
-                  </button>
                 )}
-              </div>
 
-              <div className="mt-5 px-3 tablet:px-0">
-                <p className="font-bold text-lg mb-2">Giới thiệu</p>
-                <p className="leading-7 text-justify">
-                  {story.seoOnPage?.descriptionHead}
-                </p>
-              </div>
+                {/* Categories */}
+                <div className="flex flex-wrap gap-2 mt-3">
+                  {story.item?.category?.map((cate) => (
+                    <NavLink to={`/category/${cate.slug}`} key={cate.id}>
+                      <span className={`inline-block text-xs px-3 py-1 rounded-full border transition-all ${isDarkModeEnable
+                        ? "border-blue-500/50 text-blue-400 hover:bg-blue-500 hover:text-white"
+                        : "border-primary-color text-primary-color hover:bg-primary-color hover:text-white"
+                        }`}>
+                        {cate.name}
+                      </span>
+                    </NavLink>
+                  ))}
+                </div>
 
-              <div className="mt-14">
-                {/* DANH SÁCH CHƯƠNG */}
-                <div className="mt-10">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-primary-color">
-                      <FontAwesomeIcon icon={faBookOpen} /> Danh sách chương
-                    </h3>
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-3 mt-5">
+                  <Link
+                    to={hasChapters
+                      ? `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data?.split("/").pop()}`
+                      : "#"
+                    }
+                    className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${hasChapters ? "bg-[#4CAF50] hover:bg-[#43A047]" : "bg-gray-400 cursor-not-allowed"}`}
+                  >
+                    <FontAwesomeIcon icon={faBook} />
+                    Bắt đầu đọc
+                  </Link>
+
+                  <Link
+                    to={hasChapters
+                      ? `view/${story.item?.chapters[0]?.server_data[chapterLength - 1]?.chapter_api_data?.split("/").pop()}`
+                      : "#"
+                    }
+                    className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${hasChapters
+                      ? isDarkModeEnable ? "bg-[#7B1FA2] hover:bg-[#9C27B0]" : "bg-[#BD10E0] hover:bg-[#D360EA]"
+                      : "bg-gray-400 cursor-not-allowed"
+                      }`}
+                  >
+                    <FontAwesomeIcon icon={faBookTanakh} />
+                    Chương mới nhất
+                  </Link>
+
+                  {isFavorite ? (
                     <button
-                      onClick={scrollToCurrentChapter}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-md text-sm"
+                      onClick={removeFromFavorites}
+                      className="flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm bg-rose-600 hover:bg-rose-700 transition"
                     >
-                      Cuộn tới chương đang đọc
+                      <FontAwesomeIcon icon={faHeart} />
+                      Bỏ theo dõi
                     </button>
+                  ) : (
+                    <button
+                      disabled={!user}
+                      onClick={addToFavorites}
+                      className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${!user ? "bg-gray-400 cursor-not-allowed" : "bg-pink-500 hover:bg-pink-600"}`}
+                    >
+                      <FontAwesomeIcon icon={faHeart} />
+                      Theo dõi
+                    </button>
+                  )}
+                </div>
+
+                {/* Description */}
+                <div className="mt-6">
+                  <h2 className={`font-bold text-base mb-2 ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"}`}>Giới thiệu</h2>
+                  <p className={`text-sm leading-7 text-justify ${isDarkModeEnable ? "text-gray-300" : "text-gray-600"}`}>
+                    {story.seoOnPage?.descriptionHead}
+                  </p>
+                </div>
+
+                {/* ===== CHAPTER LIST ===== */}
+                <div className="mt-8">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className={`font-bold text-base ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"}`}>
+                      <FontAwesomeIcon icon={faBookOpen} className="mr-2 text-primary-color" />
+                      Danh sách chương
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      {readHistory && (
+                        <button
+                          onClick={scrollToCurrentChapter}
+                          className="text-xs px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition"
+                        >
+                          Ch.{readHistory}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setSortAsc(!sortAsc)}
+                        className={`p-1.5 rounded-md text-xs transition ${isDarkModeEnable ? "bg-[#334155] text-gray-300 hover:bg-[#475569]" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                        title={sortAsc ? "Mới nhất trước" : "Cũ nhất trước"}
+                      >
+                        <FontAwesomeIcon icon={faArrowDown} className={`transition-transform ${sortAsc ? "rotate-180" : ""}`} />
+                      </button>
+                    </div>
                   </div>
 
                   <input
-                    className="w-full h-10 px-4 mb-6 rounded-lg border outline-none"
+                    className={`w-full h-10 px-4 mb-4 rounded-lg border outline-none text-sm transition ${isDarkModeEnable
+                      ? "bg-[#0f172a] border-[#334155] text-gray-200 placeholder-gray-500"
+                      : "bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400"
+                      }`}
                     placeholder="Tìm chương..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 max-h-96 overflow-y-auto pr-2">
-                    {filteredChapters?.map((chap) => {
-                      const currentChapterIndex = parseInt(readHistory);
-                      const isCurrentChapter =
-                        currentChapterIndex === parseInt(chap.chapter_name);
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
+                    {sortedChapters?.map((chap) => {
+                      const isCurrentChapter = parseInt(readHistory) === parseInt(chap.chapter_name);
+                      const chapTime = chap.chapter_title || "";
 
                       return (
-                        <Link
-                          key={chap.chapter_name}
-                          to={`view/${chap.chapter_api_data.split("/").pop()}`}
-                        >
+                        <Link key={chap.chapter_name} to={`view/${chap.chapter_api_data.split("/").pop()}`}>
                           <div
                             ref={isCurrentChapter ? currentChapterRef : null}
-                            className={`relative p-3 rounded-lg border transition-all duration-300 text-center
+                            className={`relative p-3 rounded-lg border text-center transition-all duration-200 group
                               ${isCurrentChapter
-                                ? "bg-blue-500 text-white font-semibold shadow-lg shadow-blue-200 border-blue-400 ring-2 ring-blue-300 ring-offset-2 scale-[1.03]"
-                                : "hover:bg-primary-color hover:text-white"
-                              }
-                            `}
+                                ? isDarkModeEnable
+                                  ? "bg-blue-600 text-white border-blue-500 ring-2 ring-blue-400/50 font-semibold"
+                                  : "bg-blue-500 text-white border-blue-400 ring-2 ring-blue-200 font-semibold shadow-md"
+                                : isDarkModeEnable
+                                  ? "border-[#334155] hover:bg-[#334155] hover:border-blue-500/50 text-gray-300"
+                                  : "border-gray-200 hover:bg-blue-50 hover:border-primary-color text-gray-600"
+                              }`}
                           >
                             {isCurrentChapter && (
-                              <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[10px] bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap">
+                              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] bg-yellow-400 text-yellow-900 font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                                 Đang đọc
                               </span>
                             )}
-                            Chapter {chap.chapter_name}
+                            <p className="text-sm font-medium">Chapter {chap.chapter_name}</p>
+                            {chapTime && (
+                              <p className={`text-[10px] mt-1 ${isCurrentChapter ? "text-blue-100" : isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
+                                {chapTime}
+                              </p>
+                            )}
                           </div>
                         </Link>
                       );
@@ -619,157 +513,112 @@ const DetailStories = () => {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* recommend */}
-
-        <div
-          className={`${isDarkModeEnable
-            ? "bg-bg_dark_light text-text_darkMode"
-            : "bg-white"
-            } h-fit mt-20 m-auto laptop:w-[90%] shadow-lg `}
-        >
-          <div className="py-1 h-12 flex items-center justify-between px-4 text-primary-color border-b-[1px] border-[#F0F0F0] ">
-            <button className=" text-lg font-semibold h-4/5  flex items-center justify-center rounded-lg">
-              <FontAwesomeIcon icon={faStar} className="mr-2" /> Bạn có thể
-              thích
-            </button>
-            <div>
-              <FontAwesomeIcon
-                icon={faCaretLeft}
-                size="xl"
-                className="mr-3 cursor-pointer"
-                onClick={() => scroll(-100)}
-              />
-              <FontAwesomeIcon
-                icon={faCaretRight}
-                size="xl"
-                className="cursor-pointer"
-                onClick={() => scroll(+100)}
-              />
+          {/* ===== RECOMMEND ===== */}
+          <div className={`mt-10 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 flex items-center justify-between border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faStar} className="mr-2" />
+                Bạn có thể thích
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={() => scroll(-200)} className={`w-8 h-8 rounded-full flex items-center justify-center transition ${isDarkModeEnable ? "bg-[#334155] hover:bg-[#475569] text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
+                  <FontAwesomeIcon icon={faCaretLeft} />
+                </button>
+                <button onClick={() => scroll(200)} className={`w-8 h-8 rounded-full flex items-center justify-center transition ${isDarkModeEnable ? "bg-[#334155] hover:bg-[#475569] text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
+                  <FontAwesomeIcon icon={faCaretRight} />
+                </button>
+              </div>
+            </div>
+            <div
+              className="p-4 flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide"
+              ref={containerRef}
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {recommendStories.length > 0 ? (
+                recommendStories.map((item) => (
+                  <CardStories
+                    key={item._id}
+                    id={item._id}
+                    title={item.name}
+                    img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                    slug={item.slug}
+                    chapter={item.chaptersLatest?.[0]?.chapter_name}
+                    nomarl
+                  />
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>
+              )}
             </div>
           </div>
-          <div
-            className="container-trendStrories h-fit relative p-4 flex gap-4 overflow-x-scroll scroll-none w-full transition-transform duration-300"
-            ref={containerRef}
-          >
-            {recommendStories.length > 0 ? (
-              recommendStories.map((item) => (
-                <CardStories
-                  key={item._id}
-                  id={item._id}
-                  title={item.name}
-                  img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                  slug={item.slug}
-                  chapter={item.chaptersLatest?.[0]?.chapter_name}
-                  nomarl
-                />
-              ))
-            ) : (
-              <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>
-            )}
-          </div>
-        </div>
 
-        {/* comment */}
-        <div
-          className={`${isDarkModeEnable
-            ? "bg-bg_dark_light text-text_darkMode"
-            : "bg-white"
-            } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg`}
-        >
-          <div className="py-1 h-12 flex items-center justify-between px-4 text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0]">
-            <p>
-              <FontAwesomeIcon icon={faCommentDots} className="mr-2" />
-              <span>Bình luận</span>
-            </p>
-          </div>
+          {/* ===== COMMENTS ===== */}
+          <div className={`mt-8 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faCommentDots} className="mr-2" />
+                Bình luận ({comments.length})
+              </h3>
+            </div>
 
-          <div className="h-fit w-full border-[1px] border-[#F0F0F0] flex flex-col py-5 items-center">
-            {/* ❌ CHƯA ĐĂNG NHẬP */}
-            {!user && (
-              <div
-                className={`${isDarkModeEnable
-                  ? "bg-bg_dark_light text-text_darkMode"
-                  : "bg-[#FFBABA]"
-                  } text-start w-full p-5 my-5`}
-              >
-                <p>
+            <div className="p-5">
+              {/* Not logged in */}
+              {!user && (
+                <div className={`rounded-lg p-4 mb-5 text-sm ${isDarkModeEnable ? "bg-[#0f172a] text-gray-300" : "bg-amber-50 text-amber-800 border border-amber-200"}`}>
                   Bạn cần
-                  <Link to={"/login"} className="font-bold ml-1">
-                    Đăng nhập
-                  </Link>{" "}
-                  hoặc{" "}
-                  <Link to={"/register"} className="font-bold">
-                    Đăng ký
-                  </Link>{" "}
+                  <Link to="/login" className="font-bold mx-1 underline">Đăng nhập</Link>
+                  hoặc
+                  <Link to="/register" className="font-bold mx-1 underline">Đăng ký</Link>
                   để bình luận
-                </p>
-              </div>
-            )}
-
-            {/* ✅ ĐÃ ĐĂNG NHẬP */}
-            {user && (
-              <>
-                <div className="relative w-[90%] flex justify-center mb-5">
-                  <textarea
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    className={`${isDarkModeEnable
-                      ? "bg-bg_dark_light text-text_darkMode"
-                      : "bg-white"
-                      } h-40 w-full p-4 border-2 border-[#F0F0F0] outline-none rounded-md`}
-                    placeholder="Nhập bình luận của bạn..."
-                  />
-                  <FontAwesomeIcon
-                    icon={faPaperPlane}
-                    size="lg"
-                    onClick={handleSubmitComment}
-                    className="absolute bottom-4 right-5 text-primary-color cursor-pointer hover:scale-110 transition"
-                  />
                 </div>
+              )}
 
-                <button
-                  onClick={handleSubmitComment}
-                  className="w-60 h-10 bg-primary-color rounded-md text-white hover:opacity-90 transition"
-                >
-                  Thêm bình luận
-                </button>
-              </>
-            )}
+              {/* Logged in */}
+              {user && (
+                <div className="mb-6">
+                  <div className="relative">
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      className={`w-full h-28 p-4 rounded-lg border outline-none resize-none text-sm transition ${isDarkModeEnable
+                        ? "bg-[#0f172a] border-[#334155] text-gray-200 placeholder-gray-500"
+                        : "bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400"
+                        } focus:border-primary-color`}
+                      placeholder="Nhập bình luận của bạn..."
+                    />
+                  </div>
+                  <button
+                    onClick={handleSubmitComment}
+                    className="mt-2 px-6 py-2 bg-primary-color text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+                  >
+                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
+                    Gửi bình luận
+                  </button>
+                </div>
+              )}
 
-            {/* Danh sách bình luận */}
-            <div className="w-[90%] mt-6">
-              {loadingComments ? (
-                <p className="text-center py-4 opacity-60">Đang tải bình luận...</p>
-              ) : comments.length === 0 ? (
-                <p className="text-center py-4 opacity-60">Chưa có bình luận nào</p>
-              ) : (
-                <div className="space-y-4">
-                  {comments.map((cmt) => (
+              {/* Comment list */}
+              <div className="space-y-3">
+                {loadingComments ? (
+                  <p className="text-center py-4 opacity-60 text-sm">Đang tải bình luận...</p>
+                ) : comments.length === 0 ? (
+                  <p className="text-center py-4 opacity-60 text-sm">Chưa có bình luận nào</p>
+                ) : (
+                  comments.map((cmt) => (
                     <div
                       key={cmt._id}
-                      className={`${isDarkModeEnable
-                        ? "bg-[#252A34] border-[#3a3f4b]"
-                        : "bg-[#F9F9F9] border-[#EBEBEB]"
-                        } p-4 rounded-lg border`}
+                      className={`p-4 rounded-lg ${isDarkModeEnable ? "bg-[#0f172a] border border-[#334155]" : "bg-gray-50 border border-gray-100"}`}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"
-                              }`}
-                          >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"}`}>
                             {cmt.username?.charAt(0)?.toUpperCase()}
                           </div>
                           <span className="font-semibold text-sm">{cmt.username}</span>
-                          <span className="text-xs opacity-50">
+                          <span className={`text-xs ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
                             {new Date(cmt.createdAt).toLocaleDateString("vi-VN", {
-                              day: "2-digit",
-                              month: "2-digit",
-                              year: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
+                              day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
                             })}
                           </span>
                         </div>
@@ -795,38 +644,30 @@ const DetailStories = () => {
                       </div>
                       <p className="text-sm leading-relaxed pl-10">{cmt.content}</p>
                     </div>
-                  ))}
-                </div>
-              )}
+                  ))
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* tag */}
-        <div
-          className={`${isDarkModeEnable
-            ? "bg-bg_dark_light text-text_darkMode"
-            : "bg-white"
-            } h-fit mt-10 m-auto laptop:w-[90%] shadow-lg `}
-        >
-          <div className="py-1 h-12 flex items-center  justify-between px-4 text-lg font-semibold text-primary-color border-b-[1px] border-[#F0F0F0] ">
-            <p>
-              <FontAwesomeIcon icon={faTags} className="mr-2" />
-              <span>Tags</span>
-            </p>
+          {/* ===== TAGS ===== */}
+          <div className={`mt-8 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faTags} className="mr-2" />
+                Tags
+              </h3>
+            </div>
+            <div className="p-5">
+              <p className={`text-sm leading-relaxed ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                Nettruyen, Truyenqq, Blogtruyen, Manhuavn, Manhwatv, Tiemsachnho,
+                Teamlanhlung, Truyentranhaudio, Vlogtruyen, Vcomi, Doctruyen3q,
+                Nhattruyen, Truyện tranh, Truyen tranh online, Đọc truyện tranh,
+                Truyện tranh hot, Truyện tranh hay, Truyện ngôn tình
+              </p>
+            </div>
           </div>
-          <div className="relative w-[90%] flex justify-center mb-5 p-4 ">
-            <a>
-              Nettruyen, Truyenqq, Blogtruyen, Manhuavn, Manhwatv, Tiemsachnho,
-              Teamlanhlung, Truyentranhaudio, Vlogtruyen, Vcomi, Doctruyen3q,
-              Nhattruyen, Truyện tranh, Truyen tranh online, Đọc truyện tranh,
-              Truyện tranh hot, Truyện tranh hay, Truyện ngôn tình, mi2manga,
-              vcomycs, otakusan, ocumeo, Nhất Đẳng Gia Đinh, , Nhất Đẳng Gia
-              Đinh Nettruyen, Nhất Đẳng Gia Đinh Blogtruyen, Nhất Đẳng Gia Đinh
-              truyenqq, Nhất Đẳng Gia Đinh, Nhất Đẳng Gia Đinh Nettruyen, Nhất
-              Đẳng Gia Đinh Blogtruyen, Nhất Đẳng Gia Đinh Truyenqq,
-            </a>
-          </div>
+
         </div>
       </div>
       <Footer />

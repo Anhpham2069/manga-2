@@ -13,7 +13,13 @@ import {
   Filler,
 } from "chart.js";
 import { Bar, Line, Doughnut } from "react-chartjs-2";
-import { getAllHistory, getRanking } from "../../../services/apiStoriesRequest";
+import { useSelector, useDispatch } from "react-redux";
+import { selectDarkMode } from "../../../components/layout/DarkModeSlice";
+import {
+  getAllHistory,
+  getRanking,
+  getNumberSaveStory,
+} from "../../../services/apiStoriesRequest";
 
 ChartJS.register(
   CategoryScale,
@@ -28,26 +34,67 @@ ChartJS.register(
   Filler
 );
 
-// Màu sắc nhất quán
-const COLORS = [
-  "rgba(59, 130, 246, 0.7)",   // blue
-  "rgba(16, 185, 129, 0.7)",   // green
-  "rgba(245, 158, 11, 0.7)",   // amber
-  "rgba(239, 68, 68, 0.7)",    // red
-  "rgba(139, 92, 246, 0.7)",   // purple
-  "rgba(236, 72, 153, 0.7)",   // pink
-  "rgba(20, 184, 166, 0.7)",   // teal
-  "rgba(249, 115, 22, 0.7)",   // orange
-  "rgba(99, 102, 241, 0.7)",   // indigo
-  "rgba(34, 197, 94, 0.7)",    // emerald
+// ===== COLORS =====
+const CHART_COLORS = [
+  "#6366f1", // indigo
+  "#06b6d4", // cyan
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#8b5cf6", // violet
+  "#ec4899", // pink
+  "#14b8a6", // teal
+  "#f97316", // orange
+  "#3b82f6", // blue
+  "#22c55e", // green
 ];
 
-const BORDER_COLORS = COLORS.map((c) => c.replace("0.7", "1"));
+// ===== CHART CARD WRAPPER =====
+const ChartCard = ({ title, children, className = "", dark }) => (
+  <div
+    className={`rounded-2xl p-6 transition-all duration-300 ${dark
+      ? "bg-[#1e293b] border border-[#334155]"
+      : "bg-white border border-gray-100 shadow-lg shadow-gray-100/50"
+      } ${className}`}
+  >
+    <h3
+      className={`text-base font-bold mb-5 flex items-center gap-2 ${dark ? "text-gray-200" : "text-gray-700"
+        }`}
+    >
+      {title}
+    </h3>
+    {children}
+  </div>
+);
 
 function ChartComponent() {
+  const isDark = useSelector(selectDarkMode);
+  const dispatch = useDispatch();
   const [readsByDay, setReadsByDay] = useState({ labels: [], data: [] });
   const [topStories, setTopStories] = useState({ labels: [], data: [] });
   const [categoryData, setCategoryData] = useState({ labels: [], data: [] });
+  const [favData, setFavData] = useState({ labels: [], data: [] });
+
+  // ===== THEME COLORS =====
+  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)";
+  const textColor = isDark ? "#94a3b8" : "#64748b";
+  const tooltipBg = isDark ? "#1e293b" : "#ffffff";
+  const tooltipBorder = isDark ? "#334155" : "#e2e8f0";
+  const tooltipText = isDark ? "#e2e8f0" : "#334155";
+
+  // Shared tooltip config
+  const tooltipConfig = {
+    backgroundColor: tooltipBg,
+    borderColor: tooltipBorder,
+    borderWidth: 1,
+    titleColor: tooltipText,
+    bodyColor: tooltipText,
+    padding: 12,
+    cornerRadius: 10,
+    titleFont: { size: 13, weight: "bold" },
+    bodyFont: { size: 12 },
+    displayColors: true,
+    boxPadding: 4,
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -55,7 +102,7 @@ function ChartComponent() {
         const history = await getAllHistory();
         if (!history || history.length === 0) return;
 
-        // --- 1. Biểu đồ lượt đọc 7 ngày gần nhất ---
+        // --- 1. Lượt đọc 7 ngày ---
         const last7Days = [];
         const dayLabels = [];
         for (let i = 6; i >= 0; i--) {
@@ -64,7 +111,11 @@ function ChartComponent() {
           d.setHours(0, 0, 0, 0);
           last7Days.push(d);
           dayLabels.push(
-            d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" })
+            d.toLocaleDateString("vi-VN", {
+              weekday: "short",
+              day: "2-digit",
+              month: "2-digit",
+            })
           );
         }
 
@@ -81,13 +132,17 @@ function ChartComponent() {
 
         setReadsByDay({ labels: dayLabels, data: dailyCounts });
 
-        // --- 2. Biểu đồ thể loại (từ storyInfo.breadCrumb) ---
+        // --- 2. Thể loại ---
         const categoryCount = {};
         history.forEach((item) => {
-          const categories = item.storyInfo?.breadCrumb || item.storyInfo?.item?.category || [];
+          const categories =
+            item.storyInfo?.breadCrumb ||
+            item.storyInfo?.item?.category ||
+            [];
           categories.forEach((cat) => {
             if (cat.name && cat.name !== "Truyện Tranh") {
-              categoryCount[cat.name] = (categoryCount[cat.name] || 0) + (item.readCount || 1);
+              categoryCount[cat.name] =
+                (categoryCount[cat.name] || 0) + (item.readCount || 1);
             }
           });
         });
@@ -107,7 +162,7 @@ function ChartComponent() {
     fetchData();
   }, []);
 
-  // --- 3. Biểu đồ top truyện xem nhiều từ ranking API ---
+  // --- 3. Top truyện từ ranking ---
   useEffect(() => {
     const fetchRanking = async () => {
       try {
@@ -115,8 +170,9 @@ function ChartComponent() {
         if (ranking && ranking.length > 0) {
           const top10 = ranking.slice(0, 10);
           setTopStories({
-            labels: top10.map((item) =>
-              (item.storyInfo?.item?.name || item._id || "").slice(0, 15)
+            labels: top10.map(
+              (item) =>
+                (item.storyInfo?.item?.name || item._id || "").slice(0, 18)
             ),
             data: top10.map((item) => item.totalViews || 0),
           });
@@ -128,111 +184,203 @@ function ChartComponent() {
     fetchRanking();
   }, []);
 
-  // Chart configs
-  const lineChartData = {
+  // --- 4. Favorites ---
+  useEffect(() => {
+    const fetchFavorites = async () => {
+      try {
+        const res = await getNumberSaveStory(dispatch);
+        if (res) {
+          const sorted = Object.entries(res)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 8);
+          setFavData({
+            labels: sorted.map(([slug]) =>
+              slug.replace(/-/g, " ").slice(0, 20)
+            ),
+            data: sorted.map(([, count]) => count),
+          });
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchFavorites();
+  }, []);
+
+  // ===== 1. LINE CHART - Lượt đọc 7 ngày =====
+  const lineData = {
     labels: readsByDay.labels,
     datasets: [
       {
         label: "Lượt đọc",
         data: readsByDay.data,
-        borderColor: "rgb(59, 130, 246)",
-        backgroundColor: "rgba(59, 130, 246, 0.1)",
+        borderColor: "#6366f1",
+        backgroundColor: (ctx) => {
+          const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300);
+          gradient.addColorStop(0, "rgba(99, 102, 241, 0.3)");
+          gradient.addColorStop(1, "rgba(99, 102, 241, 0.01)");
+          return gradient;
+        },
         fill: true,
         tension: 0.4,
-        pointBackgroundColor: "rgb(59, 130, 246)",
-        pointBorderColor: "#fff",
-        pointBorderWidth: 2,
-        pointRadius: 5,
+        pointBackgroundColor: "#6366f1",
+        pointBorderColor: isDark ? "#1e293b" : "#fff",
+        pointBorderWidth: 3,
+        pointRadius: 6,
+        pointHoverRadius: 9,
+        borderWidth: 3,
       },
     ],
   };
 
-  const lineChartOptions = {
+  const lineOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 800, easing: "easeInOutQuart" },
     plugins: {
       legend: { display: false },
-      title: {
-        display: true,
-        text: "Lượt đọc 7 ngày gần nhất",
-        font: { size: 16, weight: "bold" },
-        padding: { bottom: 20 },
-      },
+      tooltip: tooltipConfig,
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { precision: 0 },
-        grid: { color: "rgba(0,0,0,0.05)" },
+        ticks: { precision: 0, color: textColor, font: { size: 11 } },
+        grid: { color: gridColor },
+        border: { display: false },
       },
       x: {
+        ticks: { color: textColor, font: { size: 11 } },
         grid: { display: false },
+        border: { display: false },
       },
     },
   };
 
-  const barChartData = {
+  // ===== 2. BAR CHART - Top truyện =====
+  const barData = {
     labels: topStories.labels,
     datasets: [
       {
         label: "Lượt xem tuần này",
         data: topStories.data,
-        backgroundColor: COLORS.slice(0, topStories.data.length),
-        borderColor: BORDER_COLORS.slice(0, topStories.data.length),
-        borderWidth: 1,
-        borderRadius: 6,
+        backgroundColor: topStories.data.map(
+          (_, i) => CHART_COLORS[i % CHART_COLORS.length] + "cc"
+        ),
+        borderColor: topStories.data.map(
+          (_, i) => CHART_COLORS[i % CHART_COLORS.length]
+        ),
+        borderWidth: 2,
+        borderRadius: 8,
+        borderSkipped: false,
       },
     ],
   };
 
-  const barChartOptions = {
+  const barOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 800, easing: "easeInOutQuart" },
     plugins: {
       legend: { display: false },
-      title: {
-        display: true,
-        text: "Top 10 truyện xem nhiều nhất tuần",
-        font: { size: 16, weight: "bold" },
-        padding: { bottom: 20 },
-      },
+      tooltip: tooltipConfig,
     },
     scales: {
       y: {
         beginAtZero: true,
-        ticks: { precision: 0 },
-        grid: { color: "rgba(0,0,0,0.05)" },
+        ticks: { precision: 0, color: textColor, font: { size: 11 } },
+        grid: { color: gridColor },
+        border: { display: false },
       },
       x: {
+        ticks: {
+          color: textColor,
+          font: { size: 10 },
+          maxRotation: 45,
+          minRotation: 30,
+        },
         grid: { display: false },
-        ticks: { maxRotation: 45, minRotation: 45 },
+        border: { display: false },
       },
     },
   };
 
-  const doughnutChartData = {
+  // ===== 3. DOUGHNUT CHART - Thể loại =====
+  const doughnutData = {
     labels: categoryData.labels,
     datasets: [
       {
         data: categoryData.data,
-        backgroundColor: COLORS.slice(0, categoryData.data.length),
-        borderColor: "#fff",
-        borderWidth: 2,
-        hoverOffset: 8,
+        backgroundColor: categoryData.data.map(
+          (_, i) => CHART_COLORS[i % CHART_COLORS.length] + "cc"
+        ),
+        borderColor: isDark ? "#1e293b" : "#ffffff",
+        borderWidth: 3,
+        hoverOffset: 12,
+        hoverBorderWidth: 0,
       },
     ],
   };
 
-  const doughnutChartOptions = {
+  const doughnutOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    cutout: "65%",
+    animation: { duration: 800, easing: "easeInOutQuart" },
     plugins: {
       legend: {
         position: "right",
-        labels: { padding: 15, usePointStyle: true, pointStyle: "circle" },
+        labels: {
+          padding: 16,
+          usePointStyle: true,
+          pointStyle: "circle",
+          color: textColor,
+          font: { size: 12 },
+        },
       },
-      title: {
-        display: true,
-        text: "Phân bố thể loại đọc nhiều",
-        font: { size: 16, weight: "bold" },
-        padding: { bottom: 10 },
+      tooltip: tooltipConfig,
+    },
+  };
+
+  // ===== 4. HORIZONTAL BAR - Favorites =====
+  const favBarData = {
+    labels: favData.labels,
+    datasets: [
+      {
+        label: "Lượt theo dõi",
+        data: favData.data,
+        backgroundColor: (ctx) => {
+          const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 400, 0);
+          gradient.addColorStop(0, "rgba(236, 72, 153, 0.8)");
+          gradient.addColorStop(1, "rgba(139, 92, 246, 0.8)");
+          return gradient;
+        },
+        borderRadius: 6,
+        borderSkipped: false,
+        barThickness: 22,
+      },
+    ],
+  };
+
+  const favBarOptions = {
+    indexAxis: "y",
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 800, easing: "easeInOutQuart" },
+    plugins: {
+      legend: { display: false },
+      tooltip: tooltipConfig,
+    },
+    scales: {
+      x: {
+        beginAtZero: true,
+        ticks: { precision: 0, color: textColor, font: { size: 11 } },
+        grid: { color: gridColor },
+        border: { display: false },
+      },
+      y: {
+        ticks: { color: textColor, font: { size: 11 } },
+        grid: { display: false },
+        border: { display: false },
       },
     },
   };
@@ -240,21 +388,40 @@ function ChartComponent() {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
       {/* Line Chart - Lượt đọc 7 ngày */}
-      <div className="bg-white rounded-xl shadow-md p-5 lg:col-span-2">
-        <Line options={lineChartOptions} data={lineChartData} height={80} />
-      </div>
+      <ChartCard
+        title="📈 Lượt đọc 7 ngày gần nhất"
+        className="lg:col-span-2"
+        dark={isDark}
+      >
+        <div className="h-[280px]">
+          <Line options={lineOptions} data={lineData} />
+        </div>
+      </ChartCard>
 
       {/* Bar Chart - Top truyện */}
-      <div className="bg-white rounded-xl shadow-md p-5">
-        <Bar options={barChartOptions} data={barChartData} />
-      </div>
+      <ChartCard title="🏆 Top 10 truyện xem nhiều nhất tuần" dark={isDark}>
+        <div className="h-[320px]">
+          <Bar options={barOptions} data={barData} />
+        </div>
+      </ChartCard>
 
       {/* Doughnut Chart - Thể loại */}
-      <div className="bg-white rounded-xl shadow-md p-5 flex items-center justify-center">
-        <div className="w-full max-w-md">
-          <Doughnut options={doughnutChartOptions} data={doughnutChartData} />
+      <ChartCard title="📊 Phân bố thể loại đọc nhiều" dark={isDark}>
+        <div className="h-[320px] flex items-center justify-center">
+          <Doughnut options={doughnutOptions} data={doughnutData} />
         </div>
-      </div>
+      </ChartCard>
+
+      {/* Horizontal Bar - Favorites */}
+      <ChartCard
+        title="❤️ Top truyện được theo dõi nhiều nhất"
+        className="lg:col-span-2"
+        dark={isDark}
+      >
+        <div className="h-[280px]">
+          <Bar options={favBarOptions} data={favBarData} />
+        </div>
+      </ChartCard>
     </div>
   );
 }
