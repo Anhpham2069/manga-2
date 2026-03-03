@@ -79,10 +79,7 @@ const authController = {
   loginUser: async (req, res) => {
     try {
       const { username, password } = req.body;
-      console.log("=== LOGIN DEBUG ===");
-      console.log("Request body:", req.body);
       const user = await User.findOne({ username });
-      console.log("User found:", user ? user.username : "NOT FOUND");
       if (!user) {
         return res.status(401).json({ message: "Tên không chính xác" });
       }

@@ -14,13 +14,16 @@ const ScheduleList = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await getStoriesByList("truyen-moi")
+        const res = await getStoriesByList("dang-phat-hanh");
         if (res.data) {
-          setStoriesData(res.data);
+          const filtered = {
+            ...res.data,
+            items: res.data.items?.filter(item => item.chaptersLatest && item.chaptersLatest.length > 0),
+          };
+          setStoriesData(filtered);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-      } finally {
       }
     };
     fetchData();

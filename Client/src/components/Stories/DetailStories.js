@@ -294,24 +294,26 @@ const DetailStories = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/40 to-black/70" />
         </div>
 
-        <div className="max-w-[75%] mx-auto -mt-32 relative z-10 pb-8">
+        <div className="max-w-[95%] tablet:max-w-[90%] lg:max-w-[75%] mx-auto -mt-20 lg:-mt-32 relative z-10 pb-8">
 
           {/* ===== MAIN 2-COLUMN LAYOUT ===== */}
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ===== LEFT SIDEBAR ===== */}
             <div className="w-full lg:w-[260px] lg:min-w-[260px] flex-shrink-0">
-              {/* Cover image */}
-              <div className={`rounded-xl overflow-hidden shadow-lg ${isDarkModeEnable ? "shadow-black/30" : "shadow-gray-300"}`}>
-                <img
-                  className="w-full h-[360px] object-cover"
-                  src={`https://img.otruyenapi.com/uploads/comics/${slug}-thumb.jpg`}
-                  alt={story.item?.name || "Ảnh bìa truyện"}
-                />
+              {/* Cover image - centered on mobile */}
+              <div className="flex justify-center lg:block">
+                <div className={`rounded-xl overflow-hidden shadow-lg w-[180px] lg:w-full ${isDarkModeEnable ? "shadow-black/30" : "shadow-gray-300"}`}>
+                  <img
+                    className="w-full h-[260px] lg:h-[360px] object-cover"
+                    src={`https://img.otruyenapi.com/uploads/comics/${slug}-thumb.jpg`}
+                    alt={story.item?.name || "Ảnh bìa truyện"}
+                  />
+                </div>
               </div>
 
               {/* Rating */}
-              <div className="flex items-center justify-center gap-1.5 mt-3">
+              <div className="flex items-center justify-center gap-1.5 mt-3 bg-white w-full p-2 rounded-xl">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <FontAwesomeIcon key={star} icon={faStar} className="text-yellow-400 text-sm" />
                 ))}
@@ -347,7 +349,7 @@ const DetailStories = () => {
                       <FontAwesomeIcon icon={item.icon} className="w-4 text-center" />
                       {item.label}
                     </span>
-                    <span className={`font-medium text-right max-w-[140px] truncate ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"}`}>
+                    <span className={`font-medium text-right max-w-[180px] truncate ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"}`}>
                       {item.value}
                     </span>
                   </div>
@@ -357,10 +359,10 @@ const DetailStories = () => {
 
             {/* ===== RIGHT CONTENT ===== */}
             <div className="flex-1 min-w-0">
-              <div className={`rounded-xl p-6 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+              <div className={`rounded-xl p-4 lg:p-6 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
 
                 {/* Title */}
-                <h1 className={`text-2xl font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"}`}>
+                <h1 className={`text-xl lg:text-2xl font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"}`}>
                   {story.item?.name}
                 </h1>
                 {story.seoOnPage?.seoSchema?.name && (
@@ -384,50 +386,53 @@ const DetailStories = () => {
                 </div>
 
                 {/* Action buttons */}
-                <div className="flex flex-wrap gap-3 mt-5">
-                  <Link
-                    to={hasChapters
-                      ? `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data?.split("/").pop()}`
-                      : "#"
-                    }
-                    className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${hasChapters ? "bg-[#4CAF50] hover:bg-[#43A047]" : "bg-gray-400 cursor-not-allowed"}`}
-                  >
-                    <FontAwesomeIcon icon={faBook} />
-                    Bắt đầu đọc
-                  </Link>
-
-                  <Link
-                    to={hasChapters
-                      ? `view/${story.item?.chapters[0]?.server_data[chapterLength - 1]?.chapter_api_data?.split("/").pop()}`
-                      : "#"
-                    }
-                    className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${hasChapters
-                      ? isDarkModeEnable ? "bg-[#7B1FA2] hover:bg-[#9C27B0]" : "bg-[#BD10E0] hover:bg-[#D360EA]"
-                      : "bg-gray-400 cursor-not-allowed"
-                      }`}
-                  >
-                    <FontAwesomeIcon icon={faBookTanakh} />
-                    Chương mới nhất
-                  </Link>
-
-                  {isFavorite ? (
-                    <button
-                      onClick={removeFromFavorites}
-                      className="flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm bg-rose-600 hover:bg-rose-700 transition"
+                <div className="mt-5">
+                  {/* Mobile: 2-col grid + follow below. Tablet+: all 3 in one row */}
+                  <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:gap-3">
+                    <Link
+                      to={hasChapters
+                        ? `view/${story.item?.chapters[0]?.server_data[0]?.chapter_api_data?.split("/").pop()}`
+                        : "#"
+                      }
+                      className={`flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-medium text-white text-sm transition ${hasChapters ? "bg-[#4CAF50] hover:bg-[#43A047]" : "bg-gray-400 cursor-not-allowed"}`}
                     >
-                      <FontAwesomeIcon icon={faHeart} />
-                      Bỏ theo dõi
-                    </button>
-                  ) : (
-                    <button
-                      disabled={!user}
-                      onClick={addToFavorites}
-                      className={`flex items-center justify-center gap-2 h-10 px-6 rounded-lg font-medium text-white text-sm transition ${!user ? "bg-gray-400 cursor-not-allowed" : "bg-pink-500 hover:bg-pink-600"}`}
+                      <FontAwesomeIcon icon={faBook} />
+                      Bắt đầu đọc
+                    </Link>
+
+                    <Link
+                      to={hasChapters
+                        ? `view/${story.item?.chapters[0]?.server_data[chapterLength - 1]?.chapter_api_data?.split("/").pop()}`
+                        : "#"
+                      }
+                      className={`flex items-center justify-center gap-2 h-10 px-4 rounded-lg font-medium text-white text-sm transition ${hasChapters
+                        ? isDarkModeEnable ? "bg-[#7B1FA2] hover:bg-[#9C27B0]" : "bg-[#BD10E0] hover:bg-[#D360EA]"
+                        : "bg-gray-400 cursor-not-allowed"
+                        }`}
                     >
-                      <FontAwesomeIcon icon={faHeart} />
-                      Theo dõi
-                    </button>
-                  )}
+                      <FontAwesomeIcon icon={faBookTanakh} />
+                      Chương mới nhất
+                    </Link>
+
+                    {isFavorite ? (
+                      <button
+                        onClick={removeFromFavorites}
+                        className="col-span-2 sm:col-span-1 flex items-center justify-center gap-2 h-10 px-8 rounded-lg font-medium text-sm border-2 border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-white transition"
+                      >
+                        <FontAwesomeIcon icon={faHeart} />
+                        Bỏ theo dõi
+                      </button>
+                    ) : (
+                      <button
+                        disabled={!user}
+                        onClick={addToFavorites}
+                        className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-2 h-10 px-8 rounded-lg font-medium text-sm border-2 transition ${!user ? "border-gray-300 text-gray-400 cursor-not-allowed" : "border-pink-500 text-pink-500 hover:bg-pink-500 hover:text-white"}`}
+                      >
+                        <FontAwesomeIcon icon={faHeart} />
+                        Theo dõi
+                      </button>
+                    )}
+                  </div>
                 </div>
 
                 {/* Description */}
@@ -537,15 +542,16 @@ const DetailStories = () => {
             >
               {recommendStories.length > 0 ? (
                 recommendStories.map((item) => (
-                  <CardStories
-                    key={item._id}
-                    id={item._id}
-                    title={item.name}
-                    img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                    slug={item.slug}
-                    chapter={item.chaptersLatest?.[0]?.chapter_name}
-                    nomarl
-                  />
+                  <div key={item._id} className="w-[120px] shrink-0">
+                    <CardStories
+                      id={item._id}
+                      title={item.name}
+                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                      slug={item.slug}
+                      chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      nomarl
+                    />
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>

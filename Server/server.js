@@ -18,21 +18,21 @@ connectDB();
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors());
-// app.use(session({
-//   secret: 'your-secret-key',
-//   resave: true,
-//   saveUninitialized: true,
-// }));
-// Sử dụng middleware cors
+app.use(cors({
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://manga-2-client.vercel.app",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "token", "Authorization"],
+}));
 
-// Passport middleware
-// app.use(passport.initialize());
-// body-parser middleware
-// app.use(bodyParser.urlencoded({ extended: false }));
-// app.use(bodyParser.json());
-// app.use(express.static("public"));
-// app.use(express.urlencoded({ extended: false }));
+// Health check
+app.get("/", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
+});
 
 // Routes
 const storiesRouter = require('./routes/stories');
@@ -63,7 +63,6 @@ app.use('/api/views', storyViewRouter)
 // Passport Routes
 
 
-// Only listen when running locally, not on Vercel
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 8000;
   app.listen(PORT, () => {

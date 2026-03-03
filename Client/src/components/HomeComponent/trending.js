@@ -91,7 +91,7 @@ const Trending = ({ dark }) => {
     };
 
     return (
-        <div className={`trending-section ${dark ? "trending--dark" : ""}`}>
+        <div className={`trending-section ${dark ? "trending--dark" : "bg-white"}`}>
             {/* Header */}
             <div className="trending-header">
                 <div className="trending-label">
