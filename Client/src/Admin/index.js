@@ -41,31 +41,32 @@ const AdminLayout = () => {
 
         {/* Main content */}
         <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Mobile header with hamburger */}
-          <div className="p-4 flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`lg:hidden w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${isDarkModeEnable
-                ? "bg-[#1e293b] hover:bg-[#334155]"
-                : "bg-white hover:bg-gray-50 shadow-sm border border-gray-200"
-                }`}
-            >
-              <span
-                className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
-                  } ${sidebarOpen ? "rotate-45 translate-y-[7px]" : ""}`}
-              />
-              <span
-                className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
-                  } ${sidebarOpen ? "opacity-0 scale-0" : ""}`}
-              />
-              <span
-                className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
-                  } ${sidebarOpen ? "-rotate-45 -translate-y-[7px]" : ""}`}
-              />
-            </button>
-            <div className="flex-1">
-              <HeaderAdmin />
-            </div>
+          {/* Header with hamburger */}
+          <div className="p-4">
+            <HeaderAdmin
+              sidebarToggle={
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className={`lg:hidden w-10 h-10 rounded-xl flex flex-col items-center justify-center gap-[5px] transition-all duration-300 ${isDarkModeEnable
+                    ? "hover:bg-[#334155]"
+                    : "hover:bg-gray-100"
+                    }`}
+                >
+                  <span
+                    className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
+                      } ${sidebarOpen ? "rotate-45 translate-y-[7px]" : ""}`}
+                  />
+                  <span
+                    className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
+                      } ${sidebarOpen ? "opacity-0 scale-0" : ""}`}
+                  />
+                  <span
+                    className={`block h-[2px] w-5 rounded-full transition-all duration-300 ${isDarkModeEnable ? "bg-gray-300" : "bg-gray-600"
+                      } ${sidebarOpen ? "-rotate-45 -translate-y-[7px]" : ""}`}
+                  />
+                </button>
+              }
+            />
           </div>
           <div className="p-4 flex-1">
             <ContentAdmin selectedItem={selectedItem} />

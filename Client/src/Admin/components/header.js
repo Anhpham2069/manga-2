@@ -18,7 +18,7 @@ import { logOut } from "../../services/apiLoginRequest";
 import { createAxios } from "../../createInstance";
 import { logoutSuccess } from "../../redux/slice/authSlice";
 
-const HeaderAdmin = () => {
+const HeaderAdmin = ({ sidebarToggle }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state.auth.login.currentUser);
   const dispatch = useDispatch();
@@ -47,20 +47,23 @@ const HeaderAdmin = () => {
         : "bg-white border border-gray-100"
         }`}
     >
-      {/* Left — Search */}
-      <div className="relative flex-1 lg:flex-none">
-        <FontAwesomeIcon
-          icon={faMagnifyingGlass}
-          className={`absolute top-1/2 -translate-y-1/2 left-3 ${isDarkModeEnable ? "text-gray-400" : "text-gray-400"
-            }`}
-        />
-        <input
-          className={`pl-10 pr-4 py-2.5 rounded-lg text-sm font-medium w-full lg:w-72 outline-none transition-all duration-300 ${isDarkModeEnable
-            ? "bg-[#0f172a] text-gray-200 border border-[#334155] placeholder-gray-500 focus:border-blue-500"
-            : "bg-gray-50 text-gray-700 border border-gray-200 placeholder-gray-400 focus:border-blue-400"
-            }`}
-          placeholder="Tìm kiếm..."
-        />
+      {/* Left — Hamburger + Search */}
+      <div className="flex items-center gap-3 flex-1 lg:flex-none">
+        {sidebarToggle}
+        <div className="relative flex-1 lg:flex-none">
+          <FontAwesomeIcon
+            icon={faMagnifyingGlass}
+            className={`absolute top-1/2 -translate-y-1/2 left-3 ${isDarkModeEnable ? "text-gray-400" : "text-gray-400"
+              }`}
+          />
+          <input
+            className={`pl-10 pr-4 py-2.5 rounded-lg text-sm font-medium w-full lg:w-72 outline-none transition-all duration-300 ${isDarkModeEnable
+              ? "bg-[#0f172a] text-gray-200 border border-[#334155] placeholder-gray-500 focus:border-blue-500"
+              : "bg-gray-50 text-gray-700 border border-gray-200 placeholder-gray-400 focus:border-blue-400"
+              }`}
+            placeholder="Tìm kiếm..."
+          />
+        </div>
       </div>
 
       {/* Right — Actions */}

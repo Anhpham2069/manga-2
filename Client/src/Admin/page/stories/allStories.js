@@ -13,7 +13,7 @@ import AddStory from "./AddStory";
 import { deleteStoryById, getAllStories, setStories } from "../../../redux/slice/storiesSlice";
 import { set } from "date-fns";
 import { useDispatch, useSelector } from "react-redux";
-import { deleteStoryApi,getAllStoriesApi } from "./fetchApi";
+import { deleteStoryApi, getAllStoriesApi } from "./fetchApi";
 import UpdateChapter from "./updateChapter";
 
 const { Column } = Table;
@@ -33,9 +33,9 @@ const AllStories = () => {
   const dispatch = useDispatch()
   const stories = useSelector((state) => state.stories.stories);
   // const [stories,setStories] = useState([])
-  
+
   // const { stories } = data
-  
+
   console.log(stories)
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalAddOpen, setIsModalAddOpen] = useState(false);
@@ -86,9 +86,9 @@ const AllStories = () => {
     onFilter: customFilterFn
       ? customFilterFn
       : (value, record) =>
-          record[dataIndex]
-            ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
-            : "",
+        record[dataIndex]
+          ? record[dataIndex].toString().toLowerCase().includes(value.toLowerCase())
+          : "",
     onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
         setTimeout(() => searchInput.current.select());
@@ -232,8 +232,8 @@ const AllStories = () => {
     };
 
     fetchData();
-  }, [setStories]); 
-  
+  }, [setStories]);
+
   const columns = [
     {
       title: "ID",
@@ -273,7 +273,7 @@ const AllStories = () => {
       ],
       onFilter: (value, record) => record.genres.indexOf(value) === 0,
     },
-    
+
     {
       title: "Ngày thêm",
       dataIndex: "createdAt",
@@ -292,18 +292,32 @@ const AllStories = () => {
       key: "id",
     },
     {
+      title: "Lượt xem",
+      dataIndex: "sViews",
+      key: "sViews",
+      sorter: (a, b) => (a.sViews || 0) - (b.sViews || 0),
+      render: (views) => (views || 0).toLocaleString(),
+    },
+    {
+      title: "Lượt lưu",
+      dataIndex: "sSaves",
+      key: "sSaves",
+      sorter: (a, b) => (a.sSaves || 0) - (b.sSaves || 0),
+      render: (saves) => (saves || 0).toLocaleString(),
+    },
+    {
       title: "Trạng thái",
-      dataIndex : "sStatus",
+      dataIndex: "sStatus",
       key: "sStatus",
       render: (record) => (
         <Space>
           {record === "Hoàn thành" ? (
-            <Tag color="red">Hoàn thành</Tag> 
+            <Tag color="red">Hoàn thành</Tag>
           ) : record === "Sắp bắt đầu" ? (
             <Tag color="yellow">Sắp bắt đầu</Tag>
           ) : record === "Đang cập nhật" ? (
             <Tag color="blue">Đang cập nhật</Tag>
-          ):""}
+          ) : ""}
         </Space>
       ),
       filters: [
@@ -331,7 +345,7 @@ const AllStories = () => {
             onOk={handleOk}
             onCancel={handleCancel}
           >
-            <UpdateStory story={selectedStory} id={record._id}/>
+            <UpdateStory story={selectedStory} id={record._id} />
           </Modal>
 
           <Button type="primary" ghost onClick={() => showModalUpdateChap(record)}>
@@ -344,7 +358,7 @@ const AllStories = () => {
             width={1000}
           >
             <label className="font-bold text-primary-color text-2xl  uppercase">Quản lý các chap </label>
-            <UpdateChapter storyId={record._id} chapter={selectedStory?.sChapter}/>
+            <UpdateChapter storyId={record._id} chapter={selectedStory?.sChapter} />
           </Modal>
           <Button danger onClick={() => showDeleteConfirm(record._id)}>
             {" "}
@@ -380,7 +394,7 @@ const AllStories = () => {
           onSearch={onSearch}
         /> */}
       </div>
-      {/* <Table dataSource={stories} columns={columns} onChange={onChange} /> */}
+      <Table dataSource={stories} columns={columns} onChange={onChange} rowKey="_id" scroll={{ x: 1200 }} />
     </div>
   );
 };

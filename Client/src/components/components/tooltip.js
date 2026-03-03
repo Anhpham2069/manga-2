@@ -10,20 +10,6 @@ const TooltipComponent = ({ sx }) => {
   const [genres, setGenres] = useState([]);
   const isDarkMode = useSelector(selectDarkMode);
 
-  useEffect(() => {
-    const fetchDataGenres = async () => {
-      try {
-        const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
-        if (res.data?.data?.items) {
-          setGenres(res.data.data.items);
-        }
-      } catch (error) {
-        console.error("Lỗi lấy thể loại:", error);
-      }
-    };
-    fetchDataGenres();
-  }, []);
-
   // Pastel colors for genre buttons
   const lightColors = [
     "bg-red-200 text-red-800 hover:bg-red-300",
@@ -51,6 +37,28 @@ const TooltipComponent = ({ sx }) => {
     "bg-cyan-900/30 text-cyan-300 hover:bg-cyan-900/50",
   ];
 
+  useEffect(() => {
+    const fetchDataGenres = async () => {
+      try {
+        const res = await axios.get(`https://otruyenapi.com/v1/api/the-loai`);
+        if (res.data?.data?.items) {
+          const genresWithColor = res.data.data.items.map((genre) => {
+            const idx = Math.floor(Math.random() * lightColors.length);
+            return {
+              ...genre,
+              lightColor: lightColors[idx],
+              darkColor: darkColors[idx],
+            };
+          });
+          setGenres(genresWithColor);
+        }
+      } catch (error) {
+        console.error("Lỗi lấy thể loại:", error);
+      }
+    };
+    fetchDataGenres();
+  }, []);
+
   if (sx) {
     // ===== MENU THỂ LOẠI (dùng trong Navbar) =====
     return (
@@ -65,10 +73,10 @@ const TooltipComponent = ({ sx }) => {
           Thể loại truyện
         </h3>
         <div className="flex flex-wrap gap-2">
-          {genres.map((item, index) => {
+          {genres.map((item) => {
             const colorClass = isDarkMode
-              ? darkColors[index % darkColors.length]
-              : lightColors[index % lightColors.length];
+              ? item.darkColor
+              : item.lightColor;
             return (
               <Link to={`/category/${item.slug}`} key={item._id}>
                 <div

@@ -373,34 +373,33 @@ const DetailStories = () => {
 
                 {/* Categories */}
                 <div className="flex flex-wrap gap-2 mt-3">
-                  {story.item?.category?.map((cate, index) => {
-                    const lightColors = [
-                      "bg-red-200 text-red-800 hover:bg-red-300",
-                      "bg-green-200 text-green-800 hover:bg-green-300",
-                      "bg-blue-200 text-blue-800 hover:bg-blue-300",
-                      "bg-yellow-200 text-yellow-800 hover:bg-yellow-300",
-                      "bg-purple-200 text-purple-800 hover:bg-purple-300",
-                      "bg-pink-200 text-pink-800 hover:bg-pink-300",
-                      "bg-indigo-200 text-indigo-800 hover:bg-indigo-300",
-                      "bg-emerald-200 text-emerald-800 hover:bg-emerald-300",
-                      "bg-amber-200 text-amber-800 hover:bg-amber-300",
-                      "bg-cyan-200 text-cyan-800 hover:bg-cyan-300",
-                    ];
-                    const darkColors = [
-                      "bg-red-900/30 text-red-300 hover:bg-red-900/50",
-                      "bg-green-900/30 text-green-300 hover:bg-green-900/50",
-                      "bg-blue-900/30 text-blue-300 hover:bg-blue-900/50",
-                      "bg-yellow-900/30 text-yellow-300 hover:bg-yellow-900/50",
-                      "bg-purple-900/30 text-purple-300 hover:bg-purple-900/50",
-                      "bg-pink-900/30 text-pink-300 hover:bg-pink-900/50",
-                      "bg-indigo-900/30 text-indigo-300 hover:bg-indigo-900/50",
-                      "bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50",
-                      "bg-amber-900/30 text-amber-300 hover:bg-amber-900/50",
-                      "bg-cyan-900/30 text-cyan-300 hover:bg-cyan-900/50",
-                    ];
+                  {story.item?.category?.map((cate) => {
+                    const idx = Math.floor(Math.random() * 10);
                     const colorClass = isDarkModeEnable
-                      ? darkColors[index % darkColors.length]
-                      : lightColors[index % lightColors.length];
+                      ? [
+                        "bg-red-900/30 text-red-300 hover:bg-red-900/50",
+                        "bg-green-900/30 text-green-300 hover:bg-green-900/50",
+                        "bg-blue-900/30 text-blue-300 hover:bg-blue-900/50",
+                        "bg-yellow-900/30 text-yellow-300 hover:bg-yellow-900/50",
+                        "bg-purple-900/30 text-purple-300 hover:bg-purple-900/50",
+                        "bg-pink-900/30 text-pink-300 hover:bg-pink-900/50",
+                        "bg-indigo-900/30 text-indigo-300 hover:bg-indigo-900/50",
+                        "bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50",
+                        "bg-amber-900/30 text-amber-300 hover:bg-amber-900/50",
+                        "bg-cyan-900/30 text-cyan-300 hover:bg-cyan-900/50",
+                      ][idx]
+                      : [
+                        "bg-red-200 text-red-800 hover:bg-red-300",
+                        "bg-green-200 text-green-800 hover:bg-green-300",
+                        "bg-blue-200 text-blue-800 hover:bg-blue-300",
+                        "bg-yellow-200 text-yellow-800 hover:bg-yellow-300",
+                        "bg-purple-200 text-purple-800 hover:bg-purple-300",
+                        "bg-pink-200 text-pink-800 hover:bg-pink-300",
+                        "bg-indigo-200 text-indigo-800 hover:bg-indigo-300",
+                        "bg-emerald-200 text-emerald-800 hover:bg-emerald-300",
+                        "bg-amber-200 text-amber-800 hover:bg-amber-300",
+                        "bg-cyan-200 text-cyan-800 hover:bg-cyan-300",
+                      ][idx];
                     return (
                       <NavLink to={`/category/${cate.slug}`} key={cate.id}>
                         <span className={`inline-block text-xs px-3 py-1 rounded-md font-medium transition-all shadow-sm ${colorClass}`}>
