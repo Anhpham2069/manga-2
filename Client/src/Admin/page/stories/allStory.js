@@ -211,25 +211,26 @@ const AllStory = () => {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-5">
-      <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
+    <div className="bg-white rounded-xl shadow-md p-3 sm:p-5 overflow-hidden">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold m-0">Quản lý truyện</h2>
+          <h2 className="text-lg sm:text-xl font-bold m-0">Quản lý truyện</h2>
           <Tag color="blue" className="text-sm">
             {filteredItems?.length || 0} truyện
           </Tag>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Input
             placeholder="Tìm truyện..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 220 }}
+            className="flex-1 sm:flex-none"
+            style={{ minWidth: 0, maxWidth: '100%' }}
             allowClear
           />
           <Select
-            className="min-w-[180px]"
+            className="flex-1 sm:flex-none sm:min-w-[180px]"
             value={list}
             onChange={handleChange}
             options={[

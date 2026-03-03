@@ -297,53 +297,54 @@ const AllUser = () => {
   ];
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-5">
+    <div className="bg-white rounded-xl shadow-md p-3 sm:p-5 overflow-hidden">
       {/* Stats Header */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
         {stats.map((stat, idx) => (
           <div
             key={idx}
-            className="rounded-lg p-4 flex items-center gap-3"
+            className="rounded-lg p-3 sm:p-4 flex items-center gap-2 sm:gap-3"
             style={{
               background: `${stat.color}10`,
               border: `1px solid ${stat.color}30`,
             }}
           >
             <div
-              className="text-2xl rounded-full w-10 h-10 flex items-center justify-center"
+              className="text-xl sm:text-2xl rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0"
               style={{ color: stat.color, background: `${stat.color}20` }}
             >
               {stat.icon}
             </div>
             <div>
-              <div className="text-2xl font-bold" style={{ color: stat.color }}>
+              <div className="text-xl sm:text-2xl font-bold" style={{ color: stat.color }}>
                 {stat.value}
               </div>
-              <div className="text-gray-500 text-xs">{stat.label}</div>
+              <div className="text-gray-500 text-[10px] sm:text-xs">{stat.label}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-start sm:items-center justify-between mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold m-0">Quản lý người dùng</h2>
+          <h2 className="text-lg sm:text-xl font-bold m-0">Quản lý người dùng</h2>
           <Tag color="blue" className="text-sm">
             {filteredUsers?.length || 0} người dùng
           </Tag>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Input
             placeholder="Tìm theo tên, email..."
             prefix={<SearchOutlined />}
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            style={{ width: 240 }}
+            className="flex-1 sm:flex-none"
+            style={{ minWidth: 0, maxWidth: '100%' }}
             allowClear
           />
           <Select
-            className="min-w-[160px]"
+            className="flex-1 sm:flex-none sm:min-w-[160px]"
             value={roleFilter}
             onChange={setRoleFilter}
             options={[

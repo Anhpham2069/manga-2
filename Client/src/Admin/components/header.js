@@ -42,35 +42,35 @@ const HeaderAdmin = () => {
 
   return (
     <div
-      className={`rounded-xl shadow-sm px-6 py-3 flex justify-between items-center transition-all duration-300 ${isDarkModeEnable
-          ? "bg-[#1e293b] border border-[#334155]"
-          : "bg-white border border-gray-100"
+      className={`rounded-xl shadow-sm px-4 lg:px-6 py-3 flex justify-between items-center transition-all duration-300 ${isDarkModeEnable
+        ? "bg-[#1e293b] border border-[#334155]"
+        : "bg-white border border-gray-100"
         }`}
     >
       {/* Left — Search */}
-      <div className="relative">
+      <div className="relative flex-1 lg:flex-none">
         <FontAwesomeIcon
           icon={faMagnifyingGlass}
           className={`absolute top-1/2 -translate-y-1/2 left-3 ${isDarkModeEnable ? "text-gray-400" : "text-gray-400"
             }`}
         />
         <input
-          className={`pl-10 pr-4 py-2.5 rounded-lg text-sm font-medium w-72 outline-none transition-all duration-300 ${isDarkModeEnable
-              ? "bg-[#0f172a] text-gray-200 border border-[#334155] placeholder-gray-500 focus:border-blue-500"
-              : "bg-gray-50 text-gray-700 border border-gray-200 placeholder-gray-400 focus:border-blue-400"
+          className={`pl-10 pr-4 py-2.5 rounded-lg text-sm font-medium w-full lg:w-72 outline-none transition-all duration-300 ${isDarkModeEnable
+            ? "bg-[#0f172a] text-gray-200 border border-[#334155] placeholder-gray-500 focus:border-blue-500"
+            : "bg-gray-50 text-gray-700 border border-gray-200 placeholder-gray-400 focus:border-blue-400"
             }`}
           placeholder="Tìm kiếm..."
         />
       </div>
 
       {/* Right — Actions */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 lg:gap-3 ml-3">
         {/* Home link */}
         <Link to="/">
           <button
-            className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isDarkModeEnable
-                ? "bg-[#0f172a] text-gray-400 hover:text-blue-400 hover:bg-[#1e3a5f]"
-                : "bg-gray-50 text-gray-500 hover:text-blue-500 hover:bg-blue-50"
+            className={`w-9 h-9 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isDarkModeEnable
+              ? "bg-[#0f172a] text-gray-400 hover:text-blue-400 hover:bg-[#1e3a5f]"
+              : "bg-gray-50 text-gray-500 hover:text-blue-500 hover:bg-blue-50"
               }`}
             title="Về trang chủ"
           >
@@ -81,9 +81,9 @@ const HeaderAdmin = () => {
         {/* Dark mode toggle */}
         <button
           onClick={handleToggleDarkMode}
-          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isDarkModeEnable
-              ? "bg-[#0f172a] text-yellow-400 hover:bg-[#1e3a5f]"
-              : "bg-gray-50 text-amber-500 hover:bg-amber-50"
+          className={`w-9 h-9 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isDarkModeEnable
+            ? "bg-[#0f172a] text-yellow-400 hover:bg-[#1e3a5f]"
+            : "bg-gray-50 text-amber-500 hover:bg-amber-50"
             }`}
           title={isDarkModeEnable ? "Chế độ sáng" : "Chế độ tối"}
         >
@@ -92,9 +92,9 @@ const HeaderAdmin = () => {
 
         {/* Notification bell */}
         <button
-          className={`w-10 h-10 rounded-lg flex items-center justify-center relative transition-all duration-200 ${isDarkModeEnable
-              ? "bg-[#0f172a] text-gray-400 hover:text-blue-400 hover:bg-[#1e3a5f]"
-              : "bg-gray-50 text-gray-500 hover:text-blue-500 hover:bg-blue-50"
+          className={`hidden lg:flex w-10 h-10 rounded-lg items-center justify-center relative transition-all duration-200 ${isDarkModeEnable
+            ? "bg-[#0f172a] text-gray-400 hover:text-blue-400 hover:bg-[#1e3a5f]"
+            : "bg-gray-50 text-gray-500 hover:text-blue-500 hover:bg-blue-50"
             }`}
         >
           <FontAwesomeIcon icon={faBell} />
@@ -103,12 +103,12 @@ const HeaderAdmin = () => {
 
         {/* Divider */}
         <div
-          className={`w-px h-8 ${isDarkModeEnable ? "bg-[#334155]" : "bg-gray-200"
+          className={`hidden lg:block w-px h-8 ${isDarkModeEnable ? "bg-[#334155]" : "bg-gray-200"
             }`}
         ></div>
 
         {/* User info */}
-        <div className="flex items-center gap-3">
+        <div className="hidden lg:flex items-center gap-3">
           <div className="text-right">
             <p
               className={`text-sm font-semibold leading-tight ${isDarkModeEnable ? "text-gray-200" : "text-gray-700"
@@ -136,9 +136,9 @@ const HeaderAdmin = () => {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${isDarkModeEnable
-              ? "bg-[#0f172a] text-gray-400 hover:text-red-400 hover:bg-red-900/20"
-              : "bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50"
+          className={`hidden lg:flex w-10 h-10 rounded-lg items-center justify-center transition-all duration-200 ${isDarkModeEnable
+            ? "bg-[#0f172a] text-gray-400 hover:text-red-400 hover:bg-red-900/20"
+            : "bg-gray-50 text-gray-500 hover:text-red-500 hover:bg-red-50"
             }`}
           title="Đăng xuất"
         >

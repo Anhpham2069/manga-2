@@ -26,7 +26,7 @@ const Featured = ({ dark }) => {
   const [storiesData, setStoriesData] = useState([]);
   const [storiesFT, setStoriesFT] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [slug, setSlug] = useState("truyen-moi");
+  const [slug, setSlug] = useState("hoan-thanh");
   const [selectedButton, setSelectedButton] = useState("tuannay");
   const [rankingData, setRankingData] = useState([]);
   const [saveStory, setSaveStory] = useState();
@@ -99,7 +99,7 @@ const Featured = ({ dark }) => {
   }, []);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 mt-4 px-3 tablet:px-6 lg:px-14">
+    <div className="flex flex-col lg:flex-row gap-5 mt-4 tablet:px-6 lg:px-14">
       <Helmet>
         <title>Trang chủ - Đọc truyện 5s</title>
         <meta name="description" content="Khám phá những câu chuyện nổi bật mới nhất trên Đọc truyện 5s." />
@@ -108,13 +108,13 @@ const Featured = ({ dark }) => {
       {/* ========== LEFT: Story Grid ========== */}
       <div className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} flex-1 shadow-md rounded-md overflow-hidden`}>
         {/* Tabs */}
-        <div className="flex items-center gap-1 px-4 py-2.5 border-b border-gray-200">
+        <div className="flex items-center px-4 py-2.5 border-b border-gray-200">
           <FontAwesomeIcon icon={faStarOfLife} color="#5383EE" className="mr-2 text-sm" />
-          <TabButton active={slug === "truyen-moi"} onClick={() => setSlug("truyen-moi")} isDark={isDarkModeEnable}>
-            MỚI CẬP NHẬT
-          </TabButton>
           <TabButton active={slug === "hoan-thanh"} onClick={() => setSlug("hoan-thanh")} isDark={isDarkModeEnable}>
             HOT
+          </TabButton>
+          <TabButton active={slug === "truyen-moi"} onClick={() => setSlug("truyen-moi")} isDark={isDarkModeEnable}>
+            MỚI CẬP NHẬT
           </TabButton>
         </div>
 
@@ -259,7 +259,7 @@ const Featured = ({ dark }) => {
 const TabButton = ({ active, onClick, children, isDark }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-1.5 rounded text-sm font-bold transition ${active
+    className={`flex-1 text-center py-1.5 rounded text-sm font-bold transition ${active
       ? "bg-primary-color text-white"
       : isDark
         ? "text-primary-color"

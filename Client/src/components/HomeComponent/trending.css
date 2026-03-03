@@ -3,7 +3,6 @@
 .trending-section {
     margin-top: 12px;
     background: #fff;
-    border-radius: 10px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
     overflow: hidden;
 }
@@ -20,7 +19,6 @@
     justify-content: space-between;
     background: linear-gradient(135deg, #4a6cf7 0%, #6a8bfa 100%);
     padding: 10px 18px;
-    border-radius: 8px 8px 0 0;
 }
 
 .trending-label {

@@ -69,7 +69,7 @@ const StoryFilterMenu = ({ activeFilter, setActiveFilter, setSlug }) => {
 
   return (
     <div
-      className={`w-full p-5 rounded-xl transition-colors duration-300 ${isDarkMode ? "bg-[#1e293b]" : "bg-white"
+      className={`w-full p-5 transition-colors duration-300 ${isDarkMode ? "bg-[#1e293b]" : "bg-white"
         }`}
     >
       <div className="flex flex-wrap gap-2">
@@ -99,8 +99,8 @@ const StoryFilterMenu = ({ activeFilter, setActiveFilter, setSlug }) => {
           <button
             onClick={() => setShowMore(!showMore)}
             className={`px-4 py-1 rounded-md text-sm font-medium flex items-center gap-1 transition-all ${isDarkMode
-                ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
-                : "bg-gray-300 hover:bg-gray-400 text-gray-800"
+              ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+              : "bg-gray-300 hover:bg-gray-400 text-gray-800"
               }`}
           >
             {showMore ? "Thu gọn" : "+ More"}

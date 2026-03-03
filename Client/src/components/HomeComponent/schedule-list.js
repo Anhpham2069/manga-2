@@ -33,7 +33,7 @@ const ScheduleList = () => {
   return (
     <div
       className={`${isDarkModeEnable ? "bg-bg_dark_light text-text_darkMode" : "bg-white"
-        } h-fit p-5  w-full shadow-lg `}
+        } h-fit p-5  w-full `}
     >
       <div className="phone:flex-row  h-full lg:flex phone:text-xs tablet:text-sm">
         <div

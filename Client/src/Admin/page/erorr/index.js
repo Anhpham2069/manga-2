@@ -84,14 +84,14 @@ const ErrComponent = () => {
   }
 
   return (
-    <div className="bg-white p-5 shadow-md">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Quản lý báo lỗi</h2>
-        <div className="flex gap-3">
-          <Tag color="red" className="text-sm px-3 py-1">
+    <div className="bg-white p-3 sm:p-5 shadow-md rounded-xl overflow-hidden">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+        <h2 className="text-lg sm:text-xl font-bold">Quản lý báo lỗi</h2>
+        <div className="flex gap-2 sm:gap-3">
+          <Tag color="red" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
             Chưa sửa: {pendingCount}
           </Tag>
-          <Tag color="green" className="text-sm px-3 py-1">
+          <Tag color="green" className="text-xs sm:text-sm px-2 sm:px-3 py-1">
             Đã sửa: {doneCount}
           </Tag>
         </div>

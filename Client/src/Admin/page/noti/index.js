@@ -104,6 +104,7 @@ const AdminNotificationForm = () => {
       title: "Tiêu đề",
       dataIndex: "title",
       key: "title",
+      width: 150,
       render: (text) => text || <span className="text-gray-400 italic">Không có tiêu đề</span>,
     },
     {
@@ -111,13 +112,13 @@ const AdminNotificationForm = () => {
       dataIndex: "message",
       key: "message",
       ellipsis: true,
-      width: "35%",
+      width: 250,
     },
     {
       title: "Trạng thái",
       dataIndex: "isActive",
       key: "isActive",
-      width: 130,
+      width: 140,
       render: (isActive, record) => (
         <div className="flex items-center gap-2">
           <Switch
@@ -136,7 +137,7 @@ const AdminNotificationForm = () => {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
-      width: 180,
+      width: 160,
       render: (date) =>
         new Date(date).toLocaleDateString("vi-VN", {
           day: "2-digit",
@@ -149,7 +150,8 @@ const AdminNotificationForm = () => {
     {
       title: "Hành động",
       key: "actions",
-      width: 120,
+      width: 100,
+      fixed: "right",
       render: (_, record) => (
         <Space>
           <Tooltip title="Sửa">
@@ -175,10 +177,10 @@ const AdminNotificationForm = () => {
   ];
 
   return (
-    <div className="p-4">
+    <div className="p-2 sm:p-4">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-6">
+        <h2 className="text-lg sm:text-2xl font-bold flex items-center gap-2">
           <NotificationOutlined className="text-blue-500" />
           Quản lý thông báo
         </h2>
@@ -187,7 +189,7 @@ const AdminNotificationForm = () => {
           icon={<PlusOutlined />}
           size="large"
           onClick={handleCreate}
-          className="bg-blue-500 hover:bg-blue-600"
+          className="bg-blue-500 hover:bg-blue-600 w-full sm:w-auto"
         >
           Tạo thông báo
         </Button>
@@ -201,6 +203,7 @@ const AdminNotificationForm = () => {
         loading={loading}
         pagination={{ pageSize: 10 }}
         bordered
+        scroll={{ x: 700 }}
         locale={{ emptyText: "Chưa có thông báo nào" }}
       />
 

@@ -174,9 +174,9 @@ const FilterStories = () => {
         <meta property="og:type" content="website" />
       </Helmet>
       <NavBar />
-      <div className="lg:flex gap-5 max-w-[90%] mt-6 mx-auto">
+      <div className="max-w-full tablet:max-w-[90%] lg:max-w-[75%] mt-6 mx-auto px-2 tablet:px-0">
         {/* Main Content */}
-        <div className={`${cardBg} lg:w-[72%] p-5 rounded-xl shadow-lg`}>
+        <div className={`${cardBg} w-full p-5 rounded-xl shadow-lg`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b border-gray-200 pb-3 mb-5">
             <h2 className="text-xl font-bold text-primary-color flex items-center gap-2">
@@ -393,12 +393,6 @@ const FilterStories = () => {
           )}
         </div>
 
-        {/* Sidebar */}
-        <div
-          className={`${cardBg} h-fit shadow-lg flex-1 rounded-xl phone:mt-5 lg:mt-0`}
-        >
-          {/* <PopularSection /> */}
-        </div>
       </div>
       <Footer />
     </div>

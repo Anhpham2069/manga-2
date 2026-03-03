@@ -21,19 +21,19 @@ const HomeLayout = () => {
         } flex flex-col`}
     >
       <NavBar />
-      <div className="max-w-[95%] tablet:max-w-[90%] laptop:max-w-[75%] mx-auto w-full">
+      <div className="max-w-full tablet:max-w-[90%] laptop:max-w-[75%] mx-auto w-full">
         <div className="pt-3 lg:px-14 tablet:px-6">
           <Slider />
           <Trending dark={isDarkModeEnable} />
         </div>
 
-        <div className="lg:pt-10 tablet:px-6 lg:px-14">
+        <div className="pt-4 lg:pt-6 tablet:px-6 lg:px-14">
           <ScheduleList />
         </div>
 
         {/* ===== FILTER MENU ===== */}
         <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"
-          } lg:px-14 tablet:px-6 mt-8`}>
+          } lg:px-14 tablet:px-6 mt-5 mb-5`}>
           <StoryFilterMenu
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}
