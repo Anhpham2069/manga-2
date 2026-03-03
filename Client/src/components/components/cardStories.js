@@ -71,7 +71,7 @@ const CardStories = ({
 
         {/* Time badge - top left */}
         {nomarl && time && (
-          <span className="absolute top-1.5 left-1.5 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
+          <span className="absolute top-1.5 left-1.5 bg-primary-color text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
             {time}
           </span>
         )}

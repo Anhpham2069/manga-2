@@ -3,6 +3,7 @@ import NavBar from "../layout/Navbar";
 import Slider from "./slider";
 import ScheduleList from "./schedule-list";
 import Featured from "./featured";
+import Trending from "./trending";
 import Footer from "../layout/footer";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
@@ -23,6 +24,7 @@ const HomeLayout = () => {
       <div className="max-w-[95%] tablet:max-w-[90%] laptop:max-w-[75%] mx-auto w-full">
         <div className="pt-3 lg:px-14 tablet:px-6">
           <Slider />
+          <Trending dark={isDarkModeEnable} />
         </div>
 
         <div className="lg:pt-10 tablet:px-6 lg:px-14">

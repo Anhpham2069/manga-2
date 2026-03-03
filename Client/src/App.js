@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import "./App.css";
 import Home from "./pages/Home";
 import DetailStories from "./components/Stories/DetailStories";
@@ -8,9 +8,6 @@ import AllStories from "./components/Stories/AllStories";
 import FilterStories from "./components/Stories/filterStories";
 import StoryListByGenre from "./components/Stories/StoryListByGenre";
 import AdminLayout from "./Admin/index";
-import Dasbroad from "./Admin/page/dashboard";
-import StoriesAdmin from "./Admin/page/stories";
-import UserManage from "./Admin/page/user";
 import SearchResult from "./components/components/searchResult";
 import Category from "./pages/category";
 import History from "./pages/history";
@@ -20,6 +17,15 @@ import Register from "./pages/register";
 import NotFoundPage from "./pages/notFound";
 import ContactUs from "./pages/contact_us";
 import Ranking from "./pages/ranking";
+import { useSelector } from "react-redux";
+
+// Admin route guard
+const AdminRoute = ({ children }) => {
+  const user = useSelector((state) => state?.auth.login.currentUser);
+  if (!user) return <Navigate to="/login" replace />;
+  if (!user.admin) return <Navigate to="/" replace />;
+  return children;
+};
 
 function App() {
   return (
@@ -42,11 +48,9 @@ function App() {
 
         <Route path="/genres/:genre" element={<StoryListByGenre />} />
 
-        {/* admin */}
-        <Route exact path="/admin" element={<AdminLayout />} />
-        {/* <Route path='/admin/dashboard' element={<Dasbroad />} ></Route>
-        <Route path='/admin/dashboard/stories' element={<StoriesAdmin />} ></Route>
-      <Route path='/admin/dashboard/user' element={<UserManage />} ></Route> */}
+        {/* admin - protected */}
+        <Route exact path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>} />
+
         {/* Route cho trang "Not Found" */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

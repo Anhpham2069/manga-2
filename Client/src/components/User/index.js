@@ -3,22 +3,50 @@ import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 import Sidebar from "./Sidebar";
 import Content from "./ContentCpn";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
+import { updateAvatar } from "../../redux/slice/authSlice";
+import axios from "axios";
+
+const AVATAR_STYLES = [
+  "adventurer", "adventurer-neutral", "avataaars", "big-ears",
+  "big-smile", "bottts", "fun-emoji", "lorelei",
+  "micah", "miniavs", "personas", "pixel-art",
+];
+
+const BG_COLORS = [
+  "b6e3f4", "c0aede", "d1d4f9", "ffd5dc", "ffdfbf",
+  "a3e4d7", "f9e79f", "f5b7b1", "aed6f1", "d5f5e3",
+  "fadbd8", "e8daef", "d6eaf8", "fcf3cf", "d4efdf",
+];
+
+const generateAvatars = (count = 12) => {
+  const avatars = [];
+  for (let i = 0; i < count; i++) {
+    const seed = Math.random().toString(36).substring(2, 10);
+    const style = AVATAR_STYLES[Math.floor(Math.random() * AVATAR_STYLES.length)];
+    const bg = BG_COLORS[Math.floor(Math.random() * BG_COLORS.length)];
+    avatars.push(`https://api.dicebear.com/9.x/${style}/svg?seed=${seed}&backgroundColor=${bg}`);
+  }
+  return avatars;
+};
 
 const UserComponent = () => {
   const [selectedItem, setSelectedItem] = useState(1);
   const isDarkModeEnable = useSelector(selectDarkMode);
   const user = useSelector((state) => state.auth.login.currentUser);
+  const dispatch = useDispatch();
+
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [avatarOptions, setAvatarOptions] = useState([]);
+  const [savingAvatar, setSavingAvatar] = useState(false);
 
   const handleItemClick = (item) => {
     setSelectedItem(item);
   };
 
-  // Lấy chữ cái đầu
   const getInitial = (name) => (name ? name.charAt(0).toUpperCase() : "A");
 
-  // Tính ngày tham gia
   const getMemberSince = () => {
     if (!user?.createdAt) return "N/A";
     return new Date(user.createdAt).toLocaleDateString("vi-VN", {
@@ -26,6 +54,33 @@ const UserComponent = () => {
       month: "2-digit",
       year: "numeric",
     });
+  };
+
+  const openAvatarPicker = () => {
+    setAvatarOptions(generateAvatars(12));
+    setShowAvatarPicker(true);
+  };
+
+  const refreshAvatars = () => {
+    setAvatarOptions(generateAvatars(12));
+  };
+
+  const handleSelectAvatar = async (avatarUrl) => {
+    if (!user) return;
+    setSavingAvatar(true);
+    try {
+      await axios.put(
+        `${process.env.REACT_APP_API_URL}/api/user/update-avatar/${user._id}`,
+        { avatar: avatarUrl },
+        { headers: { token: `Bearer ${user.accessToken}` } }
+      );
+      dispatch(updateAvatar(avatarUrl));
+      setShowAvatarPicker(false);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSavingAvatar(false);
+    }
   };
 
   return (
@@ -57,13 +112,28 @@ const UserComponent = () => {
             {/* Avatar */}
             <div className="absolute -top-14 left-8">
               <div
-                className="w-28 h-28 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-xl border-4 border-white"
+                className="w-28 h-28 rounded-2xl flex items-center justify-center text-white text-4xl font-bold shadow-xl border-4 border-white cursor-pointer group relative overflow-hidden"
                 style={{
-                  background:
-                    "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+                  background: user?.avatar
+                    ? "transparent"
+                    : "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
                 }}
+                onClick={openAvatarPicker}
               >
-                {getInitial(user?.username)}
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt="avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitial(user?.username)
+                )}
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">
+                    Đổi avatar
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -122,6 +192,67 @@ const UserComponent = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar Picker Modal */}
+      {showAvatarPicker && (
+        <div
+          className="fixed inset-0 bg-black/50 z-[9999] flex items-center justify-center p-4"
+          onClick={() => setShowAvatarPicker(false)}
+        >
+          <div
+            className={`w-full max-w-md rounded-2xl shadow-2xl p-6 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white"
+              }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3
+                className={`text-lg font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"
+                  }`}
+              >
+                Chọn Avatar
+              </h3>
+              <button
+                onClick={refreshAvatars}
+                className="px-3 py-1.5 text-xs font-medium bg-primary-color text-white rounded-lg hover:opacity-90 transition"
+              >
+                🎲 Random lại
+              </button>
+            </div>
+
+            <div className="grid grid-cols-4 gap-3">
+              {avatarOptions.map((url, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSelectAvatar(url)}
+                  disabled={savingAvatar}
+                  className={`rounded-xl border-2 p-1.5 transition-all hover:scale-105 hover:border-primary-color ${user?.avatar === url
+                    ? "border-primary-color ring-2 ring-primary-color/30"
+                    : isDarkModeEnable
+                      ? "border-gray-600"
+                      : "border-gray-200"
+                    } ${savingAvatar ? "opacity-50 cursor-wait" : "cursor-pointer"}`}
+                >
+                  <img
+                    src={url}
+                    alt={`avatar-${index}`}
+                    className="w-full aspect-square rounded-lg"
+                  />
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowAvatarPicker(false)}
+              className={`w-full mt-4 py-2 rounded-lg text-sm font-medium transition ${isDarkModeEnable
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

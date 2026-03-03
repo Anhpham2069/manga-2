@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Helmet } from "react-helmet";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Modal, Input, message } from "antd";
@@ -13,7 +13,14 @@ import {
   faChevronLeft,
   faChevronRight,
   faArrowUp,
+  faStar,
+  faCaretLeft,
+  faCaretRight,
+  faCommentDots,
+  faPaperPlane,
+  faTags,
 } from "@fortawesome/free-solid-svg-icons";
+import CardStories from "../components/cardStories";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 import { useSelector, useDispatch } from "react-redux";
@@ -26,6 +33,9 @@ import {
   addFavoritesStoryAPI,
   removeFavoritesStory,
   incrementStoryView,
+  addComment,
+  getCommentsByStory,
+  getStorybyCategory,
 } from "../../services/apiStoriesRequest";
 
 // ===== CHAPTER NAVIGATION COMPONENT (DRY) =====
@@ -101,6 +111,14 @@ const ReadStories = () => {
   const [loadingFav, setLoadingFav] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [imagesLoaded, setImagesLoaded] = useState(0);
+  const [activeServer, setActiveServer] = useState(() => {
+    return parseInt(localStorage.getItem("activeServer")) || 1;
+  });
+  const [commentText, setCommentText] = useState("");
+  const [comments, setComments] = useState([]);
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [recommendStories, setRecommendStories] = useState([]);
+  const recommendRef = useRef(null);
 
   const { id, slug } = useParams();
   const dispatch = useDispatch();
@@ -147,13 +165,56 @@ const ReadStories = () => {
     const fetchStory = async () => {
       try {
         const res = await getDetailStory(slug);
-        if (res?.data) setStory(res.data.data);
+        if (res?.data) {
+          setStory(res.data.data);
+          // Fetch recommendations from first category
+          const categories = res.data.data?.item?.category;
+          if (categories && categories.length > 0) {
+            try {
+              const catRes = await getStorybyCategory(categories[0].slug);
+              if (catRes?.items) {
+                const filtered = catRes.items.filter((item) => item.slug !== slug);
+                setRecommendStories(filtered.slice(0, 6));
+              }
+            } catch (e) { console.log(e); }
+          }
+        }
       } catch (error) {
         console.error("Error fetching story:", error);
       }
     };
     fetchStory();
   }, [slug]);
+
+  // ===== FETCH COMMENTS =====
+  const fetchComments = useCallback(async () => {
+    setLoadingComments(true);
+    try {
+      const data = await getCommentsByStory(slug);
+      setComments(data || []);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    } finally {
+      setLoadingComments(false);
+    }
+  }, [slug]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
+
+  const handleSubmitComment = useCallback(async () => {
+    if (!user) { message.warning("Bạn cần đăng nhập để bình luận"); return; }
+    if (!commentText.trim()) { message.warning("Vui lòng nhập nội dung bình luận"); return; }
+    try {
+      await addComment(accessToken, slug, userId, user.username, commentText);
+      message.success("Đã gửi bình luận");
+      setCommentText("");
+      fetchComments();
+    } catch (error) {
+      message.error("Gửi bình luận thất bại");
+    }
+  }, [commentText, user, accessToken, slug, userId, fetchComments]);
 
   // ===== FETCH CHAPTER DATA =====
   useEffect(() => {
@@ -392,8 +453,39 @@ const ReadStories = () => {
             </p>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-wrap justify-center gap-3 mt-4">
+          {/* Server notice */}
+          <p className={`text-center text-xs mt-3 ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
+            Nếu không xem được truyện vui lòng đổi "SERVER ẢNH" bên dưới
+          </p>
+
+          {/* Server buttons */}
+          <div className="flex flex-wrap justify-center gap-3 mt-3">
+            <button
+              onClick={() => { localStorage.setItem("activeServer", "1"); setActiveServer(1); window.location.reload(); }}
+              className={`px-5 py-1.5 rounded-lg text-sm font-bold transition-all shadow-sm ${activeServer === 1
+                ? "bg-gradient-to-r from-green-400 to-green-500 text-white"
+                : isDarkModeEnable
+                  ? "border border-green-500 text-green-400 bg-transparent hover:bg-green-500/10"
+                  : "border border-green-500 text-green-600 bg-transparent hover:bg-green-50"
+                }`}
+            >
+              Server 1
+            </button>
+            <button
+              onClick={() => { localStorage.setItem("activeServer", "2"); setActiveServer(2); window.location.reload(); }}
+              className={`px-5 py-1.5 rounded-lg text-sm font-bold transition-all shadow-sm ${activeServer === 2
+                ? "bg-gradient-to-r from-purple-400 to-purple-500 text-white"
+                : isDarkModeEnable
+                  ? "border border-purple-500 text-purple-400 bg-transparent hover:bg-purple-500/10"
+                  : "border border-purple-500 text-purple-600 bg-transparent hover:bg-purple-50"
+                }`}
+            >
+              Server 2
+            </button>
+          </div>
+
+          {/* Báo lỗi */}
+          <div className="flex justify-center mt-3">
             <button
               onClick={() => setIsModalOpen(true)}
               className="px-4 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium transition-all"
@@ -484,6 +576,156 @@ const ReadStories = () => {
               <ChapterNav {...navProps} variant="bottom" />
             </div>
           )}
+        </div>
+
+        {/* ===== RECOMMEND + COMMENTS + TAGS ===== */}
+        <div className="w-[92%] lg:w-[85%] mx-auto pb-24">
+
+          {/* ===== RECOMMEND ===== */}
+          <div className={`mt-10 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 flex items-center justify-between border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faStar} className="mr-2" />
+                Bạn có thể thích
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={() => recommendRef.current && (recommendRef.current.scrollLeft -= 200)} className={`w-8 h-8 rounded-full flex items-center justify-center transition ${isDarkModeEnable ? "bg-[#334155] hover:bg-[#475569] text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
+                  <FontAwesomeIcon icon={faCaretLeft} />
+                </button>
+                <button onClick={() => recommendRef.current && (recommendRef.current.scrollLeft += 200)} className={`w-8 h-8 rounded-full flex items-center justify-center transition ${isDarkModeEnable ? "bg-[#334155] hover:bg-[#475569] text-gray-300" : "bg-gray-100 hover:bg-gray-200 text-gray-600"}`}>
+                  <FontAwesomeIcon icon={faCaretRight} />
+                </button>
+              </div>
+            </div>
+            <div
+              className="p-4 flex gap-4 overflow-x-auto scroll-smooth scrollbar-hide"
+              ref={recommendRef}
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {recommendStories.length > 0 ? (
+                recommendStories.map((item) => (
+                  <CardStories
+                    key={item._id}
+                    id={item._id}
+                    title={item.name}
+                    img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                    slug={item.slug}
+                    chapter={item.chaptersLatest?.[0]?.chapter_name}
+                    nomarl
+                  />
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>
+              )}
+            </div>
+          </div>
+
+          {/* ===== COMMENTS ===== */}
+          <div className={`mt-8 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faCommentDots} className="mr-2" />
+                Bình luận ({comments.length})
+              </h3>
+            </div>
+            <div className="p-5">
+              {!user && (
+                <div className={`rounded-lg p-4 mb-5 text-sm ${isDarkModeEnable ? "bg-[#0f172a] text-gray-300" : "bg-amber-50 text-amber-800 border border-amber-200"}`}>
+                  Bạn cần
+                  <Link to="/login" className="font-bold mx-1 underline">Đăng nhập</Link>
+                  hoặc
+                  <Link to="/register" className="font-bold mx-1 underline">Đăng ký</Link>
+                  để bình luận
+                </div>
+              )}
+              {user && (
+                <div className="mb-6">
+                  <textarea
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    className={`w-full h-28 p-4 rounded-lg border outline-none resize-none text-sm transition ${isDarkModeEnable
+                      ? "bg-[#0f172a] border-[#334155] text-gray-200 placeholder-gray-500"
+                      : "bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400"
+                      } focus:border-primary-color`}
+                    placeholder="Nhập bình luận của bạn..."
+                  />
+                  <button
+                    onClick={handleSubmitComment}
+                    className="mt-2 px-6 py-2 bg-primary-color text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+                  >
+                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
+                    Gửi bình luận
+                  </button>
+                </div>
+              )}
+              <div className="space-y-3">
+                {loadingComments ? (
+                  <p className="text-center py-4 opacity-60 text-sm">Đang tải bình luận...</p>
+                ) : comments.length === 0 ? (
+                  <p className="text-center py-4 opacity-60 text-sm">Chưa có bình luận nào</p>
+                ) : (
+                  comments.map((cmt) => (
+                    <div
+                      key={cmt._id}
+                      className={`p-4 rounded-lg ${isDarkModeEnable ? "bg-[#0f172a] border border-[#334155]" : "bg-gray-50 border border-gray-100"}`}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"}`}>
+                            {cmt.username?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <span className="font-semibold text-sm">{cmt.username}</span>
+                          <span className={`text-xs ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
+                            {new Date(cmt.createdAt).toLocaleDateString("vi-VN", {
+                              day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+                            })}
+                          </span>
+                        </div>
+                        {user && (user._id === cmt.userId || user.admin) && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await axios.delete(
+                                  `${process.env.REACT_APP_API_URL}/api/comment/delete/${cmt._id}`,
+                                  { headers: { token: `Bearer ${accessToken}` } }
+                                );
+                                message.success("Đã xoá bình luận");
+                                fetchComments();
+                              } catch (err) {
+                                message.error("Xoá thất bại");
+                              }
+                            }}
+                            className="text-xs text-red-500 hover:text-red-700 transition"
+                          >
+                            Xoá
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-sm leading-relaxed pl-10">{cmt.content}</p>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* ===== TAGS ===== */}
+          <div className={`mt-8 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-sm border border-gray-100"}`}>
+            <div className="py-3 px-5 border-b border-gray-200/50">
+              <h3 className="text-base font-bold text-primary-color">
+                <FontAwesomeIcon icon={faTags} className="mr-2" />
+                Tags
+              </h3>
+            </div>
+            <div className="p-5">
+              <p className={`text-sm leading-relaxed ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                Nettruyen, Truyenqq, Blogtruyen, Manhuavn, Manhwatv, Tiemsachnho,
+                Teamlanhlung, Truyentranhaudio, Vlogtruyen, Vcomi, Doctruyen3q,
+                Nhattruyen, Truyện tranh, Truyen tranh online, Đọc truyện tranh,
+                Truyện tranh hot, Truyện tranh hay, Truyện ngôn tình
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* ===== FIXED BOTTOM BAR ===== */}

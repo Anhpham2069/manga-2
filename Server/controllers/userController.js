@@ -65,6 +65,24 @@ const userController = {
       res.status(500).json(err);
     }
   },
+
+  //UPDATE AVATAR
+  updateAvatar: async (req, res) => {
+    try {
+      const { avatar } = req.body;
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id,
+        { $set: { avatar } },
+        { new: true }
+      ).select("-password");
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      res.status(500).json(err);
+    }
+  },
 };
 
 module.exports = userController;

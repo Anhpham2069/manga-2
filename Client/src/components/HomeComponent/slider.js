@@ -1,13 +1,23 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Carousel } from "antd";
+import "./slider.css";
 import { Link } from "react-router-dom";
 import { getStoriesByList } from "../../services/apiStoriesRequest";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronLeft, faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronLeft,
+  faChevronRight,
+} from "@fortawesome/free-solid-svg-icons";
+
+const AUTOPLAY_INTERVAL = 5000;
+const SLIDE_COUNT = 5;
 
 const Slider = () => {
   const [storiesData, setStoriesData] = useState([]);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [progress, setProgress] = useState(0);
   const carouselRef = useRef(null);
+  const progressRef = useRef(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -23,12 +33,37 @@ const Slider = () => {
     fetchData();
   }, []);
 
+  // Progress bar animation
+  useEffect(() => {
+    setProgress(0);
+    const startTime = Date.now();
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min((elapsed / AUTOPLAY_INTERVAL) * 100, 100);
+      setProgress(pct);
+      if (pct < 100) {
+        progressRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    progressRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(progressRef.current);
+  }, [activeSlide]);
+
+  const handleBeforeChange = useCallback((_, next) => {
+    setActiveSlide(next);
+  }, []);
+
+  const items = storiesData.items?.slice(0, SLIDE_COUNT) || [];
+
   return (
-    <div className="relative group">
+    <div className="slider-wrapper">
       {/* Prev Button */}
       <button
         onClick={() => carouselRef.current?.prev()}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-black/50 hover:bg-primary-color text-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0 "
+        className="slider-nav slider-nav--prev"
+        aria-label="Previous slide"
       >
         <FontAwesomeIcon icon={faChevronLeft} />
       </button>
@@ -36,50 +71,70 @@ const Slider = () => {
       {/* Next Button */}
       <button
         onClick={() => carouselRef.current?.next()}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 bg-black/50 hover:bg-primary-color text-white rounded-full flex items-center justify-center transition-all duration-300 opacity-0"
+        className="slider-nav slider-nav--next"
+        aria-label="Next slide"
       >
         <FontAwesomeIcon icon={faChevronRight} />
       </button>
 
-      <Carousel autoplay ref={carouselRef} dots={{ className: "custom-dots" }}>
-        {storiesData.items?.slice(0, 4).map((item, index) => (
-          <Link to={`detail/${item.slug}`} key={item._id}>
-            <div className="relative w-full bg-black phone:h-80 tablet:h-[440px]">
-              <img
-                className="absolute w-full h-full opacity-25 object-cover z-1"
-                src={`https://img.otruyenapi.com${storiesData.seoOnPage?.og_image?.[index]}`}
-              ></img>
-              <div className="text-white flex justify-center p-10 h-full z-20">
-                <div className="flex-1 tablet:p-20">
-                  <div className="text-xl font-medium">
-                    <p>
-                      Chương {item.chaptersLatest?.[0]?.chapter_name || ""}
-                    </p>
-                  </div>
-                  <div className="phone:text-sm tablet:text-4xl w-full font-semibold pt-2 pb-10">
-                    <p className="z-40">{item.name}</p>
-                  </div>
-                  <div className="flex flex-wrap">
-                    {item?.category?.map((cate, i) => (
-                      <div className="cursor-pointer" key={i}>
-                        <p
-                          className="mr-1 p-1 rounded-md font-medium border-slate-300 border-2 w-fit tablet:text-sm hover:text-blue-400 phone:text-xs"
-                        >
+      <Carousel
+        autoplay
+        autoplaySpeed={AUTOPLAY_INTERVAL}
+        ref={carouselRef}
+        dots={false}
+        beforeChange={handleBeforeChange}
+      >
+        {items.map((item, index) => {
+          const imgUrl = `https://img.otruyenapi.com${storiesData.seoOnPage?.og_image?.[index]}`;
+          return (
+            <Link to={`detail/${item.slug}`} key={item._id}>
+              <div className="slider-slide">
+                {/* Blurred background */}
+                <div
+                  className="slider-bg"
+                  style={{ backgroundImage: `url(${imgUrl})` }}
+                />
+                <div className="slider-overlay" />
+
+                {/* Content */}
+                <div className="slider-content">
+                  <div className="slider-info">
+                    <span className="slider-chapter">
+                      Chương{" "}
+                      {item.chaptersLatest?.[0]?.chapter_name || "N/A"}
+                    </span>
+                    <h2 className="slider-title">{item.name}</h2>
+                    <div className="slider-categories">
+                      {item?.category?.slice(0, 4).map((cate, i) => (
+                        <span className="slider-category" key={i}>
                           {cate.name}
-                        </p>
-                      </div>
-                    ))}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Cover image */}
+                  <div className="slider-cover-wrapper">
+                    <img
+                      className="slider-cover"
+                      src={imgUrl}
+                      alt={item.name}
+                    />
                   </div>
                 </div>
-                <img
-                  className="phone:w-2/5 tablet:w-1/4 h-full object-cover border-white border-[14px] rotate-[12deg] shadow-2xl -translate-x-10"
-                  src={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
-                ></img>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </Carousel>
+
+      {/* Progress bar */}
+      <div className="slider-progress">
+        <div
+          className="slider-progress-bar"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
     </div>
   );
 };

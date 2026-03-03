@@ -17,6 +17,7 @@ import {
   faSpinner,
   faClose,
   faFaceSmile,
+  faBell,
 } from "@fortawesome/free-solid-svg-icons";
 import "../HomeComponent/style.css";
 import TooltipComponent from "../components/tooltip";
@@ -44,6 +45,32 @@ const NavBar = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [readNotiIds, setReadNotiIds] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("readNotiIds") || "[]"); } catch { return []; }
+  });
+
+  const markAsRead = (id) => {
+    setReadNotiIds((prev) => {
+      if (prev.includes(id)) return prev;
+      const updated = [...prev, id];
+      localStorage.setItem("readNotiIds", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const unreadCount = notifications.filter((n) => !readNotiIds.includes(n._id)).length;
+
+  // Fetch notifications
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/noti/noti`);
+        setNotifications(res.data || []);
+      } catch (e) { console.log(e); }
+    };
+    fetchNotifications();
+  }, []);
 
   // Debounce search
   useEffect(() => {
@@ -212,14 +239,12 @@ const NavBar = () => {
 
   return (
     <>
-      <AnnouncementBanner />
-
       {/* ======= MAIN NAVBAR ======= */}
       <nav
         className={`w-full h-16 text-white flex items-center transition-colors duration-300 ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-regal-blue"
           }`}
       >
-        <div className="max-w-[90%] mx-auto w-full flex items-center justify-between">
+        <div className="max-w-[80%] mx-auto w-full flex items-center justify-between">
           {/* Mobile hamburger */}
           <button
             className="lg:hidden text-xl p-2 hover:bg-white/10 rounded-lg transition-colors"
@@ -230,17 +255,19 @@ const NavBar = () => {
 
           {/* Logo */}
           <NavLink to="/" className="flex-shrink-0">
-            <div className="flex items-center">
-              <div className="px-5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-500 shadow-lg hover:shadow-xl transition-shadow">
-                <h1 className="text-xl font-extrabold text-white tracking-wide">
-                  Truyện <span className="text-yellow-300">3s</span>
-                </h1>
-              </div>
+            <div className="flex items-center gap-2 transition-transform duration-300 hover:scale-110">
+              <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="18" stroke="#facc15" strokeWidth="2.5" fill="none" />
+                <path d="M20 8 C28 8 32 14 32 20 C32 26 28 30 22 30 C16 30 14 26 14 22 C14 18 17 16 20 16 C23 16 25 18 25 20 C25 22 23 24 21 24" stroke="#facc15" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+              </svg>
+              <h1 className="text-xl font-extrabold text-white tracking-wide">
+                DocTruyen<span className="text-yellow-300">5s</span>
+              </h1>
             </div>
           </NavLink>
 
           {/* Desktop Nav Links */}
-          <div className="phone:hidden lg:flex items-center gap-1 flex-1 ml-8 font-semibold text-sm">
+          <div className="phone:hidden lg:flex items-center gap-0 flex-1 ml-6 font-semibold text-[13px]">
             <Popover
               content={<TooltipComponent sx />}
               trigger="click"
@@ -248,29 +275,82 @@ const NavBar = () => {
               open={openCategory}
               onOpenChange={setOpenCategory}
             >
-              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors flex items-center gap-1">
-                Thể loại <CaretDownOutlined />
+              <button className="nav-hover-underline px-3 py-2 hover:bg-white/10 transition-colors flex items-center gap-1">
+                Thể loại <CaretDownOutlined className="text-[10px]" />
               </button>
             </Popover>
             <Link to="/ranking">
-              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
-                Xếp hạng
+              <button className="nav-hover-underline px-3 py-2 hover:bg-white/10 transition-colors flex items-center gap-1">
+                Xếp hạng <CaretDownOutlined className="text-[10px]" />
               </button>
             </Link>
             <Link to="/filter">
-              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
+              <button className="nav-hover-underline px-3 py-2 hover:bg-white/10 transition-colors">
                 Tìm kiếm nâng cao
-              </button>
-            </Link>
-            <Link to="/contact">
-              <button className="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">
-                Liên hệ
               </button>
             </Link>
           </div>
 
           {/* Right side actions */}
           <div className="flex items-center gap-2">
+            {/* Notification bell */}
+            <Popover
+              placement="bottomRight"
+              trigger="click"
+              content={
+                <div className="w-[300px] max-h-[400px] overflow-y-auto">
+                  <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                    <h4 className="font-bold text-gray-800 text-sm">Thông báo</h4>
+                    <span className="text-xs text-gray-400">{notifications.length} thông báo</span>
+                  </div>
+                  {notifications.length === 0 ? (
+                    <div className="p-6 text-center text-gray-400 text-sm">Chưa có thông báo nào</div>
+                  ) : (
+                    notifications.slice(0, 10).map((noti) => {
+                      const isRead = readNotiIds.includes(noti._id);
+                      return (
+                        <div
+                          key={noti._id}
+                          onClick={() => markAsRead(noti._id)}
+                          className={`px-4 py-3 border-b border-gray-50 transition-colors cursor-pointer ${isRead ? "bg-white" : "bg-blue-50/50 hover:bg-blue-50"
+                            }`}
+                        >
+                          <div className="flex items-start gap-2.5">
+                            {!isRead ? (
+                              <div className="w-2 h-2 rounded-full bg-primary-color mt-1.5 shrink-0" />
+                            ) : (
+                              <div className="w-2 h-2 rounded-full bg-gray-300 mt-1.5 shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              {noti.title && (
+                                <p className={`text-sm leading-tight ${isRead ? "font-medium text-gray-400" : "font-semibold text-gray-800"}`}>{noti.title}</p>
+                              )}
+                              <p className={`text-xs mt-0.5 line-clamp-2 ${isRead ? "text-gray-400" : "text-gray-500"}`}>{noti.message}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-[10px] text-gray-400">
+                                  {new Date(noti.createdAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                </p>
+                                {isRead && <span className="text-[10px] text-green-500 font-medium">Đã đọc</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              }
+            >
+              <button className="phone:hidden lg:flex w-9 h-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors relative">
+                <FontAwesomeIcon icon={faBell} className="text-white" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </button>
+            </Popover>
+
             {/* Dark mode toggle */}
             <button
               className="phone:hidden lg:flex w-9 h-9 items-center justify-center rounded-lg hover:bg-white/10 transition-colors"
@@ -294,15 +374,21 @@ const NavBar = () => {
               content={<UserMenuContent />}
             >
               {user ? (
-                <button
-                  className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
-                  }}
-                >
-                  {getInitial(user?.username)}
-                </button>
+                user.avatar ? (
+                  <button className="w-9 h-9 rounded-lg overflow-hidden hover:opacity-90 transition-opacity">
+                    <img src={user.avatar} alt="avatar" className="w-full h-full object-cover" />
+                  </button>
+                ) : (
+                  <button
+                    className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-sm font-bold hover:opacity-90 transition-opacity"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)",
+                    }}
+                  >
+                    {getInitial(user?.username)}
+                  </button>
+                )
               ) : (
                 <button className="w-9 h-9 rounded-lg border-2 border-white/30 flex items-center justify-center bg-white/10 hover:bg-white/20 transition-colors">
                   <FontAwesomeIcon icon={faUser} className="text-sm" />
@@ -327,17 +413,12 @@ const NavBar = () => {
       <Drawer
         title={
           <div className="flex items-center gap-2">
-            <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-bold"
-              style={{
-                background:
-                  "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              }}
-            >
-              M
-            </div>
+            <svg className="w-7 h-7" viewBox="0 0 40 40" fill="none">
+              <circle cx="20" cy="20" r="18" stroke="#facc15" strokeWidth="2.5" fill="none" />
+              <path d="M20 8 C28 8 32 14 32 20 C32 26 28 30 22 30 C16 30 14 26 14 22 C14 18 17 16 20 16 C23 16 25 18 25 20 C25 22 23 24 21 24" stroke="#facc15" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+            </svg>
             <span className="font-bold text-gray-800">
-              Truyện <span className="text-yellow-500">3s</span>
+              DocTruyen<span className="text-yellow-500">5s</span>
             </span>
           </div>
         }

@@ -14,5 +14,7 @@ router.put("/toggle-admin/:id", verifyTokenAndUserAuthorization, userController.
 
 // DELETE USER
 router.delete("/delete-user/:id", verifyTokenAndUserAuthorization, userController.deleteUser);
+// UPDATE AVATAR
+router.put("/update-avatar/:id", verifyToken, userController.updateAvatar);
 
 module.exports = router;

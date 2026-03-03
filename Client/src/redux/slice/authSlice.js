@@ -56,7 +56,7 @@ const authSlice = createSlice({
       state.login.isFetching = true;
     },
     logoutSuccess: (state) => {
-      state.login.currentUser = null; 
+      state.login.currentUser = null;
       state.login.isFetching = false;
       state.login.error = false;
     },
@@ -64,7 +64,11 @@ const authSlice = createSlice({
       state.login.isFetching = false;
       state.login.error = true;
     },
-    
+    updateAvatar: (state, action) => {
+      if (state.login.currentUser) {
+        state.login.currentUser.avatar = action.payload;
+      }
+    },
   },
 });
 
@@ -78,6 +82,7 @@ export const {
   logoutStart,
   logoutSuccess,
   logoutFail,
+  updateAvatar,
 } = authSlice.actions;
 
 export default authSlice.reducer;

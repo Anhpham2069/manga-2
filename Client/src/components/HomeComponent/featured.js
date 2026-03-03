@@ -193,15 +193,17 @@ const Featured = ({ dark }) => {
                     className={`flex gap-2.5 px-3 py-2 transition ${isDarkModeEnable ? "hover:bg-[#333]" : "hover:bg-gray-50"}`}
                   >
                     <img
-                      src={`https://img.otruyenapi.com/uploads/${item.storyInfo?.seoOnPage?.og_image?.[0]}`}
+                      src={item.storyInfo?.seoOnPage?.seoSchema?.image || `https://img.otruyenapi.com/uploads/comics/${item._id}-thumb.jpg`}
                       alt=""
                       className="w-[50px] h-[65px] object-cover rounded shrink-0"
                     />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[13px] leading-tight line-clamp-1">
-                        {item.storyInfo?.item?.name}
+                        {item.storyInfo?.item?.name || item._id}
                       </p>
-                      <p className="text-[11px] text-gray-400 mt-0.5">Thể loại: </p>
+                      <p className="text-[11px] text-gray-400 mt-0.5 line-clamp-1">
+                        {item.storyInfo?.breadCrumb?.slice(1).map(c => c.name).join(", ") || "Đang cập nhật"}
+                      </p>
                       <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
                         <span className="flex items-center gap-0.5">
                           <FontAwesomeIcon icon={faEye} className="text-[9px]" />
