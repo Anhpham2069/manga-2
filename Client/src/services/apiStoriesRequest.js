@@ -108,13 +108,14 @@ export const removeFavoritesStory = async (
 //favorite
 
 export const getNumberSaveStory = async (dispatch) => {
-  dispatch(getCountFavoritesStart());
+  if (dispatch) dispatch(getCountFavoritesStart());
   try {
     const res = await axios.get(`${apiURL}/api/favorites/get-all`);
-    dispatch(getCountFavoritesSuccess(res.data));
+    if (dispatch) dispatch(getCountFavoritesSuccess(res.data));
     return res.data;
   } catch (error) {
-    dispatch(getCountFavoritesFail(error));
+    if (dispatch) dispatch(getCountFavoritesFail(error));
+    console.log(error);
   }
 };
 export const getFavoritesByUser = async (accessToken, userId, dispatch) => {
@@ -137,7 +138,7 @@ export const getFavoritesByUser = async (accessToken, userId, dispatch) => {
 export const getAllHistory = async (dispatch) => {
   try {
     const res = await axios.get(`${apiURL}/api/history/get-all`);
-    dispatch(getCountHistorySuccess(res.data));
+    if (dispatch) dispatch(getCountHistorySuccess(res.data));
     return res.data;
   } catch (error) {
     console.log(error);

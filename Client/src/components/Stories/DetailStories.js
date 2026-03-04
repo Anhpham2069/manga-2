@@ -80,6 +80,10 @@ const DetailStories = () => {
   const [storyViewCount, setStoryViewCount] = useState(0);
   const [storyFavCount, setStoryFavCount] = useState(0);
   const [sortAsc, setSortAsc] = useState(false);
+  const [averageScore, setAverageScore] = useState(0);
+  const [totalRatings, setTotalRatings] = useState(0);
+  const [userScore, setUserScore] = useState(0);
+  const [hoverScore, setHoverScore] = useState(0);
 
   // Fetch comments
   const fetchComments = async () => {
@@ -112,6 +116,46 @@ const DetailStories = () => {
     };
     fetchCounts();
   }, [slug]);
+
+  // Fetch rating data
+  useEffect(() => {
+    const fetchRating = async () => {
+      try {
+        const apiURL = process.env.REACT_APP_API_URL;
+        const res = await axios.get(`${apiURL}/api/rating/get/${slug}`);
+        setAverageScore(res.data?.averageScore || 0);
+        setTotalRatings(res.data?.totalRatings || 0);
+
+        if (userId) {
+          const userRes = await axios.get(`${apiURL}/api/rating/user/${slug}/${userId}`);
+          setUserScore(userRes.data?.userScore || 0);
+        }
+      } catch (error) { console.log(error); }
+    };
+    fetchRating();
+  }, [slug, userId]);
+
+  const handleRate = async (score) => {
+    if (!user) {
+      message.warning("Bạn cần đăng nhập để đánh giá");
+      return;
+    }
+    try {
+      const apiURL = process.env.REACT_APP_API_URL;
+      const res = await axios.post(`${apiURL}/api/rating/rate`, {
+        slug,
+        userId,
+        score,
+      });
+      setUserScore(res.data.userScore);
+      setAverageScore(res.data.averageScore);
+      setTotalRatings(res.data.totalRatings);
+      message.success(`Đã đánh giá ${score} sao!`);
+    } catch (error) {
+      console.error(error);
+      message.error("Đánh giá thất bại");
+    }
+  };
 
   const handleSubmitComment = async () => {
     if (!user) {
@@ -313,13 +357,39 @@ const DetailStories = () => {
               </div>
 
               {/* Rating */}
-              <div className="flex items-center justify-center gap-1.5 mt-3 bg-white w-full p-2 rounded-xl">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <FontAwesomeIcon key={star} icon={faStar} className="text-yellow-400 text-sm" />
-                ))}
-                <span className={`text-xs ml-1 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
-                  10/10 ({storyFavCount})
-                </span>
+              <div className={`mt-3 w-full p-3 rounded-xl ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white shadow-sm border border-gray-100"}`}>
+                <div className="flex items-center justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <FontAwesomeIcon
+                      key={star}
+                      icon={faStar}
+                      className={`text-lg cursor-pointer transition-all duration-150 ${(hoverScore || userScore) >= star
+                          ? "text-yellow-400 scale-110"
+                          : averageScore >= star
+                            ? "text-yellow-300/60"
+                            : averageScore >= star - 0.5
+                              ? "text-yellow-300/30"
+                              : isDarkModeEnable ? "text-gray-600" : "text-gray-300"
+                        }`}
+                      onMouseEnter={() => setHoverScore(star)}
+                      onMouseLeave={() => setHoverScore(0)}
+                      onClick={() => handleRate(star)}
+                    />
+                  ))}
+                </div>
+                <div className="text-center mt-1.5">
+                  <span className={`text-sm font-bold ${isDarkModeEnable ? "text-yellow-400" : "text-yellow-500"}`}>
+                    {averageScore > 0 ? averageScore.toFixed(1) : "—"}
+                  </span>
+                  <span className={`text-xs ml-1 ${isDarkModeEnable ? "text-gray-400" : "text-gray-500"}`}>
+                    / 5 ({totalRatings} đánh giá)
+                  </span>
+                </div>
+                {userScore > 0 && (
+                  <p className={`text-center text-[11px] mt-1 ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
+                    Bạn đã đánh giá {userScore} ⭐
+                  </p>
+                )}
               </div>
 
               {/* Read button */}

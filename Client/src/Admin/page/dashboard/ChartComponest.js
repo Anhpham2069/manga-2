@@ -99,7 +99,7 @@ function ChartComponent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const history = await getAllHistory();
+        const history = await getAllHistory(dispatch);
         if (!history || history.length === 0) return;
 
         // --- 1. Lượt đọc 7 ngày ---

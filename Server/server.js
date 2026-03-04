@@ -46,6 +46,7 @@ const storyErrorRouter = require('./routes/storyErorr');
 const contactRoute = require("./routes/contact");
 const commentRouter = require('./routes/comment');
 const storyViewRouter = require('./routes/storyView');
+const ratingRouter = require('./routes/rating');
 
 app.use("/api/contact", contactRoute);
 app.use('/api/comment', commentRouter);
@@ -58,6 +59,7 @@ app.use('/api/favorites', favoriteRouter)
 app.use('/api/history', readHistoryRouter)
 app.use('/api/error', storyErrorRouter)
 app.use('/api/views', storyViewRouter)
+app.use('/api/rating', ratingRouter)
 
 
 // Passport Routes

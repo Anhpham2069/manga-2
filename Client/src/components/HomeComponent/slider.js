@@ -110,11 +110,28 @@ const Slider = () => {
                     </span>
                     <h2 className="slider-title">{item.name}</h2>
                     <div className="slider-categories">
-                      {item?.category?.slice(0, 4).map((cate, i) => (
-                        <span className="slider-category" key={i}>
-                          {cate.name}
-                        </span>
-                      ))}
+                      {item?.category?.slice(0, 4).map((cate, i) => {
+                        const colors = [
+                          { bg: "rgba(255,107,107,0.25)", border: "rgba(255,107,107,0.7)" },
+                          { bg: "rgba(78,205,196,0.25)", border: "rgba(78,205,196,0.7)" },
+                          { bg: "rgba(255,195,0,0.25)", border: "rgba(255,195,0,0.7)" },
+                          { bg: "rgba(130,88,255,0.25)", border: "rgba(130,88,255,0.7)" },
+                          { bg: "rgba(0,210,255,0.25)", border: "rgba(0,210,255,0.7)" },
+                          { bg: "rgba(255,140,66,0.25)", border: "rgba(255,140,66,0.7)" },
+                          { bg: "rgba(99,255,132,0.25)", border: "rgba(99,255,132,0.7)" },
+                          { bg: "rgba(255,85,187,0.25)", border: "rgba(255,85,187,0.7)" },
+                        ];
+                        const c = colors[Math.floor(Math.random() * colors.length)];
+                        return (
+                          <span
+                            className="slider-category"
+                            key={i}
+                            style={{ background: c.bg, borderColor: c.border }}
+                          >
+                            {cate.name}
+                          </span>
+                        );
+                      })}
                     </div>
                   </div>
 

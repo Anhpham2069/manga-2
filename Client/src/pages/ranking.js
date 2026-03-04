@@ -33,9 +33,10 @@ const Ranking = () => {
                 const res = await axios.get(
                     `${apiURL}/api/history/ranking?period=${period}`
                 );
-                setRanking(res.data);
+                let rankingData = res.data || [];
+
                 // Fetch real views from StoryView
-                const slugs = (res.data || []).map((item) => item._id);
+                const slugs = rankingData.map((item) => item._id);
                 if (slugs.length > 0) {
                     try {
                         const viewsRes = await axios.post(
@@ -44,6 +45,40 @@ const Ranking = () => {
                         setViewsMap(viewsRes.data || {});
                     } catch (e) { console.log(e); }
                 }
+
+                // Fix missing story names — fetch from OTruyen API
+                const missingNameItems = rankingData.filter(
+                    (item) => !item.storyInfo?.item?.name
+                );
+                if (missingNameItems.length > 0) {
+                    const fetchPromises = missingNameItems.map(async (item) => {
+                        try {
+                            const detailRes = await axios.get(
+                                `https://otruyenapi.com/v1/api/truyen-tranh/${item._id}`
+                            );
+                            return { slug: item._id, data: detailRes.data?.data };
+                        } catch (e) {
+                            return { slug: item._id, data: null };
+                        }
+                    });
+                    const results = await Promise.all(fetchPromises);
+                    const nameMap = {};
+                    results.forEach((r) => {
+                        if (r.data) nameMap[r.slug] = r.data;
+                    });
+
+                    rankingData = rankingData.map((item) => {
+                        if (!item.storyInfo?.item?.name && nameMap[item._id]) {
+                            return {
+                                ...item,
+                                storyInfo: nameMap[item._id],
+                            };
+                        }
+                        return item;
+                    });
+                }
+
+                setRanking(rankingData);
             } catch (error) {
                 console.error("Error fetching ranking:", error);
             } finally {
@@ -89,7 +124,7 @@ const Ranking = () => {
                 <meta property="og:type" content="website" />
             </Helmet>
             <NavBar />
-            <div className="max-w-[70%] mx-auto py-8 px-4">
+            <div className="max-w-full tablet:max-w-[90%] lg:max-w-[70%] mx-auto py-6 lg:py-8 px-3 sm:px-4">
                 {/* Header */}
                 <div
                     className={`${isDarkModeEnable
@@ -152,25 +187,24 @@ const Ranking = () => {
                                         className="block"
                                     >
                                         <div
-                                            className={`flex items-center gap-4 p-4 transition-all duration-200 border-b
+                                            className={`flex items-center gap-3 sm:gap-4 p-3 sm:p-4 transition-all duration-200 border-b
                       ${isDarkModeEnable
                                                     ? "border-[#3a3f4b] hover:bg-[#252A34]"
                                                     : "border-[#f0f0f0] hover:bg-[#f8f9ff]"
                                                 }
-                      ${index < 3 ? "py-5" : ""}
+                      ${index < 3 ? "sm:py-5" : ""}
                     `}
                                         >
                                             {/* Rank Number */}
-                                            <div className="w-12 text-center flex-shrink-0">
+                                            <div className="w-8 sm:w-12 text-center flex-shrink-0">
                                                 {index < 3 ? (
                                                     <FontAwesomeIcon
                                                         icon={faMedal}
-                                                        size="2x"
-                                                        className={getMedalColor(index)}
+                                                        className={`text-xl sm:text-2xl ${getMedalColor(index)}`}
                                                     />
                                                 ) : (
                                                     <span
-                                                        className={`text-xl font-bold ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"
+                                                        className={`text-lg sm:text-xl font-bold ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"
                                                             }`}
                                                     >
                                                         {index + 1}
@@ -180,7 +214,7 @@ const Ranking = () => {
 
                                             {/* Image */}
                                             <img
-                                                className={`${index < 3 ? "w-20 h-28" : "w-16 h-22"
+                                                className={`${index < 3 ? "w-14 h-20 sm:w-20 sm:h-28" : "w-12 h-16 sm:w-16 sm:h-22"
                                                     } object-cover rounded-lg shadow-md flex-shrink-0`}
                                                 src={
                                                     item.storyInfo?.seoOnPage?.seoSchema?.image ||
@@ -189,21 +223,48 @@ const Ranking = () => {
                                                 alt={item.storyInfo?.item?.name || item._id}
                                             />
 
-                                            {/* Info */}
+                                            {/* Info + Stats */}
                                             <div className="flex-1 min-w-0">
                                                 <p
-                                                    className={`font-semibold truncate ${index < 3 ? "text-lg" : "text-base"
+                                                    className={`font-semibold truncate ${index < 3 ? "text-base sm:text-lg" : "text-sm sm:text-base"
                                                         }`}
                                                 >
                                                     {item.storyInfo?.item?.name || item._id}
                                                 </p>
-                                                <div className="flex flex-wrap gap-1 mt-1">
+
+                                                {/* Views & Saves — below title on mobile */}
+                                                <div className="flex items-center gap-3 mt-1.5">
+                                                    <div className="flex items-center gap-1">
+                                                        <FontAwesomeIcon
+                                                            icon={faEye}
+                                                            className="text-primary-color text-xs sm:text-sm"
+                                                        />
+                                                        <span
+                                                            className={`font-bold text-sm sm:text-base ${index < 3 ? "text-primary-color" : ""
+                                                                }`}
+                                                        >
+                                                            {(viewsMap[item._id] || 0).toLocaleString()}
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-1">
+                                                        <FontAwesomeIcon
+                                                            icon={faBookmark}
+                                                            className="text-pink-400 text-xs sm:text-sm"
+                                                        />
+                                                        <span className={`font-medium text-sm sm:text-base`}>
+                                                            {favCount}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Categories */}
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
                                                     {item.storyInfo?.item?.category
                                                         ?.slice(0, 3)
                                                         .map((cate) => (
                                                             <span
                                                                 key={cate.id}
-                                                                className={`text-xs px-2 py-0.5 rounded ${isDarkModeEnable
+                                                                className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded ${isDarkModeEnable
                                                                     ? "bg-[#252A34] text-text_darkMode"
                                                                     : "bg-[#EEF3FD] text-primary-color"
                                                                     }`}
@@ -211,31 +272,6 @@ const Ranking = () => {
                                                                 {cate.name}
                                                             </span>
                                                         ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Views & Saves */}
-                                            <div className="flex items-center gap-4 flex-shrink-0">
-                                                <div className="flex items-center gap-1.5">
-                                                    <FontAwesomeIcon
-                                                        icon={faEye}
-                                                        className="text-primary-color"
-                                                    />
-                                                    <span
-                                                        className={`font-bold ${index < 3 ? "text-lg text-primary-color" : ""
-                                                            }`}
-                                                    >
-                                                        {(viewsMap[item._id] || 0).toLocaleString()}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <FontAwesomeIcon
-                                                        icon={faBookmark}
-                                                        className="text-pink-400"
-                                                    />
-                                                    <span className={`font-medium ${index < 3 ? "text-lg" : ""}`}>
-                                                        {favCount}
-                                                    </span>
                                                 </div>
                                             </div>
                                         </div>

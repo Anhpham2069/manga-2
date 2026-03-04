@@ -303,7 +303,7 @@ const FilterStories = () => {
                 <p className="text-lg">Không tìm thấy truyện phù hợp</p>
               </div>
             ) : (
-              <div className="grid phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-5 lg:gap-4 place-items-center">
+              <div className="grid phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-5 lg:gap-4">
                 {results.map((item) => {
                   let trimmedTimeAgo = "";
                   try {
@@ -315,18 +315,15 @@ const FilterStories = () => {
                     trimmedTimeAgo = "";
                   }
                   return (
-                    <div
+                    <CardStories
                       key={item._id}
-                      className="flex flex-col justify-center items-center gap-2"
-                    >
-                      <CardStories
-                        slug={item.slug}
-                        title={item.name}
-                        img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                        time={trimmedTimeAgo}
-                        chapter={item.chaptersLatest?.[0]?.chapter_name}
-                      />
-                    </div>
+                      slug={item.slug}
+                      title={item.name}
+                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                      time={trimmedTimeAgo}
+                      chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      nomarl
+                    />
                   );
                 })}
               </div>

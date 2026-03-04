@@ -6,6 +6,7 @@ import {
   ReadOutlined,
   UserOutlined,
   ExclamationCircleOutlined,
+  CommentOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../../components/layout/DarkModeSlice";
@@ -20,6 +21,7 @@ const SideBarAdmin = ({ onItemClick }) => {
     { label: "Thể loại", icon: <ReadOutlined />, key: 3 },
     { label: "Người dùng", icon: <UserOutlined />, key: 4 },
     { label: "Thông báo", icon: <NotificationFilled />, key: 5 },
+    { label: "Bình luận", icon: <CommentOutlined />, key: 7 },
     { label: "Báo lỗi", icon: <ExclamationCircleOutlined />, key: 6 },
   ];
 
@@ -79,21 +81,21 @@ const SideBarAdmin = ({ onItemClick }) => {
             key={item.key}
             onClick={() => handleClick(item.key)}
             className={`px-4 py-3 cursor-pointer rounded-lg transition-all duration-200 ${active === item.key
-                ? isDarkModeEnable
-                  ? "bg-blue-600/20 text-blue-400"
-                  : "bg-blue-50 text-blue-600"
-                : isDarkModeEnable
-                  ? "hover:bg-[#1e293b] text-gray-400 hover:text-gray-200"
-                  : "hover:bg-gray-50 text-gray-600 hover:text-gray-800"
+              ? isDarkModeEnable
+                ? "bg-blue-600/20 text-blue-400"
+                : "bg-blue-50 text-blue-600"
+              : isDarkModeEnable
+                ? "hover:bg-[#1e293b] text-gray-400 hover:text-gray-200"
+                : "hover:bg-gray-50 text-gray-600 hover:text-gray-800"
               }`}
           >
             <div className="flex items-center text-sm font-medium">
               <div
                 className={`mr-3 text-base ${active === item.key
-                    ? isDarkModeEnable
-                      ? "text-blue-400"
-                      : "text-blue-500"
-                    : ""
+                  ? isDarkModeEnable
+                    ? "text-blue-400"
+                    : "text-blue-500"
+                  : ""
                   }`}
               >
                 {item.icon}

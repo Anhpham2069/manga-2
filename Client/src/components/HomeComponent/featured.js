@@ -39,15 +39,38 @@ const Featured = ({ dark }) => {
     const fetchRanking = async () => {
       try {
         const res = await getRanking(periodMap[selectedButton] || "week");
-        setRankingData(res || []);
+        let data = res || [];
+
         // Fetch real views from StoryView
-        const slugs = (res || []).map((item) => item._id);
+        const slugs = data.map((item) => item._id);
         if (slugs.length > 0) {
           try {
             const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
             setRankingViewsMap(viewsRes.data || {});
           } catch (e) { console.log(e); }
         }
+
+        // Fix missing story names — fetch from OTruyen API
+        const missing = data.filter((item) => !item.storyInfo?.item?.name);
+        if (missing.length > 0) {
+          const results = await Promise.all(
+            missing.map(async (item) => {
+              try {
+                const d = await axios.get(`https://otruyenapi.com/v1/api/truyen-tranh/${item._id}`);
+                return { slug: item._id, data: d.data?.data };
+              } catch { return { slug: item._id, data: null }; }
+            })
+          );
+          const nameMap = {};
+          results.forEach((r) => { if (r.data) nameMap[r.slug] = r.data; });
+          data = data.map((item) =>
+            !item.storyInfo?.item?.name && nameMap[item._id]
+              ? { ...item, storyInfo: nameMap[item._id] }
+              : item
+          );
+        }
+
+        setRankingData(data);
       } catch (error) { console.log(error); }
     };
     fetchRanking();
