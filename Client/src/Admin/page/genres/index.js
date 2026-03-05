@@ -93,12 +93,12 @@ const GenreAdmin = () => {
     onFilter: customFilterFn
       ? customFilterFn
       : (value, record) =>
-          record[dataIndex]
-            ? record[dataIndex]
-                .toString()
-                .toLowerCase()
-                .includes(value.toLowerCase())
-            : "",
+        record[dataIndex]
+          ? record[dataIndex]
+            .toString()
+            .toLowerCase()
+            .includes(value.toLowerCase())
+          : "",
     onFilterDropdownVisibleChange: (visible) => {
       if (visible) {
         setTimeout(() => searchInput.current.select());
@@ -187,17 +187,38 @@ const GenreAdmin = () => {
   console.log(selectedGenre);
   const column = [
     {
-      title: "ID",
-      dataIndex: "_id",
-      key: "_id",
-      sorter: (a, b) => a.id - b.id,
+      title: "STT",
+      key: "index",
+      render: (text, record, index) => index + 1,
+      width: 70,
     },
     {
-      title: "Tên",
+      title: "Mã TL",
+      dataIndex: "genreId",
+      key: "genreId",
+      sorter: (a, b) => a.genreId - b.genreId,
+      width: 100,
+    },
+    {
+      title: "Tên thể loại",
       dataIndex: "genreName",
       key: "name",
-      sorter: (a, b) => a.id - b.id,
+      sorter: (a, b) => a.genreName?.localeCompare(b.genreName),
       ...getColumnSearchProps("genreName"),
+    },
+    {
+      title: "Ngày tạo",
+      dataIndex: "createdAt",
+      key: "createdAt",
+      render: (date) => date ? new Date(date).toLocaleDateString("vi-VN") : "N/A",
+      sorter: (a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0),
+    },
+    {
+      title: "Ngày cập nhật",
+      dataIndex: "updatedAt",
+      key: "updatedAt",
+      render: (date) => date ? new Date(date).toLocaleDateString("vi-VN") : "N/A",
+      sorter: (a, b) => new Date(a.updatedAt || 0) - new Date(b.updatedAt || 0),
     },
     {
       title: "Hành động",
