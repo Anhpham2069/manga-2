@@ -1,7 +1,5 @@
-import { Form, Input, Button, Select, Upload, message } from "antd";
-import { UploadOutlined } from "@ant-design/icons";
+import { Form, Input, Button, message } from "antd";
 
-import Typography from "antd/es/typography/Typography";
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { updateStory } from "./fetchApi"; // Assuming you have an updateStory function
@@ -34,10 +32,12 @@ const UpdateStory = ({ story }) => {
       sStatus: story.sStatus,
     });
   }, [story]);
+  // eslint-disable-next-line no-unused-vars
   const handleChapterChange = (event) => {
     // Similar logic for handling chapter changes as in AddStoryForm
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleDeleteChapter = (chapterName) => {
     // Similar logic for deleting chapters as in AddStoryForm
   };

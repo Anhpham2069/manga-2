@@ -1,4 +1,4 @@
-import AllStories from "./allStories";
+import AllStories from "./allStories"; // eslint-disable-line no-unused-vars
 import AllStory from "./allStory";
 
 const StoriesAdmin = () => {

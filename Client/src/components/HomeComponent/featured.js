@@ -25,12 +25,13 @@ const Featured = ({ dark }) => {
 
   const [storiesData, setStoriesData] = useState([]);
   const [storiesFT, setStoriesFT] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("hoan-thanh");
   const [selectedButton, setSelectedButton] = useState("tuannay");
   const [rankingData, setRankingData] = useState([]);
   const [saveStory, setSaveStory] = useState();
-  const [rankingViewsMap, setRankingViewsMap] = useState({});
+
   const [gridViewsMap, setGridViewsMap] = useState({});
 
   // Fetch ranking + StoryView batch
@@ -41,14 +42,7 @@ const Featured = ({ dark }) => {
         const res = await getRanking(periodMap[selectedButton] || "week");
         let data = res || [];
 
-        // Fetch real views from StoryView
-        const slugs = data.map((item) => item._id);
-        if (slugs.length > 0) {
-          try {
-            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
-            setRankingViewsMap(viewsRes.data || {});
-          } catch (e) { console.log(e); }
-        }
+
 
         // Fix missing story names — fetch from OTruyen API
         const missing = data.filter((item) => !item.storyInfo?.item?.name);
@@ -85,6 +79,7 @@ const Featured = ({ dark }) => {
       } catch (error) { console.log(error); }
     };
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch stories list + views
@@ -230,7 +225,11 @@ const Featured = ({ dark }) => {
                       <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-500">
                         <span className="flex items-center gap-0.5">
                           <FontAwesomeIcon icon={faEye} className="text-[9px]" />
-                          {(rankingViewsMap[item._id] || 0).toLocaleString()}
+                          {(item.allTimeViews || 0).toLocaleString()}
+                        </span>
+                        <span className="flex items-center gap-0.5 text-green-500">
+                          <FontAwesomeIcon icon={faCalendarDay} className="text-[9px]" />
+                          +{(item.totalViews || 0).toLocaleString()}
                         </span>
                         <span className="flex items-center gap-0.5">
                           <FontAwesomeIcon icon={faBookmark} className="text-[9px]" />

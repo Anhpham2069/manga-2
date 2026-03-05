@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircleUser,
   faLock,
   faGift,
-  faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 
 const Sidebar = ({ onItemClick, activeItem = 1, isDarkMode }) => {
@@ -26,12 +25,12 @@ const Sidebar = ({ onItemClick, activeItem = 1, isDarkMode }) => {
               key={item.key}
               onClick={() => onItemClick(item.key)}
               className={`w-full text-left px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center gap-3 ${activeItem === item.key
-                  ? isDarkMode
-                    ? "bg-blue-600/20 text-blue-400"
-                    : "bg-blue-50 text-blue-600"
-                  : isDarkMode
-                    ? "text-gray-400 hover:bg-[#0f172a] hover:text-gray-200"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
+                ? isDarkMode
+                  ? "bg-blue-600/20 text-blue-400"
+                  : "bg-blue-50 text-blue-600"
+                : isDarkMode
+                  ? "text-gray-400 hover:bg-[#0f172a] hover:text-gray-200"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-800"
                 }`}
             >
               <FontAwesomeIcon icon={item.icon} className="w-4" />

@@ -63,6 +63,7 @@ const StoryFilterMenu = ({ activeFilter, setActiveFilter, setSlug }) => {
     };
 
     fetchDataGenres();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const visibleGenres = showMore ? genres : genres.slice(0, 20);

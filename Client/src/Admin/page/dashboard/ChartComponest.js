@@ -20,6 +20,9 @@ import {
   getRanking,
   getNumberSaveStory,
 } from "../../../services/apiStoriesRequest";
+import axios from "axios";
+
+const apiURL = process.env.REACT_APP_API_URL;
 
 ChartJS.register(
   CategoryScale,
@@ -96,49 +99,49 @@ function ChartComponent() {
     boxPadding: 4,
   };
 
+  // --- 1. Lượt đọc 7 ngày (từ DailyViewCount - chính xác) ---
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDailyViews = async () => {
+      try {
+        const res = await axios.get(`${apiURL}/api/views/daily-range?days=7`);
+        const data = res.data || [];
+
+        const labels = data.map((item) => {
+          const d = new Date(item.date + "T00:00:00");
+          return d.toLocaleDateString("vi-VN", {
+            weekday: "short",
+            day: "2-digit",
+            month: "2-digit",
+          });
+        });
+
+        setReadsByDay({
+          labels,
+          data: data.map((item) => item.views),
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchDailyViews();
+  }, []);
+
+  // --- 2. Thể loại (từ ReadHistory - cần metadata thể loại) ---
+  useEffect(() => {
+    const fetchCategoryData = async () => {
       try {
         const history = await getAllHistory(dispatch);
         if (!history || history.length === 0) return;
 
-        // --- 1. Lượt đọc 7 ngày ---
-        const last7Days = [];
-        const dayLabels = [];
-        for (let i = 6; i >= 0; i--) {
-          const d = new Date();
-          d.setDate(d.getDate() - i);
-          d.setHours(0, 0, 0, 0);
-          last7Days.push(d);
-          dayLabels.push(
-            d.toLocaleDateString("vi-VN", {
-              weekday: "short",
-              day: "2-digit",
-              month: "2-digit",
-            })
-          );
-        }
-
-        const dailyCounts = last7Days.map((day) => {
-          const nextDay = new Date(day);
-          nextDay.setDate(nextDay.getDate() + 1);
-          return history
-            .filter((item) => {
-              const t = new Date(item.timestamp);
-              return t >= day && t < nextDay;
-            })
-            .reduce((sum, item) => sum + (item.readCount || 0), 0);
-        });
-
-        setReadsByDay({ labels: dayLabels, data: dailyCounts });
-
-        // --- 2. Thể loại ---
         const categoryCount = {};
         history.forEach((item) => {
-          const categories =
-            item.storyInfo?.breadCrumb ||
-            item.storyInfo?.item?.category ||
-            [];
+          // Ưu tiên item.category (chỉ chứa thể loại thật)
+          // breadCrumb chứa cả tên truyện ở mục cuối → bỏ mục cuối nếu dùng
+          let categories = item.storyInfo?.item?.category || [];
+          if (categories.length === 0 && item.storyInfo?.breadCrumb) {
+            // breadCrumb: [...thể loại, tên truyện] → bỏ phần tử cuối
+            categories = item.storyInfo.breadCrumb.slice(0, -1);
+          }
           categories.forEach((cat) => {
             if (cat.name && cat.name !== "Truyện Tranh") {
               categoryCount[cat.name] =
@@ -159,7 +162,7 @@ function ChartComponent() {
         console.log(error);
       }
     };
-    fetchData();
+    fetchCategoryData();
   }, []);
 
   // --- 3. Top truyện từ ranking ---

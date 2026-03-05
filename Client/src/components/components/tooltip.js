@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Tooltip } from "antd";
+import { Tooltip } from "antd"; // eslint-disable-line no-unused-vars
 import "../HomeComponent/style.css";
 import { Link } from "react-router-dom";
 import axios from "axios";
@@ -57,6 +57,7 @@ const TooltipComponent = ({ sx }) => {
       }
     };
     fetchDataGenres();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (sx) {

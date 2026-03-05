@@ -19,11 +19,14 @@ const AllStories = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
+  const [viewsMap, setViewsMap] = useState({});
+  const [savesMap, setSavesMap] = useState({});
 
-  const itemsPerPage = 24;
+
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, currentPage]);
 
   const fetchData = async () => {
@@ -48,6 +51,16 @@ const AllStories = () => {
           res.data.data.params.pagination.totalItemsPerPage;
 
         setTotalPages(Math.ceil(totalItems / totalItemsPerPage));
+
+        // Fetch views batch
+        const slugs = res.data.data.items?.map((item) => item.slug) || [];
+        if (slugs.length > 0) {
+          try {
+            const apiURL = process.env.REACT_APP_API_URL;
+            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+            setViewsMap(viewsRes.data || {});
+          } catch (e) { console.log(e); }
+        }
       }
     } catch (error) {
       console.log(error);
@@ -103,10 +116,10 @@ const AllStories = () => {
               key={item.value}
               onClick={() => handleSectionClick(item.value)}
               className={`p-5 cursor-pointer border-r-4 transition ${slug === item.value
-                  ? "bg-blue-100 text-blue-600 border-blue-500"
-                  : darkMode
-                    ? "hover:bg-gray-700 border-transparent"
-                    : "hover:bg-gray-100 border-transparent"
+                ? "bg-blue-100 text-blue-600 border-blue-500"
+                : darkMode
+                  ? "hover:bg-gray-700 border-transparent"
+                  : "hover:bg-gray-100 border-transparent"
                 }`}
             >
               {item.label}
@@ -163,6 +176,7 @@ const AllStories = () => {
                     img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                     slug={item.slug}
                     time={trimmedTimeAgo}
+                    views={viewsMap[item.slug] || 0}
                     chapter={
                       item.chaptersLatest?.[0]?.chapter_name || ""
                     }

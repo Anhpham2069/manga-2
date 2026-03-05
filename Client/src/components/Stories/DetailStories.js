@@ -30,14 +30,10 @@ import CardStories from "../components/cardStories";
 import { useDispatch, useSelector } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
 
-import { Data } from "../../services/Data";
 import axios from "axios";
 import { message } from "antd";
 import {
-  addFavoritesStory,
   addFavoritesStoryAPI,
-  getAllFavorites,
-  getAllHistory,
   getDetailStory,
   getFavoritesByUser,
   getLastChapter,
@@ -100,6 +96,7 @@ const DetailStories = () => {
 
   useEffect(() => {
     fetchComments();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   // Fetch view count and fav count for this story
@@ -227,7 +224,8 @@ const DetailStories = () => {
     };
     fetchData();
     getFavoritesByUser(accessToken, userId, dispatch);
-  }, [slug]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, accessToken, userId, dispatch]);
 
   // Check isFavorite
   useEffect(() => {
@@ -364,12 +362,12 @@ const DetailStories = () => {
                       key={star}
                       icon={faStar}
                       className={`text-lg cursor-pointer transition-all duration-150 ${(hoverScore || userScore) >= star
-                          ? "text-yellow-400 scale-110"
-                          : averageScore >= star
-                            ? "text-yellow-300/60"
-                            : averageScore >= star - 0.5
-                              ? "text-yellow-300/30"
-                              : isDarkModeEnable ? "text-gray-600" : "text-gray-300"
+                        ? "text-yellow-400 scale-110"
+                        : averageScore >= star
+                          ? "text-yellow-300/60"
+                          : averageScore >= star - 0.5
+                            ? "text-yellow-300/30"
+                            : isDarkModeEnable ? "text-gray-600" : "text-gray-300"
                         }`}
                       onMouseEnter={() => setHoverScore(star)}
                       onMouseLeave={() => setHoverScore(0)}

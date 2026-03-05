@@ -179,6 +179,7 @@ const AllStories = () => {
     console.log("params", pagination, filters, sorter, extra);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handlePreview = async (file) => {
     if (!file.url && !file.preview) {
       file.preview = await getBase64(file.originFileObj);
@@ -188,14 +189,17 @@ const AllStories = () => {
     setPreviewTitle(file.name || file.url.substring(file.url.lastIndexOf("/") + 1));
   };
 
+  // eslint-disable-next-line no-unused-vars
   const onFinish = (values) => {
     console.log("Success:", values);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const onFinishFailed = (errorInfo) => {
     console.log("Failed:", errorInfo);
   };
 
+  // eslint-disable-next-line no-unused-vars
   const props = {
     name: "file",
     action: "https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188",
@@ -232,7 +236,8 @@ const AllStories = () => {
     };
 
     fetchData();
-  }, [setStories]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setStories, dispatch]);
 
   const columns = [
     {

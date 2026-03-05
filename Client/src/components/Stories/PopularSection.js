@@ -1,67 +1,58 @@
-import React,{useEffect,useState} from 'react';
-// import { formatDistanceToNow } from 'date-fns';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faFire } from '@fortawesome/free-solid-svg-icons';
-import { getAllHistory } from '../../services/apiStoriesRequest';
+import axios from 'axios';
 
-
+const apiURL = process.env.REACT_APP_API_URL;
 
 const PopularSection = ({ darkMode }) => {
-    const [readHistory, setReadHistory] = useState();
+  const [topStories, setTopStories] = useState([]);
 
-    useEffect(() => {
-        const fetchData = async () => {
-          try {
-            const res = await getAllHistory()
-            if (res) {
-              setReadHistory(res);
-            }
-          } catch (error) {
-            console.log(error);
-          }
-        };
-        fetchData();
-      }, []);
-      console.log(readHistory)
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Lấy top truyện xem nhiều nhất từ StoryView (chính xác)
+        const res = await axios.get(`${apiURL}/api/views/top?limit=10`);
+        if (res.data) {
+          setTopStories(res.data);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData();
+  }, []);
+
   return (
-    <div className={`${darkMode? "bg-bg_dark_light text-text_darkMode": "bg-white"} laptop:col-span-2  h-screen shadow-lg flex-1`}>
-                    <div className='w-[50%] uppercase text-primary-color p-3 border-b-2 border-gray-200'>
-                        <FontAwesomeIcon icon={faFire} className='mr-2' />
-                        Phổ biến</div>
-                        {readHistory?.slice(0,10).map((item,index) => {
-                            if (item.readCount > 3) {
-                                return (
-                                    <div key={item._id} className='flex p-2 justify-start cursor-pointer border-b-2 border-gray-200'>
-                                        <div className='flex justify-center items-center px-3'>
-                                          <p className='text-primary-color border-[1px] border-primary-color px-2 py-1 font-medium'>{index+1}</p></div>
-                                        <img
-                                            src={item.storyInfo?.seoOnPage.seoSchema.image}
-                                            alt='anh'
-                                            className='h-20'
-                                        />
-                                        <div className='ml-4 h-fit flex flex-col justify-around'>
-                                            <div className='flex-1 text-sm'>
-                                                <p>{item.storyInfo.item.name}</p>
-                                                <div className='flex justify-between text-xs'>
-                                                    <p className='font-semibold text-[#888888] mr-1 '>Thể loại:</p>
-                                                    <p className=''> {item.genres}</p>
-                                                </div>
-                                            </div>
-                                            <div className='flex font-light text-sm'>
-                                                <p><FontAwesomeIcon icon={faEye} /> {item.readCount.toLocaleString()} </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            } else {
-                                return null; // Không hiển thị truyện có views dưới 10000
-                            }
-                        })}
-
-                
-            
-                    </div>
-           
+    <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} laptop:col-span-2 h-screen shadow-lg flex-1`}>
+      <div className='w-[50%] uppercase text-primary-color p-3 border-b-2 border-gray-200'>
+        <FontAwesomeIcon icon={faFire} className='mr-2' />
+        Phổ biến
+      </div>
+      {topStories.map((item, index) => (
+        <Link to={`/detail/${item.slug}`} key={item._id || item.slug}>
+          <div className='flex p-2 justify-start cursor-pointer border-b-2 border-gray-200 hover:bg-gray-50 transition'>
+            <div className='flex justify-center items-center px-3'>
+              <p className='text-primary-color border-[1px] border-primary-color px-2 py-1 font-medium'>{index + 1}</p>
+            </div>
+            <img
+              src={`https://img.otruyenapi.com/uploads/comics/${item.slug}-thumb.jpg`}
+              alt={item.storyName || item.slug}
+              className='h-20 w-14 object-cover rounded'
+            />
+            <div className='ml-4 h-fit flex flex-col justify-around'>
+              <div className='flex-1 text-sm'>
+                <p className='font-medium line-clamp-1'>{item.storyName || item.slug}</p>
+              </div>
+              <div className='flex font-light text-sm mt-1'>
+                <p><FontAwesomeIcon icon={faEye} className="mr-1" /> {item.viewCount.toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </Link>
+      ))}
+    </div>
   );
 };
 

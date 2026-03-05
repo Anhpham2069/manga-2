@@ -41,7 +41,8 @@ const AllUser = () => {
 
   useEffect(() => {
     if (accessToken) getAllUser(dispatch, accessToken);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken, dispatch]);
 
   // --- Thống kê ---
   const totalUsers = userList?.length || 0;

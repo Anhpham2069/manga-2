@@ -24,7 +24,7 @@ const Ranking = () => {
     const [period, setPeriod] = useState("week");
     const [loading, setLoading] = useState(false);
     const [saveStory, setSaveStory] = useState({});
-    const [viewsMap, setViewsMap] = useState({});
+
 
     useEffect(() => {
         const fetchRanking = async () => {
@@ -35,16 +35,7 @@ const Ranking = () => {
                 );
                 let rankingData = res.data || [];
 
-                // Fetch real views from StoryView
-                const slugs = rankingData.map((item) => item._id);
-                if (slugs.length > 0) {
-                    try {
-                        const viewsRes = await axios.post(
-                            `${apiURL}/api/views/batch`, { slugs }
-                        );
-                        setViewsMap(viewsRes.data || {});
-                    } catch (e) { console.log(e); }
-                }
+
 
                 // Fix missing story names — fetch from OTruyen API
                 const missingNameItems = rankingData.filter(
@@ -243,7 +234,7 @@ const Ranking = () => {
                                                             className={`font-bold text-sm sm:text-base ${index < 3 ? "text-primary-color" : ""
                                                                 }`}
                                                         >
-                                                            {(viewsMap[item._id] || 0).toLocaleString()}
+                                                            {(item.allTimeViews || 0).toLocaleString()}
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-1">

@@ -21,6 +21,7 @@ const Category = () => {
   const [isCategory, setIsCategory] = useState(null);
   const [genres, setGenres] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(initialSlug);
+  const [viewsMap, setViewsMap] = useState({});
 
   // 👇 chế độ hiển thị
   const [viewMode, setViewMode] = useState("grid");
@@ -57,6 +58,16 @@ const Category = () => {
           `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=1`
         );
         setIsCategory(res.data.data);
+
+        // Fetch views batch
+        const slugs = res.data.data?.items?.map((item) => item.slug) || [];
+        if (slugs.length > 0) {
+          try {
+            const apiURL = process.env.REACT_APP_API_URL;
+            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+            setViewsMap(viewsRes.data || {});
+          } catch (e) { console.log(e); }
+        }
       } catch (error) {
         console.error(error);
       } finally {
@@ -130,8 +141,8 @@ const Category = () => {
               {/* LIST / GRID STORIES */}
               <div
                 className={`grid gap-4 mt-6 ${viewMode === "grid"
-                    ? "phone:grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
-                    : "grid-cols-1"
+                  ? "phone:grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
+                  : "grid-cols-1"
                   }`}
               >
                 {loading && <Skeleton active />}
@@ -150,6 +161,7 @@ const Category = () => {
                       img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                       time={trimmedTimeAgo}
                       chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      views={viewsMap[item.slug] || 0}
                       viewMode={viewMode}
                     />
                   );
@@ -171,8 +183,8 @@ const Category = () => {
                     key={item.slug}
                     onClick={(e) => handleCategoryChange(e, item.slug)}
                     className={`cursor-pointer text-sm p-2 rounded-lg transition ${selectedCategory === item.slug
-                        ? "bg-primary-color text-white"
-                        : "hover:bg-slate-100 dark:hover:bg-slate-700"
+                      ? "bg-primary-color text-white"
+                      : "hover:bg-slate-100 dark:hover:bg-slate-700"
                       }`}
                   >
                     {item.name}

@@ -15,6 +15,7 @@ const SLIDE_COUNT = 5;
 const Slider = () => {
   const [storiesData, setStoriesData] = useState([]);
   const [activeSlide, setActiveSlide] = useState(0);
+  // eslint-disable-next-line no-unused-vars
   const [progress, setProgress] = useState(0);
   const carouselRef = useRef(null);
   const progressRef = useRef(null);

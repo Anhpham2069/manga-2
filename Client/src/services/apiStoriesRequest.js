@@ -312,3 +312,13 @@ export const getTotalStoryViews = async () => {
     return { totalViews: 0 };
   }
 };
+
+export const getTodayStoryViews = async () => {
+  try {
+    const res = await axios.get(`${apiURL}/api/views/today`);
+    return res.data;
+  } catch (error) {
+    console.log(error);
+    return { todayViews: 0 };
+  }
+};

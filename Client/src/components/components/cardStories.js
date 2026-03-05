@@ -47,9 +47,15 @@ const CardStories = ({
             </div>
             <div className="flex items-center justify-between mt-3">
               <span className="text-xs text-gray-400">{time}</span>
-              <span className="bg-[#FF4500] text-white text-xs px-3 py-1 rounded-full">
-                Chương {chapter}
-              </span>
+              {chapter ? (
+                <span className="bg-[#FF4500] text-white text-xs px-3 py-1 rounded-full">
+                  Chương {chapter}
+                </span>
+              ) : (
+                <span className="bg-amber-500 text-white text-xs px-3 py-1 rounded-full">
+                  Chưa có chap
+                </span>
+              )}
             </div>
           </div>
         </Link>
@@ -83,6 +89,13 @@ const CardStories = ({
           </span>
         )}
 
+        {/* No chapter badge - below time badge */}
+        {!chapter && !hot && (
+          <span className="absolute top-7 left-1.5 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
+            Chưa có chap
+          </span>
+        )}
+
         {/* View & Save counts - bottom overlay */}
         <div className="absolute bottom-0 left-0 right-0 flex items-center px-2 py-1.5 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
           <div className="flex items-center gap-3 text-white text-[11px] font-medium">
@@ -105,8 +118,10 @@ const CardStories = ({
             {title}
           </h3>
         </Link>
-        {chapter && (
+        {chapter ? (
           <p className="text-[12px] text-gray-500 mt-0.5">Chapter {chapter}</p>
+        ) : (
+          <p className="text-[12px] text-amber-500 font-medium mt-0.5">Chưa có chap</p>
         )}
       </div>
     </figure>

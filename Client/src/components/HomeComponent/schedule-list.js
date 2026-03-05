@@ -52,7 +52,6 @@ const ScheduleList = () => {
 
             const hour = dateObject.getHours();
             const minute = dateObject.getMinutes();
-            const second = dateObject.getSeconds();
             return (
               <div
                 key={item._id}
@@ -62,7 +61,7 @@ const ScheduleList = () => {
                   [{hour}:{minute}]
                 </p>
                 <div className="flex">
-                  <Link to={`detail/${item.slug}/view/${item.chaptersLatest?.[0]?.chapter_name || ""?.split("/").pop()}`}>
+                  <Link to={`/detail/${item.slug}`}>
                     <p className="pl-1">
                       <span className={`${isDarkModeEnable ? "text-text_darkMode" : "text-[#73868C]"} font-medium`}>
                         {(() => {

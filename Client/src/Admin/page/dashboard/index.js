@@ -12,10 +12,10 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {
   getAllStories,
-  getAllHistory,
   getNumberSaveStory,
   getAllErorr,
   getTotalStoryViews,
+  getTodayStoryViews,
 } from "../../../services/apiStoriesRequest";
 
 const StatCard = ({ icon, value, label, color, subValue }) => (
@@ -58,16 +58,9 @@ const Dashboard = () => {
         const viewsData = await getTotalStoryViews();
         setTotalReads(viewsData?.totalViews || 0);
 
-        // Đếm lượt đọc hôm nay từ history
-        const history = await getAllHistory();
-        if (history) {
-          const today = new Date();
-          const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-          const todayCount = history
-            .filter((item) => new Date(item.timestamp) >= todayStart)
-            .reduce((sum, item) => sum + (item.readCount || 0), 0);
-          setTodayReads(todayCount);
-        }
+        // Đếm lượt xem hôm nay từ DailyViewCount (chính xác)
+        const todayData = await getTodayStoryViews();
+        setTodayReads(todayData?.todayViews || 0);
       } catch (error) {
         console.log(error);
       }

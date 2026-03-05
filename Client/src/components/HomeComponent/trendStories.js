@@ -19,7 +19,8 @@ const TrendStoriesCpn = () => {
   const isDarkModeEnable = useSelector(selectDarkMode);
 
   const [storiesData, setStoriesData] = useState([]);
-  const [slug, setSlug] = useState("hoan-thanh");
+  const [slug] = useState("hoan-thanh");
+  const [viewsMap, setViewsMap] = useState({});
   // sate
 
   useEffect(() => {
@@ -30,6 +31,16 @@ const TrendStoriesCpn = () => {
 
       if (res.data) {
         setStoriesData(res.data.data);
+
+        // Fetch views batch
+        const slugs = res.data.data?.items?.map((item) => item.slug) || [];
+        if (slugs.length > 0) {
+          try {
+            const apiURL = process.env.REACT_APP_API_URL;
+            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+            setViewsMap(viewsRes.data || {});
+          } catch (e) { console.log(e); }
+        }
       }
     };
     fetchData();
@@ -40,21 +51,15 @@ const TrendStoriesCpn = () => {
   const scroll = (scollOffset) => {
     containerRef.current.scrollLeft += scollOffset;
   };
-  const hotButton = (
-    <button className="hot-button w-2/6 h-[10%] bg-[#FF4500] text-white text-xs shadow-md rounded-md font-medium uppercase absolute top-1 right-1">
-      Hot
-    </button>
-  );
+
   return (
     <div
-      className={`${
-        isDarkModeEnable ? "bg-bg_dark_light text-white" : "bg-white"
-      } h-fit shadow-lg `}
+      className={`${isDarkModeEnable ? "bg-bg_dark_light text-white" : "bg-white"
+        } h-fit shadow-lg `}
     >
       <div
-        className={` ${
-          isDarkModeEnable ? "bg-[#3A64C2]" : "bg-primary-color"
-        } py-1 h-12 flex items-center justify-between px-4 text-white`}
+        className={` ${isDarkModeEnable ? "bg-[#3A64C2]" : "bg-primary-color"
+          } py-1 h-12 flex items-center justify-between px-4 text-white`}
       >
         <button className=" w-32 h-4/5 bg-[#222222] flex items-center justify-center rounded-lg">
           <FontAwesomeIcon icon={faFire} className="mr-2" /> Xu hướng
@@ -102,6 +107,7 @@ const TrendStoriesCpn = () => {
                   img={`https://img.otruyenapi.com${storiesData.seoOnPage.og_image?.[index]}`}
                   slug={item.slug}
                   time={trimmedTimeAgo}
+                  views={viewsMap[item.slug] || 0}
                   hot
                 />
                 {/* <p className='text-sm'>Chap {(newestChapter.chapter_id)}</p> */}

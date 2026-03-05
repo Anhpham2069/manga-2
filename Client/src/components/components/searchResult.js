@@ -34,6 +34,7 @@ const SearchResult = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [viewsMap, setViewsMap] = useState({});
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,6 +50,16 @@ const SearchResult = () => {
             }
           );
           setSearchResults(response.data.data);
+
+          // Fetch views batch
+          const slugs = response.data.data?.items?.map((item) => item.slug) || [];
+          if (slugs.length > 0) {
+            try {
+              const apiURL = process.env.REACT_APP_API_URL;
+              const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+              setViewsMap(viewsRes.data || {});
+            } catch (e) { console.log(e); }
+          }
         } catch (error) {
           console.error("Error fetching search results:", error);
           setError("An error occurred while searching. Please try again later.");
@@ -125,6 +136,7 @@ const SearchResult = () => {
                     img={`https://img.otruyenapi.com/uploads/${searchResults.seoOnPage.og_image?.[index]}`}
                     slug={item.slug}
                     time={trimmedTimeAgo}
+                    views={viewsMap[item.slug] || 0}
                     // chapter={item.chaptersLatest[0].chapter_name}            
                     nomarl
                   />
@@ -164,23 +176,23 @@ const Pagination = ({ truyensPerPage, totalTruyens, paginate, currentPage, nextP
   return (
     <ul className="pagination flex justify-center items-center gap-5">
       <li className="page-item">
-        <a href="#" className="page-link" onClick={() => prevPage()}>
+        <button className="page-link" onClick={() => prevPage()}>
           Previous
-        </a>
+        </button>
       </li>
       {pageNumbers.map(number => (
         <li key={number}
           onClick={() => paginate(number)}
           className={`page-item ${currentPage === number ? 'active bg-primary-color text-white' : ''} cursor-pointer border-[1px] py-2 px-4`}>
-          <a href="#" className="page-link">
+          <button className="page-link">
             {number}
-          </a>
+          </button>
         </li>
       ))}
       <li className="page-item">
-        <a href="#" className="page-link" onClick={() => nextPage()}>
+        <button className="page-link" onClick={() => nextPage()}>
           Next
-        </a>
+        </button>
       </li>
     </ul>
   );

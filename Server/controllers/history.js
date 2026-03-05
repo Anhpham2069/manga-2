@@ -71,42 +71,75 @@ exports.getReadHistoryByUser = async (req, res) => {
   }
 };
 
-// Bảng xếp hạng truyện theo lượt đọc (ngày / tuần / tháng)
+// Bảng xếp hạng truyện theo lượt xem thực tế (ngày / tuần / tháng)
 exports.getRanking = async (req, res) => {
   try {
     const { period } = req.query; // 'day', 'week', 'month'
+    const DailyViewCount = require('../models/DailyViewCount');
 
     const now = new Date();
-    let dateFilter = new Date();
+    let startDate = new Date();
 
     switch (period) {
       case 'day':
-        dateFilter.setDate(now.getDate() - 1);
+        startDate.setDate(now.getDate() - 1);
         break;
       case 'week':
-        dateFilter.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 7);
         break;
       case 'month':
-        dateFilter.setMonth(now.getMonth() - 1);
+        startDate.setMonth(now.getMonth() - 1);
         break;
       default:
-        dateFilter.setDate(now.getDate() - 7); // mặc định tuần
+        startDate.setDate(now.getDate() - 7);
     }
 
-    const ranking = await ReadHistory.aggregate([
-      { $match: { timestamp: { $gte: dateFilter } } },
+    // Format ngày bắt đầu thành "YYYY-MM-DD" để so sánh string
+    const startDateStr = startDate.toISOString().slice(0, 10);
+
+    const ranking = await DailyViewCount.aggregate([
+      { $match: { date: { $gte: startDateStr } } },
       {
         $group: {
           _id: '$slug',
-          totalViews: { $sum: '$readCount' },
-          storyInfo: { $first: '$storyInfo' },
+          totalViews: { $sum: '$viewCount' },
+          storyName: { $first: '$storyName' },
         },
       },
       { $sort: { totalViews: -1 } },
       { $limit: 20 },
     ]);
 
-    res.status(200).json(ranking);
+    // Lấy storyInfo từ ReadHistory cho từng truyện (để hiển thị tên + ảnh)
+    const slugs = ranking.map((item) => item._id);
+    const historyInfos = await ReadHistory.aggregate([
+      { $match: { slug: { $in: slugs } } },
+      { $sort: { timestamp: -1 } },
+      {
+        $group: {
+          _id: '$slug',
+          storyInfo: { $first: '$storyInfo' },
+        },
+      },
+    ]);
+
+    const infoMap = {};
+    historyInfos.forEach((h) => { infoMap[h._id] = h.storyInfo; });
+
+    // Lấy lượt xem all-time từ StoryView (để hiển thị đồng bộ với grid cards)
+    const StoryView = require('../models/StoryView');
+    const storyViews = await StoryView.find({ slug: { $in: slugs } });
+    const viewsMap = {};
+    storyViews.forEach((v) => { viewsMap[v.slug] = v.viewCount; });
+
+    // Gộp storyInfo + allTimeViews vào kết quả ranking
+    const result = ranking.map((item) => ({
+      ...item,
+      storyInfo: infoMap[item._id] || null,
+      allTimeViews: viewsMap[item._id] || 0,
+    }));
+
+    res.status(200).json(result);
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Có lỗi xảy ra, vui lòng thử lại sau.' });

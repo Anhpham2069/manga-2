@@ -27,7 +27,7 @@ import axios from "axios";
 import { logOut } from "../../services/apiLoginRequest";
 import { createAxios } from "../../createInstance";
 import { logoutSuccess } from "../../redux/slice/authSlice";
-import AnnouncementBanner from "../components/AnnouncementBanner";
+import AnnouncementBanner from "../components/AnnouncementBanner"; // eslint-disable-line no-unused-vars
 
 const NavBar = () => {
   const dispatch = useDispatch();
@@ -110,7 +110,7 @@ const NavBar = () => {
 
   const handleToggleDarkMode = () => dispatch(toggleDarkMode());
 
-  let axiosJWT = createAxios(user, dispatch, logoutSuccess);
+  let axiosJWT = createAxios(user, dispatch, logoutSuccess); // eslint-disable-line no-unused-vars
   const handleLogout = () => logOut(dispatch, id, navigate, accessToken);
 
   // Lấy chữ cái đầu

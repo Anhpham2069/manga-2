@@ -17,7 +17,7 @@ import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 import axios from "axios";
 import { getAllCategory } from "../../services/apiStoriesRequest";
-import PopularSection from "./PopularSection";
+import PopularSection from "./PopularSection"; // eslint-disable-line no-unused-vars
 
 const apiURLOTruyen = process.env.REACT_APP_API_URL_OTruyen;
 
@@ -39,6 +39,7 @@ const FilterStories = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewsMap, setViewsMap] = useState({});
 
   // Fetch genres on mount
   useEffect(() => {
@@ -54,6 +55,7 @@ const FilterStories = () => {
   // Fetch stories when filters change
   useEffect(() => {
     fetchStories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedGenre, currentPage]);
 
   const fetchStories = async () => {
@@ -118,6 +120,16 @@ const FilterStories = () => {
             )
             : 1
         );
+
+        // Fetch views batch
+        const slugs = items.map((item) => item.slug).filter(Boolean);
+        if (slugs.length > 0) {
+          try {
+            const apiURL = process.env.REACT_APP_API_URL;
+            const viewsRes = await axios.post(`${apiURL}/api/views/batch`, { slugs });
+            setViewsMap(viewsRes.data || {});
+          } catch (e) { console.log(e); }
+        }
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -322,6 +334,7 @@ const FilterStories = () => {
                       img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
                       time={trimmedTimeAgo}
                       chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      views={viewsMap[item.slug] || 0}
                       nomarl
                     />
                   );

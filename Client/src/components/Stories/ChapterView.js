@@ -312,6 +312,7 @@ const ReadStories = () => {
 
       localStorage.setItem("historyChapter", JSON.stringify(historyChapter));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chapter]);
 
   // ===== PRELOAD NEXT CHAPTER IMAGES =====
@@ -604,15 +605,20 @@ const ReadStories = () => {
             >
               {recommendStories.length > 0 ? (
                 recommendStories.map((item) => (
-                  <CardStories
+                  <div
                     key={item._id}
-                    id={item._id}
-                    title={item.name}
-                    img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                    slug={item.slug}
-                    chapter={item.chaptersLatest?.[0]?.chapter_name}
-                    nomarl
-                  />
+                    className="flex-shrink-0"
+                    style={{ width: "clamp(140px, 30vw, 180px)" }}
+                  >
+                    <CardStories
+                      id={item._id}
+                      title={item.name}
+                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                      slug={item.slug}
+                      chapter={item.chaptersLatest?.[0]?.chapter_name}
+                      nomarl
+                    />
+                  </div>
                 ))
               ) : (
                 <p className="text-gray-400 text-sm py-4 w-full text-center">Không có gợi ý</p>

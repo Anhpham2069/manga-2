@@ -10,19 +10,19 @@ import CommentManage from '../page/comment';
 
 const ContentAdmin = ({ selectedItem }) => {
   let content;
-  if (selectedItem == 1) {
+  if (selectedItem === 1) {
     content = <Dasbroad />;
-  } else if (selectedItem == 2) {
+  } else if (selectedItem === 2) {
     content = <StoriesAdmin />;
-  } else if (selectedItem == 4) {
+  } else if (selectedItem === 4) {
     content = <UserManage />;
-  } else if (selectedItem == 3) {
+  } else if (selectedItem === 3) {
     content = <GenresAdmin />
-  } else if (selectedItem == 5) {
+  } else if (selectedItem === 5) {
     content = <AdminNotificationForm />
-  } else if (selectedItem == 6) {
+  } else if (selectedItem === 6) {
     content = <ErrComponent />
-  } else if (selectedItem == 7) {
+  } else if (selectedItem === 7) {
     content = <CommentManage />
   }
 
