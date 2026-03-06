@@ -82,7 +82,7 @@ exports.getRanking = async (req, res) => {
 
     switch (period) {
       case 'day':
-        startDate.setDate(now.getDate() - 1);
+        // startDate is already today
         break;
       case 'week':
         startDate.setDate(now.getDate() - 7);
