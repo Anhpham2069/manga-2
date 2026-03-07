@@ -99,6 +99,7 @@ const StickerAdmin = () => {
                     <Button
                         type="primary"
                         icon={<PlusOutlined />}
+                        className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white"
                         onClick={() => {
                             form.setFieldsValue({ category: record.category, label: record.label });
                             setIsModalVisible(true);
@@ -185,7 +186,7 @@ const StickerAdmin = () => {
 
                     <div className="flex justify-end mt-6">
                         <Button className="mr-2" onClick={() => setIsModalVisible(false)}>Hủy</Button>
-                        <Button type="primary" htmlType="submit">Lưu Gói Sticker</Button>
+                        <Button type="primary" htmlType="submit" className="bg-blue-500 text-white hover:bg-blue-600 hover:text-white">Lưu Gói Sticker</Button>
                     </div>
                 </Form>
             </Modal>
