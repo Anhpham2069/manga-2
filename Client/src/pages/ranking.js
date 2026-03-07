@@ -25,7 +25,6 @@ const Ranking = () => {
     const [loading, setLoading] = useState(false);
     const [saveStory, setSaveStory] = useState({});
 
-
     useEffect(() => {
         const fetchRanking = async () => {
             setLoading(true);
@@ -107,13 +106,6 @@ const Ranking = () => {
 
     return (
         <div className={`${isDarkModeEnable ? "bg-bg_dark" : "bg-bg_light"} min-h-screen`}>
-            <Helmet>
-                <title>Bảng xếp hạng - DocTruyen5s</title>
-                <meta name="description" content="Bảng xếp hạng truyện tranh được đọc nhiều nhất tại DocTruyen5s. Xem top truyện hot theo ngày, tuần, tháng." />
-                <meta property="og:title" content="Bảng xếp hạng - DocTruyen5s" />
-                <meta property="og:description" content="Bảng xếp hạng truyện tranh được đọc nhiều nhất tại DocTruyen5s." />
-                <meta property="og:type" content="website" />
-            </Helmet>
             <NavBar />
             <div className="max-w-full tablet:max-w-[90%] lg:max-w-[70%] mx-auto py-6 lg:py-8 px-3 sm:px-4">
                 {/* Header */}

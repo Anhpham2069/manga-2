@@ -12,6 +12,7 @@ import Footer from "../components/layout/footer";
 import axios from "axios";
 import { Skeleton } from "antd";
 import { useParams } from "react-router-dom";
+import Pagination from "../components/components/pagination";
 
 const Category = () => {
   const { slug: initialSlug } = useParams();
@@ -22,6 +23,9 @@ const Category = () => {
   const [genres, setGenres] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(initialSlug);
   const [viewsMap, setViewsMap] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [seo, setSeo] = useState(null);
 
   // 👇 chế độ hiển thị
   const [viewMode, setViewMode] = useState("grid");
@@ -47,6 +51,17 @@ const Category = () => {
       }
     };
     fetchDataGenres();
+
+    const fetchSeo = async () => {
+      try {
+        const apiURL = process.env.REACT_APP_API_URL || "http://localhost:8000";
+        const res = await axios.get(`${apiURL}/api/seo`);
+        setSeo(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchSeo();
   }, []);
 
   // ====== LẤY TRUYỆN ======
@@ -55,9 +70,16 @@ const Category = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=1`
+          `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=${currentPage}`
         );
         setIsCategory(res.data.data);
+
+        const pagination = res.data.data?.params?.pagination;
+        if (pagination) {
+          setTotalPages(Math.ceil(pagination.totalItems / (pagination.totalItemsPerPage || 24)));
+        } else {
+          setTotalPages(1);
+        }
 
         // Fetch views batch
         const slugs = res.data.data?.items?.map((item) => item.slug) || [];
@@ -75,20 +97,42 @@ const Category = () => {
       }
     };
     if (selectedCategory) fetchData();
-  }, [selectedCategory]);
+  }, [selectedCategory, currentPage]);
 
   const handleCategoryChange = (e, slug) => {
     e.preventDefault();
     setSelectedCategory(slug);
+    setCurrentPage(1);
   };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const getSeoContent = () => {
+    let title = isCategory?.titlePage ? `${isCategory.titlePage} - DocTruyen5s` : 'Thể loại - DocTruyen5s';
+    let desc = `Danh sách truyện thể loại ${isCategory?.titlePage || ''} tại DocTruyen5s`;
+
+    if (seo && seo.categoryTitle) {
+      title = seo.categoryTitle.replace(/\[category\]/gi, isCategory?.titlePage || "Đang cập nhật");
+    }
+    if (seo && seo.categoryDesc) {
+      desc = seo.categoryDesc.replace(/\[category\]/gi, isCategory?.titlePage || "Đang cập nhật");
+    }
+
+    return { title, desc };
+  };
+
+  const { title: seoTitle, desc: seoDesc } = getSeoContent();
 
   return (
     <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
       <Helmet>
-        <title>{isCategory?.titlePage ? `${isCategory.titlePage} - DocTruyen5s` : 'Thể loại - DocTruyen5s'}</title>
-        <meta name="description" content={`Danh sách truyện thể loại ${isCategory?.titlePage || ''} - Đọc truyện tranh online miễn phí tại DocTruyen5s.`} />
-        <meta property="og:title" content={isCategory?.titlePage ? `${isCategory.titlePage} - DocTruyen5s` : 'Thể loại - DocTruyen5s'} />
-        <meta property="og:description" content={`Danh sách truyện thể loại ${isCategory?.titlePage || ''} tại DocTruyen5s`} />
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDesc} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDesc} />
         <meta property="og:type" content="website" />
       </Helmet>
       <NavBar />
@@ -129,7 +173,10 @@ const Category = () => {
               <select
                 className="phone:block tablet:hidden w-full bg-[#E6F4FF] rounded-xl p-2 my-5 text-primary-color"
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={(e) => {
+                  setSelectedCategory(e.target.value);
+                  setCurrentPage(1);
+                }}
               >
                 {genres?.map((item) => (
                   <option key={item.slug} value={item.slug}>
@@ -166,6 +213,15 @@ const Category = () => {
                     />
                   );
                 })}
+              </div>
+
+              {/* PAGINATION */}
+              <div className="mt-8 pb-4">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  handlePageChange={handlePageChange}
+                />
               </div>
             </div>
           </div>

@@ -52,11 +52,6 @@ const FavoriteStories = () => {
 
   return (
     <div className={isDark ? "bg-bg_dark min-h-screen" : "bg-bg_light min-h-screen"}>
-      <Helmet>
-        <title>Truyện yêu thích - DocTruyen5s</title>
-        <meta name="description" content="Danh sách truyện yêu thích của bạn tại DocTruyen5s." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <NavBar />
 
       <div className="max-w-[95%] tablet:max-w-[90%] laptop:max-w-[75%] mx-auto py-6">

@@ -18,6 +18,7 @@ import NotFoundPage from "./pages/notFound";
 import ContactUs from "./pages/contact_us";
 import Ranking from "./pages/ranking";
 import { useSelector } from "react-redux";
+import HelmetManager from "./components/layout/HelmetManager";
 
 // Admin route guard
 const AdminRoute = ({ children }) => {
@@ -30,6 +31,7 @@ const AdminRoute = ({ children }) => {
 function App() {
   return (
     <Router>
+      <HelmetManager />
       <Routes>
         <Route exact path="/" element={<Home />} />
         <Route exact path="/detail/:slug" element={<DetailStories />} />

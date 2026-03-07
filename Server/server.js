@@ -52,10 +52,12 @@ const commentRouter = require('./routes/comment');
 const storyViewRouter = require('./routes/storyView');
 const ratingRouter = require('./routes/rating');
 const stickerRouter = require('./routes/stickers');
+const seoRouter = require('./routes/seo');
 
 app.use("/api/contact", contactRoute);
 app.use('/api/comment', commentRouter);
 app.use('/api/stickers', stickerRouter);
+app.use('/api/seo', seoRouter);
 app.use('/api/story', storiesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', usersRouter);

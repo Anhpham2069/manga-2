@@ -14,7 +14,6 @@ import {
   faBook,
 } from "@fortawesome/free-solid-svg-icons";
 import { getHistoryByUser } from "../services/apiStoriesRequest";
-
 const History = () => {
   const isDark = useSelector(selectDarkMode);
   const user = useSelector((state) => state?.auth.login.currentUser);
@@ -48,14 +47,8 @@ const History = () => {
   }, [userId, user, navigate]);
 
   const count = history.length;
-
   return (
     <div className={isDark ? "bg-bg_dark min-h-screen" : "bg-bg_light min-h-screen"}>
-      <Helmet>
-        <title>Lịch sử đọc truyện - DocTruyen5s</title>
-        <meta name="description" content="Xem lại lịch sử đọc truyện của bạn tại DocTruyen5s." />
-        <meta name="robots" content="noindex, nofollow" />
-      </Helmet>
       <NavBar />
 
       <div className="max-w-[95%] tablet:max-w-[90%] laptop:max-w-[75%] mx-auto py-6">

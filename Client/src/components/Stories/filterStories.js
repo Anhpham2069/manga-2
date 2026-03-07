@@ -178,13 +178,6 @@ const FilterStories = () => {
       className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"
         } min-h-screen`}
     >
-      <Helmet>
-        <title>Tìm kiếm nâng cao - DocTruyen5s</title>
-        <meta name="description" content="Tìm kiếm và lọc truyện theo thể loại, trạng thái, số chương. Tìm truyện tranh yêu thích của bạn tại DocTruyen5s." />
-        <meta property="og:title" content="Tìm kiếm nâng cao - DocTruyen5s" />
-        <meta property="og:description" content="Tìm kiếm và lọc truyện theo thể loại, trạng thái, số chương tại DocTruyen5s." />
-        <meta property="og:type" content="website" />
-      </Helmet>
       <NavBar />
       <div className="max-w-full tablet:max-w-[90%] lg:max-w-[75%] mt-6 mx-auto px-2 tablet:px-0">
         {/* Main Content */}
@@ -227,10 +220,10 @@ const FilterStories = () => {
                 Tìm
               </button>
             </div>
-          </form>
+          </form >
 
           {/* Genres Grid */}
-          <div className="mb-5">
+          < div className="mb-5" >
             <p className="font-semibold mb-3">Thể loại</p>
             <div className="grid phone:grid-cols-2 tablet:grid-cols-3 lg:grid-cols-4 gap-2">
               {genres.map((item) => (
@@ -249,10 +242,10 @@ const FilterStories = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div >
 
           {/* Filter Options */}
-          <div className="grid tablet:grid-cols-2 gap-4 mb-5">
+          < div className="grid tablet:grid-cols-2 gap-4 mb-5" >
             <div className="flex justify-between items-center">
               <label className="font-semibold">Số chương</label>
               <select
@@ -293,119 +286,122 @@ const FilterStories = () => {
                 <option value="za">Từ Z-A</option>
               </select>
             </div>
-          </div>
+          </div >
 
           {/* Apply Filter Button */}
-          <button
+          < button
             onClick={handleApplyFilters}
             className="w-full py-2.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg hover:opacity-90 transition shadow-md"
           >
             <FontAwesomeIcon icon={faFilter} className="mr-2" />
             Lọc truyện
-          </button>
+          </button >
 
           {/* Results */}
-          <div className="mt-8">
-            {loading ? (
-              <div className="flex justify-center py-20">
-                <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary-color border-t-transparent"></div>
-              </div>
-            ) : results.length === 0 ? (
-              <div className="text-center py-20 opacity-60">
-                <p className="text-lg">Không tìm thấy truyện phù hợp</p>
-              </div>
-            ) : (
-              <div className="grid phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-5 lg:gap-4">
-                {results.map((item) => {
-                  let trimmedTimeAgo = "";
-                  try {
-                    trimmedTimeAgo = formatDistanceToNow(
-                      new Date(item.updatedAt),
-                      { addSuffix: true, locale: vi }
-                    ).replace(/^khoảng\s/, "");
-                  } catch (e) {
-                    trimmedTimeAgo = "";
-                  }
-                  return (
-                    <CardStories
-                      key={item._id}
-                      slug={item.slug}
-                      title={item.name}
-                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                      time={trimmedTimeAgo}
-                      chapter={item.chaptersLatest?.[0]?.chapter_name}
-                      views={viewsMap[item.slug] || 0}
-                      nomarl
-                    />
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          < div className="mt-8" >
+            {
+              loading ? (
+                <div className="flex justify-center py-20" >
+                  <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary-color border-t-transparent"></div>
+                </div>
+              ) : results.length === 0 ? (
+                <div className="text-center py-20 opacity-60">
+                  <p className="text-lg">Không tìm thấy truyện phù hợp</p>
+                </div>
+              ) : (
+                <div className="grid phone:grid-cols-2 phone:gap-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-5 lg:gap-4">
+                  {results.map((item) => {
+                    let trimmedTimeAgo = "";
+                    try {
+                      trimmedTimeAgo = formatDistanceToNow(
+                        new Date(item.updatedAt),
+                        { addSuffix: true, locale: vi }
+                      ).replace(/^khoảng\s/, "");
+                    } catch (e) {
+                      trimmedTimeAgo = "";
+                    }
+                    return (
+                      <CardStories
+                        key={item._id}
+                        slug={item.slug}
+                        title={item.name}
+                        img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                        time={trimmedTimeAgo}
+                        chapter={item.chaptersLatest?.[0]?.chapter_name}
+                        views={viewsMap[item.slug] || 0}
+                        nomarl
+                      />
+                    );
+                  })}
+                </div>
+              )}
+          </div >
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-3 mt-8 pt-5 border-t">
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg transition ${currentPage === 1
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-primary-color text-white hover:opacity-90"
-                  }`}
-              >
-                <FontAwesomeIcon icon={faChevronLeft} />
-              </button>
+          {
+            totalPages > 1 && (
+              <div className="flex justify-center items-center gap-3 mt-8 pt-5 border-t">
+                <button
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className={`px-4 py-2 rounded-lg transition ${currentPage === 1
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-primary-color text-white hover:opacity-90"
+                    }`}
+                >
+                  <FontAwesomeIcon icon={faChevronLeft} />
+                </button>
 
-              {Array.from(
-                { length: Math.min(5, totalPages) },
-                (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
+                {Array.from(
+                  { length: Math.min(5, totalPages) },
+                  (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === pageNum
+                          ? "bg-primary-color text-white shadow-md"
+                          : darkMode
+                            ? "bg-[#252A34] hover:bg-[#3a3f4b]"
+                            : "bg-gray-100 hover:bg-gray-200"
+                          }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
                   }
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => setCurrentPage(pageNum)}
-                      className={`px-4 py-2 rounded-lg font-medium transition ${currentPage === pageNum
-                        ? "bg-primary-color text-white shadow-md"
-                        : darkMode
-                          ? "bg-[#252A34] hover:bg-[#3a3f4b]"
-                          : "bg-gray-100 hover:bg-gray-200"
-                        }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                }
-              )}
+                )}
 
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-lg transition ${currentPage === totalPages
-                  ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  : "bg-primary-color text-white hover:opacity-90"
-                  }`}
-              >
-                <FontAwesomeIcon icon={faChevronRight} />
-              </button>
-            </div>
-          )}
-        </div>
+                <button
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className={`px-4 py-2 rounded-lg transition ${currentPage === totalPages
+                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-primary-color text-white hover:opacity-90"
+                    }`}
+                >
+                  <FontAwesomeIcon icon={faChevronRight} />
+                </button>
+              </div>
+            )
+          }
+        </div >
 
-      </div>
+      </div >
       <Footer />
-    </div>
+    </div >
   );
 };
 

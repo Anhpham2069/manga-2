@@ -7,6 +7,7 @@ import AdminNotificationForm from '../page/noti';
 import ErrComponent from '../page/erorr';
 import CommentManage from '../page/comment';
 import StickerAdmin from '../page/stickers';
+import SeoSettings from '../page/seo';
 
 const ContentAdmin = ({ selectedItem }) => {
   let content;
@@ -26,6 +27,8 @@ const ContentAdmin = ({ selectedItem }) => {
     content = <CommentManage />
   } else if (selectedItem === 8) {
     content = <StickerAdmin />
+  } else if (selectedItem === 9) {
+    content = <SeoSettings />
   }
 
   return <div className="content">{content}</div>;

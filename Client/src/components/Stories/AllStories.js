@@ -22,8 +22,6 @@ const AllStories = () => {
   const [viewsMap, setViewsMap] = useState({});
   const [savesMap, setSavesMap] = useState({});
 
-
-
   useEffect(() => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,13 +88,6 @@ const AllStories = () => {
 
   return (
     <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
-      <Helmet>
-        <title>Tất cả truyện - DocTruyen5s</title>
-        <meta name="description" content="Danh sách tất cả truyện tranh mới nhất, đang phát hành, hoàn thành tại DocTruyen5s. Cập nhật liên tục." />
-        <meta property="og:title" content="Tất cả truyện - DocTruyen5s" />
-        <meta property="og:description" content="Danh sách tất cả truyện tranh mới nhất, đang phát hành, hoàn thành tại DocTruyen5s." />
-        <meta property="og:type" content="website" />
-      </Helmet>
       <NavBar />
 
       <div className="grid laptop:grid-cols-5 gap-6 w-[95%] mt-6 m-auto">
