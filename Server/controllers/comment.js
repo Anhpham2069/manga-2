@@ -3,7 +3,7 @@ const Comment = require("../models/Comment");
 // Thêm bình luận
 exports.addComment = async (req, res) => {
     try {
-        const { storySlug, userId, username, content } = req.body;
+        const { storySlug, userId, username, content, parentId } = req.body;
 
         if (!storySlug || !content) {
             return res.status(400).json({ message: "storySlug và content là bắt buộc" });
@@ -14,6 +14,7 @@ exports.addComment = async (req, res) => {
             userId,
             username,
             content,
+            parentId: parentId || null,
         });
 
         const savedComment = await newComment.save();
@@ -43,7 +44,7 @@ exports.getCommentsByStory = async (req, res) => {
         const { slug } = req.params;
         const comments = await Comment.find({ storySlug: slug })
             .populate("userId", "avatar")
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: 1 });
         res.status(200).json(comments);
     } catch (error) {
         console.error(error);

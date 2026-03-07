@@ -256,11 +256,11 @@ export const updateStoryErrorStatus = async (id, status) => {
 
 // comment
 
-export const addComment = async (accessToken, storySlug, userId, username, content) => {
+export const addComment = async (accessToken, storySlug, userId, username, content, parentId = null) => {
   try {
     const res = await axios.post(
       `${apiURL}/api/comment/add`,
-      { storySlug, userId, username, content },
+      { storySlug, userId, username, content, parentId },
       {
         headers: { token: `Bearer ${accessToken}` },
       }

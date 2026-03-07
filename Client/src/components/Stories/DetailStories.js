@@ -127,6 +127,7 @@ const DetailStories = () => {
   const [selectedStickers, setSelectedStickers] = useState([]);
   const [stickerTabs, setStickerTabs] = useState([]);
   const [activeStickerTab, setActiveStickerTab] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [recommendStories, setRecommendStories] = useState([]);
@@ -239,10 +240,11 @@ const DetailStories = () => {
     const finalComment = comment + selectedStickers.map(s => `[sticker:${s.category}:${s.id}]`).join("");
 
     try {
-      await addComment(accessToken, slug, userId, user.username, finalComment);
+      await addComment(accessToken, slug, userId, user.username, finalComment, replyingTo?._id || null);
       message.success("Đã gửi bình luận");
       setComment("");
       setSelectedStickers([]);
+      setReplyingTo(null);
       fetchComments();
     } catch (error) {
       message.error("Gửi bình luận thất bại");
@@ -289,7 +291,7 @@ const DetailStories = () => {
               const catRes = await getStorybyCategory(catSlug);
               if (catRes?.items) {
                 const filtered = catRes.items.filter((item) => item.slug !== slug);
-                setRecommendStories(filtered.slice(0, 6));
+                setRecommendStories(filtered.slice(0, 10));
               }
             } catch (e) { console.log(e); }
           }
@@ -751,11 +753,20 @@ const DetailStories = () => {
 
               {user && (
                 <div className="mb-6">
+                  {replyingTo && (
+                    <div className="flex items-center justify-between mb-2 p-2 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                      <span>Đang trả lời: <strong>{replyingTo.username}</strong></span>
+                      <button onClick={() => setReplyingTo(null)} className="text-blue-500 hover:text-blue-800">
+                        <FontAwesomeIcon icon={faXmark} /> Huỷ
+                      </button>
+                    </div>
+                  )}
                   <div className={`relative flex flex-col rounded-lg border transition ${isDarkModeEnable
                     ? "bg-[#0f172a] border-[#334155]"
                     : "bg-gray-50 border-gray-200"
                     } focus-within:border-primary-color`}>
                     <textarea
+                      id="commentTextarea"
                       value={comment}
                       onChange={(e) => setComment(e.target.value)}
                       className={`w-full min-h-[112px] p-4 pb-12 pr-20 bg-transparent outline-none resize-none text-sm rounded-lg transition ${isDarkModeEnable
@@ -884,7 +895,7 @@ const DetailStories = () => {
                 ) : comments.length === 0 ? (
                   <p className="text-center py-4 opacity-60 text-sm">Chưa có bình luận nào</p>
                 ) : (
-                  comments.map((cmt) => (
+                  comments.filter(c => !c.parentId).map((cmt) => (
                     <div
                       key={cmt._id}
                       className={`p-4 rounded-lg ${isDarkModeEnable ? "bg-[#0f172a] border border-[#334155]" : "bg-gray-50 border border-gray-100"}`}
@@ -901,27 +912,96 @@ const DetailStories = () => {
                             })}
                           </span>
                         </div>
-                        {user && (user._id === cmt.userId || user.admin) && (
-                          <button
-                            onClick={async () => {
-                              try {
-                                await axios.delete(
-                                  `${process.env.REACT_APP_API_URL}/api/comment/delete/${cmt._id}`,
-                                  { headers: { token: `Bearer ${accessToken}` } }
-                                );
-                                message.success("Đã xoá bình luận");
-                                fetchComments();
-                              } catch (err) {
-                                message.error("Xoá thất bại");
-                              }
-                            }}
-                            className="text-xs text-red-500 hover:text-red-700 transition"
-                          >
-                            Xoá
-                          </button>
-                        )}
+                        <div className="flex gap-3 items-center">
+                          {user && (
+                            <button
+                              onClick={() => {
+                                setReplyingTo({ _id: cmt._id, username: cmt.username });
+                                document.getElementById('commentTextarea')?.focus();
+                              }}
+                              className="text-xs text-blue-500 hover:text-blue-700 transition font-medium"
+                            >
+                              Trả lời
+                            </button>
+                          )}
+                          {user && (user._id === cmt.userId || user.admin) && (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await axios.delete(
+                                    `${process.env.REACT_APP_API_URL}/api/comment/delete/${cmt._id}`,
+                                    { headers: { token: `Bearer ${accessToken}` } }
+                                  );
+                                  message.success("Đã xoá bình luận");
+                                  fetchComments();
+                                } catch (err) {
+                                  message.error("Xoá thất bại");
+                                }
+                              }}
+                              className="text-xs text-red-500 hover:text-red-700 transition"
+                            >
+                              Xoá
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="text-sm leading-relaxed pl-10 whitespace-pre-wrap">{renderCommentContent(cmt.content, stickerTabs)}</div>
+
+                      {/* Sub-comments (Replies) */}
+                      {comments.filter(sub => sub.parentId === cmt._id).length > 0 && (
+                        <div className={`mt-3 pl-4 sm:pl-10 space-y-3 border-l-2 ${isDarkModeEnable ? "border-[#334155]" : "border-gray-200"}`}>
+                          {comments.filter(sub => sub.parentId === cmt._id).map((subCmt) => (
+                            <div key={subCmt._id} className="pt-2">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${isDarkModeEnable ? "bg-[#713f96]" : "bg-purple-500"}`}>
+                                    {subCmt.username?.charAt(0)?.toUpperCase()}
+                                  </div>
+                                  <span className="font-semibold text-xs">{subCmt.username}</span>
+                                  <span className={`text-[11px] ${isDarkModeEnable ? "text-gray-500" : "text-gray-400"}`}>
+                                    {new Date(subCmt.createdAt).toLocaleDateString("vi-VN", {
+                                      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+                                    })}
+                                  </span>
+                                </div>
+                                <div className="flex gap-3 items-center">
+                                  {user && (
+                                    <button
+                                      onClick={() => {
+                                        setReplyingTo({ _id: cmt._id, username: subCmt.username });
+                                        document.getElementById('commentTextarea')?.focus();
+                                      }}
+                                      className="text-xs text-blue-500 hover:text-blue-700 transition font-medium"
+                                    >
+                                      Trả lời
+                                    </button>
+                                  )}
+                                  {user && (user._id === subCmt.userId || user.admin) && (
+                                    <button
+                                      onClick={async () => {
+                                        try {
+                                          await axios.delete(
+                                            `${process.env.REACT_APP_API_URL}/api/comment/delete/${subCmt._id}`,
+                                            { headers: { token: `Bearer ${accessToken}` } }
+                                          );
+                                          message.success("Đã xoá bình luận");
+                                          fetchComments();
+                                        } catch (err) {
+                                          message.error("Xoá thất bại");
+                                        }
+                                      }}
+                                      className="text-[11px] text-red-500 hover:text-red-700 transition"
+                                    >
+                                      Xoá
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="text-sm leading-relaxed pl-8 whitespace-pre-wrap">{renderCommentContent(subCmt.content, stickerTabs)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))
                 )}
