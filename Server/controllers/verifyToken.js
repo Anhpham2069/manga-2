@@ -29,7 +29,7 @@ const verifyTokenAndUserAuthorization = (req, res, next) => {
 
 const verifyTokenAndAdmin = (req, res, next) => {
   verifyToken(req, res, () => {
-    if (req.user.isAdmin) {
+    if (req.user.admin) {
       next();
     } else {
       res.status(403).json("You're not allowed to do that!");

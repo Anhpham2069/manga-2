@@ -7,6 +7,7 @@ const cors = require('cors');
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const cookieParser = require("cookie-parser");
+const path = require('path');
 const app = express();
 
 dotenv.config();
@@ -29,6 +30,9 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "token", "Authorization"],
 }));
 
+// Route for serving static assets explicitly
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 // Health check
 app.get("/", (req, res) => {
   res.json({ status: "ok", message: "Server is running" });
@@ -47,9 +51,11 @@ const contactRoute = require("./routes/contact");
 const commentRouter = require('./routes/comment');
 const storyViewRouter = require('./routes/storyView');
 const ratingRouter = require('./routes/rating');
+const stickerRouter = require('./routes/stickers');
 
 app.use("/api/contact", contactRoute);
 app.use('/api/comment', commentRouter);
+app.use('/api/stickers', stickerRouter);
 app.use('/api/story', storiesRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/user', usersRouter);

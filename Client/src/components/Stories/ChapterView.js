@@ -19,12 +19,16 @@ import {
   faCommentDots,
   faPaperPlane,
   faTags,
+  faImage,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import CardStories from "../components/cardStories";
 import NavBar from "../layout/Navbar";
 import Footer from "../layout/footer";
 import { useSelector, useDispatch } from "react-redux";
 import { selectDarkMode } from "../layout/DarkModeSlice";
+import { faFaceSmile } from "@fortawesome/free-regular-svg-icons";
+import EmojiPicker from "emoji-picker-react";
 
 import "./style.css";
 import {
@@ -37,6 +41,54 @@ import {
   getCommentsByStory,
   getStorybyCategory,
 } from "../../services/apiStoriesRequest";
+
+const renderCommentContent = (content, stickerTabs) => {
+  if (!content) return null;
+  const parts = content.split(/(\[sticker:[^:]+:[^\]]+\]|\[sticker:\d+\])/g);
+  return parts.map((part, index) => {
+    let match = part.match(/\[sticker:([^:]+):([^\]]+)\]/);
+    if (match) {
+      const category = match[1];
+      const id = match[2];
+      const categoryTab = stickerTabs?.find(t => t.category === category);
+      const sticker = categoryTab?.stickers?.find(s => s.id === id);
+      let url = sticker?.url || `/public/stickers/${category}/${id}.gif`;
+      url = url.startsWith('http') ? url : `${process.env.REACT_APP_API_URL}${url}`;
+      return (
+        <img
+          key={index}
+          src={url}
+          alt={`sticker-${category}-${id}`}
+          className="inline-block w-16 h-16 object-contain align-middle mx-1"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="12" fill="%2364748b">${match[1]} ${match[2]}</text></svg>`;
+          }}
+        />
+      );
+    }
+    match = part.match(/\[sticker:(\d+)\]/);
+    if (match) {
+      const categoryTab = stickerTabs?.find(t => t.category === 'troll');
+      const sticker = categoryTab?.stickers?.find(s => s.id === match[1]);
+      let url = sticker?.url || `/public/stickers/troll/${match[1]}.gif`;
+      url = url.startsWith('http') ? url : `${process.env.REACT_APP_API_URL}${url}`;
+      return (
+        <img
+          key={index}
+          src={url}
+          alt={`sticker-${match[1]}`}
+          className="inline-block w-16 h-16 object-contain align-middle mx-1"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23e2e8f0"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="14" font-weight="bold" fill="%2364748b">${match[1]}</text></svg>`;
+          }}
+        />
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
+};
 
 // ===== CHAPTER NAVIGATION COMPONENT (DRY) =====
 const ChapterNav = ({ chapters, currentId, slug, onPrev, onNext, onChange, prevId, nextId, variant = "header" }) => {
@@ -115,6 +167,11 @@ const ReadStories = () => {
     return parseInt(localStorage.getItem("activeServer")) || 1;
   });
   const [commentText, setCommentText] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showStickerPicker, setShowStickerPicker] = useState(false);
+  const [selectedStickers, setSelectedStickers] = useState([]);
+  const [stickerTabs, setStickerTabs] = useState([]);
+  const [activeStickerTab, setActiveStickerTab] = useState("");
   const [comments, setComments] = useState([]);
   const [loadingComments, setLoadingComments] = useState(false);
   const [recommendStories, setRecommendStories] = useState([]);
@@ -200,21 +257,40 @@ const ReadStories = () => {
   }, [slug]);
 
   useEffect(() => {
+    const fetchStickers = async () => {
+      try {
+        const res = await axios.get(`${process.env.REACT_APP_API_URL}/api/stickers/all`);
+        if (res.data) {
+          setStickerTabs(res.data);
+          if (res.data.length > 0) setActiveStickerTab(res.data[0].category);
+        }
+      } catch (e) {
+        console.error("Error fetching stickers", e);
+      }
+    };
+    fetchStickers();
+  }, []);
+
+  useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
   const handleSubmitComment = useCallback(async () => {
     if (!user) { message.warning("Bạn cần đăng nhập để bình luận"); return; }
-    if (!commentText.trim()) { message.warning("Vui lòng nhập nội dung bình luận"); return; }
+    if (!commentText.trim() && selectedStickers.length === 0) { message.warning("Vui lòng nhập nội dung bình luận hoặc ảnh"); return; }
+
+    const finalComment = commentText + selectedStickers.map(s => `[sticker:${s.category}:${s.id}]`).join("");
+
     try {
-      await addComment(accessToken, slug, userId, user.username, commentText);
+      await addComment(accessToken, slug, userId, user.username, finalComment);
       message.success("Đã gửi bình luận");
       setCommentText("");
+      setSelectedStickers([]);
       fetchComments();
     } catch (error) {
       message.error("Gửi bình luận thất bại");
     }
-  }, [commentText, user, accessToken, slug, userId, fetchComments]);
+  }, [commentText, selectedStickers, user, accessToken, slug, userId, fetchComments]);
 
   // ===== FETCH CHAPTER DATA =====
   useEffect(() => {
@@ -627,7 +703,7 @@ const ReadStories = () => {
           </div>
 
           {/* ===== COMMENTS ===== */}
-          <div className={`mt-8 rounded-xl overflow-hidden ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-sm border border-gray-100"}`}>
+          <div className={`mt-8 rounded-xl ${isDarkModeEnable ? "bg-[#16213e]" : "bg-white shadow-sm border border-gray-100"}`}>
             <div className="py-3 px-5 border-b border-gray-200/50">
               <h3 className="text-base font-bold text-primary-color">
                 <FontAwesomeIcon icon={faCommentDots} className="mr-2" />
@@ -646,22 +722,129 @@ const ReadStories = () => {
               )}
               {user && (
                 <div className="mb-6">
-                  <textarea
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    className={`w-full h-28 p-4 rounded-lg border outline-none resize-none text-sm transition ${isDarkModeEnable
-                      ? "bg-[#0f172a] border-[#334155] text-gray-200 placeholder-gray-500"
-                      : "bg-gray-50 border-gray-200 text-gray-700 placeholder-gray-400"
-                      } focus:border-primary-color`}
-                    placeholder="Nhập bình luận của bạn..."
-                  />
-                  <button
-                    onClick={handleSubmitComment}
-                    className="mt-2 px-6 py-2 bg-primary-color text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
-                  >
-                    <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
-                    Gửi bình luận
-                  </button>
+                  <div className={`relative flex flex-col rounded-lg border transition ${isDarkModeEnable
+                    ? "bg-[#0f172a] border-[#334155]"
+                    : "bg-gray-50 border-gray-200"
+                    } focus-within:border-primary-color`}>
+                    <textarea
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      className={`w-full min-h-[112px] p-4 pb-12 pr-20 bg-transparent outline-none resize-none text-sm rounded-lg transition ${isDarkModeEnable
+                        ? "text-gray-200 placeholder-gray-500"
+                        : "text-gray-700 placeholder-gray-400"
+                        }`}
+                      placeholder="Nhập bình luận hoặc gửi nhãn dán..."
+                    />
+
+                    {selectedStickers.length > 0 && (
+                      <div className="px-4 pb-14 flex flex-wrap gap-2">
+                        {selectedStickers.map((st, idx) => {
+                          const categoryTab = stickerTabs?.find(t => t.category === st.category);
+                          const stickerObj = categoryTab?.stickers?.find(s => s.id === st.id);
+                          let url = stickerObj?.url || `/public/stickers/${st.category}/${st.id}.gif`;
+                          url = url.startsWith('http') ? url : `${process.env.REACT_APP_API_URL}${url}`;
+                          return (
+                            <div key={idx} className="relative group inline-block">
+                              <img src={url} alt="sticker" className={`w-16 h-16 object-contain border rounded-lg ${isDarkModeEnable ? "bg-[#1e293b] border-[#334155]" : "bg-white border-gray-200"}`} />
+                              <button
+                                onClick={() => setSelectedStickers(prev => prev.filter((_, i) => i !== idx))}
+                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <FontAwesomeIcon icon={faXmark} />
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-transparent">
+                      <button
+                        onClick={() => { setShowStickerPicker(!showStickerPicker); setShowEmojiPicker(false); }}
+                        className={`p-1.5 rounded-full transition-all flex items-center justify-center ${isDarkModeEnable ? "text-gray-400 hover:text-gray-200 hover:bg-[#334155]" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}
+                        title="Thêm sticker"
+                      >
+                        <FontAwesomeIcon icon={faImage} className="text-xl" />
+                      </button>
+                      <button
+                        onClick={() => { setShowEmojiPicker(!showEmojiPicker); setShowStickerPicker(false); }}
+                        className={`p-1.5 rounded-full transition-all flex items-center justify-center ${isDarkModeEnable ? "text-gray-400 hover:text-gray-200 hover:bg-[#334155]" : "text-gray-500 hover:text-gray-700 hover:bg-gray-200"}`}
+                        title="Thêm emoji"
+                      >
+                        <FontAwesomeIcon icon={faFaceSmile} className="text-xl" />
+                      </button>
+                    </div>
+
+                    {showStickerPicker && (
+                      <div className={`absolute top-full right-0 mt-2 z-50 rounded-lg shadow-2xl border w-[320px] sm:w-[400px] h-[350px] flex flex-col overflow-hidden ${isDarkModeEnable ? "bg-[#16213e] border-[#334155]" : "bg-white border-gray-200"}`}>
+                        <div className="bg-[#4a85f6] text-white px-3 py-2 flex justify-between items-center shrink-0">
+                          <span className="font-semibold text-sm">Emojis</span>
+                          <button onClick={() => setShowStickerPicker(false)} className="hover:opacity-80">
+                            <FontAwesomeIcon icon={faXmark} />
+                          </button>
+                        </div>
+                        <div className={`flex gap-1 p-2 border-b overflow-x-auto shrink-0 scrollbar-hide ${isDarkModeEnable ? "border-[#334155]" : "border-gray-200"}`}>
+                          {stickerTabs.map(tab => (
+                            <button
+                              key={tab._id}
+                              onClick={() => setActiveStickerTab(tab.category)}
+                              className={`px-3 py-1.5 text-xs font-semibold rounded whitespace-nowrap transition ${activeStickerTab === tab.category
+                                ? "bg-[#4a85f6] text-white"
+                                : isDarkModeEnable
+                                  ? "bg-[#334155] text-gray-300 hover:bg-[#475569]"
+                                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                }`}
+                            >
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2 grid grid-cols-4 sm:grid-cols-5 gap-2 content-start">
+                          {stickerTabs.find(t => t.category === activeStickerTab)?.stickers.map((sticker) => (
+                            <button
+                              key={sticker.id}
+                              onClick={() => {
+                                setSelectedStickers((prev) => [...prev, { category: activeStickerTab, id: sticker.id }]);
+                                setShowStickerPicker(false);
+                              }}
+                              className={`p-1 flex items-center justify-center rounded transition-all hover:scale-110 ${isDarkModeEnable ? "hover:bg-[#334155]" : "hover:bg-gray-100"}`}
+                            >
+                              <img
+                                src={sticker.url.startsWith('http') ? sticker.url : `${process.env.REACT_APP_API_URL}${sticker.url}`}
+                                alt={`sticker-${activeStickerTab}-${sticker.id}`}
+                                className="w-12 h-12 object-contain"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60"><rect width="60" height="60" fill="%23cbd5e1"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="14" font-weight="bold" fill="%23475569">${sticker.id}</text></svg>`;
+                                }}
+                              />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {showEmojiPicker && (
+                      <div className="absolute top-full right-0 mt-1 z-50 shadow-2xl rounded-lg">
+                        <EmojiPicker
+                          onEmojiClick={(emojiObject) => {
+                            setCommentText((prev) => prev + emojiObject.emoji);
+                          }}
+                          theme={isDarkModeEnable ? "dark" : "light"}
+                          previewConfig={{ showPreview: false }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <button
+                      onClick={handleSubmitComment}
+                      className="px-6 py-2 bg-primary-color text-white rounded-lg text-sm font-medium hover:opacity-90 transition"
+                    >
+                      <FontAwesomeIcon icon={faPaperPlane} className="mr-2" />
+                      Gửi bình luận
+                    </button>
+                  </div>
                 </div>
               )}
               <div className="space-y-3">
@@ -707,7 +890,7 @@ const ReadStories = () => {
                           </button>
                         )}
                       </div>
-                      <p className="text-sm leading-relaxed pl-10">{cmt.content}</p>
+                      <div className="text-sm leading-relaxed pl-10 whitespace-pre-wrap">{renderCommentContent(cmt.content, stickerTabs)}</div>
                     </div>
                   ))
                 )}

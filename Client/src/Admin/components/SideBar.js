@@ -7,6 +7,7 @@ import {
   UserOutlined,
   ExclamationCircleOutlined,
   CommentOutlined,
+  SmileOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import { selectDarkMode } from "../../components/layout/DarkModeSlice";
@@ -22,6 +23,7 @@ const SideBarAdmin = ({ onItemClick }) => {
     { label: "Người dùng", icon: <UserOutlined />, key: 4 },
     { label: "Thông báo", icon: <NotificationFilled />, key: 5 },
     { label: "Bình luận", icon: <CommentOutlined />, key: 7 },
+    { label: "Sticker (Meme)", icon: <SmileOutlined />, key: 8 },
     { label: "Báo lỗi", icon: <ExclamationCircleOutlined />, key: 6 },
   ];
 

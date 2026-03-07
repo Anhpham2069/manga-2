@@ -6,7 +6,7 @@ import GenresAdmin from '../page/genres/allCategory';
 import AdminNotificationForm from '../page/noti';
 import ErrComponent from '../page/erorr';
 import CommentManage from '../page/comment';
-// import { Profile, ChangePassWord, Gift  } from './Content'; // Nhớ import các component đã tạo
+import StickerAdmin from '../page/stickers';
 
 const ContentAdmin = ({ selectedItem }) => {
   let content;
@@ -24,6 +24,8 @@ const ContentAdmin = ({ selectedItem }) => {
     content = <ErrComponent />
   } else if (selectedItem === 7) {
     content = <CommentManage />
+  } else if (selectedItem === 8) {
+    content = <StickerAdmin />
   }
 
   return <div className="content">{content}</div>;

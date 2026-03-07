@@ -28,7 +28,7 @@ const Featured = ({ dark }) => {
   // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(false);
   const [slug, setSlug] = useState("hoan-thanh");
-  const [selectedButton, setSelectedButton] = useState("tuannay");
+  const [selectedButton, setSelectedButton] = useState("homnay");
   const [rankingData, setRankingData] = useState([]);
   const [saveStory, setSaveStory] = useState();
 
@@ -137,7 +137,7 @@ const Featured = ({ dark }) => {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-2 tablet:grid-cols-3 lg:grid-cols-4 desktop:grid-cols-4 gap-x-3 gap-y-0 p-3">
+        <div className="grid grid-cols-2 tablet:grid-cols-3 lg:grid-cols-5 desktop:grid-cols-5 gap-x-3 gap-y-0 p-3">
           {storiesData.items?.map((item) => {
             const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
             const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
