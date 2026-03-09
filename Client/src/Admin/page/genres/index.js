@@ -207,6 +207,19 @@ const GenreAdmin = () => {
       ...getColumnSearchProps("genreName"),
     },
     {
+      title: "Slug đường dẫn",
+      dataIndex: "slug",
+      key: "slug",
+      width: 150,
+      ...getColumnSearchProps("slug"),
+    },
+    {
+      title: "Mô tả",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+    },
+    {
       title: "Ngày tạo",
       dataIndex: "createdAt",
       key: "createdAt",
@@ -239,7 +252,6 @@ const GenreAdmin = () => {
               onUpdateSuccess={handleUpdateSuccess}
               onCancel={handleCancel}
             />
-            {/* <Input value={selectedGenre && selectedGenre.genreName} onChange={(e)=>updateGenre(e.target.value,selectedGenre._id)}></Input> */}
           </Modal>
           <Button danger onClick={() => showDeleteConfirm(record._id)}>
             {" "}

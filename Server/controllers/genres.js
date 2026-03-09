@@ -1,10 +1,10 @@
 const Genre = require('../models/genres');
 
 exports.addGenre = async (req, res) => {
-  const { genreId,genreName } = req.body;
+  const { genreId, genreName, slug, description } = req.body;
 
   try {
-    const newGenre = new Genre(genreId, genreName );
+    const newGenre = new Genre({ genreId, genreName, slug, description });
     await newGenre.save();
     res.status(201).json({ newGenre });
   } catch (error) {
@@ -15,12 +15,12 @@ exports.addGenre = async (req, res) => {
 
 exports.updateGenre = async (req, res) => {
   try {
-    const { genreName } = req.body;
+    const { genreName, slug, description } = req.body;
     const genreId = req.params.id;
 
     const updatedGenre = await Genre.findByIdAndUpdate(
       genreId,
-      { genreName },
+      { genreName, slug, description },
       { new: true, runValidators: true }
     );
 

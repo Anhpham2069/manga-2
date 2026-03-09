@@ -261,8 +261,8 @@ const SeoSettings = () => {
     return (
         <div className={`p-6 md:p-8 rounded-xl min-h-screen ${isDarkModeEnable ? "bg-[#1e293b]" : "bg-white"}`}>
             <div className="mb-6">
-                <h2 className={`text-2xl font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"}`}>Cấu Hình SEO Mở Rộng</h2>
-                <p className={isDarkModeEnable ? "text-gray-400" : "text-gray-500"}>Quản lý thẻ Tiêu đề, Mô tả cho nhiều trang khác nhau nhằm tối ưu SEO.</p>
+                <h2 className={`text-2xl font-bold ${isDarkModeEnable ? "text-white" : "text-gray-800"}`}>Cấu Hình SEO</h2>
+                <p className={isDarkModeEnable ? "text-gray-400" : "text-gray-500"}>Quản lý thẻ Tiêu đề, Mô tả cho nhiều trang khác nhau</p>
             </div>
 
             <Card className={isDarkModeEnable ? "bg-[#0f172a] border-[#334155] text-white" : ""}>

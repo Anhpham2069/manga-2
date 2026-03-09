@@ -11,25 +11,26 @@ const genreSlice = createSlice({
     addGenre: (state, action) => {
       state.push(action.payload);
     },
-    getAllGenre:(state,action)=>{
+    getAllGenre: (state, action) => {
       return action.payload
     },
     deleteGenreById: (state, action) => {
       const genreIdToDelete = action.payload;
-      return state.filter(genre => genre.id !== genreIdToDelete);
+      return state.filter(genre => genre._id !== genreIdToDelete);
     },
     updateGenreById: (state, action) => {
       const { id, updatedGenre } = action.payload;
-      const genreToUpdate = state.find((genre) => genre.id === id);
+      const genreToUpdate = state.find((genre) => genre._id === id);
 
       if (genreToUpdate) {
         // Update the properties of the found genre
-        genreToUpdate.genreName = updatedGenre.genreName;
-        // Add other fields as needed
+        if (updatedGenre.genreName !== undefined) genreToUpdate.genreName = updatedGenre.genreName;
+        if (updatedGenre.slug !== undefined) genreToUpdate.slug = updatedGenre.slug;
+        if (updatedGenre.description !== undefined) genreToUpdate.description = updatedGenre.description;
       }
     },
   },
 });
 
-export const { addGenre,getAllGenre,deleteGenreById,updateGenreById } = genreSlice.actions;
+export const { addGenre, getAllGenre, deleteGenreById, updateGenreById } = genreSlice.actions;
 export default genreSlice.reducer;

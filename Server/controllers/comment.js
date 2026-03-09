@@ -44,7 +44,7 @@ exports.getCommentsByStory = async (req, res) => {
         const { slug } = req.params;
         const comments = await Comment.find({ storySlug: slug })
             .populate("userId", "avatar")
-            .sort({ createdAt: 1 });
+            .sort({ createdAt: -1 });
         res.status(200).json(comments);
     } catch (error) {
         console.error(error);
