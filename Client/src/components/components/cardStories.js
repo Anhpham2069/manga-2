@@ -19,6 +19,10 @@ const CardStories = ({
 }) => {
   const isDarkModeEnable = useSelector(selectDarkMode);
 
+  if (!chapter) {
+    return null;
+  }
+
   // ================= LIST MODE =================
   if (viewMode === "list") {
     return (

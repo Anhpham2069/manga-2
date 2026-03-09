@@ -253,6 +253,8 @@ const DetailStories = () => {
 
   useEffect(() => {
     const fetchReadProgress = async () => {
+      setReadHistory(null);
+      setReadHistoryChapterId(null);
       try {
         if (userId) {
           const res = await getLastChapter(slug, userId);
