@@ -292,7 +292,7 @@ const DetailStories = () => {
               const catSlug = categories[0].slug;
               const catRes = await getStorybyCategory(catSlug);
               if (catRes?.items) {
-                const filtered = catRes.items.filter((item) => item.slug !== slug);
+                const filtered = catRes.items.filter((item) => item.slug !== slug && item.chaptersLatest?.[0]?.chapter_name);
                 setRecommendStories(filtered.slice(0, 10));
               }
             } catch (e) { console.log(e); }

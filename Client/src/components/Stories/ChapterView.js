@@ -231,7 +231,7 @@ const ReadStories = () => {
             try {
               const catRes = await getStorybyCategory(categories[0].slug);
               if (catRes?.items) {
-                const filtered = catRes.items.filter((item) => item.slug !== slug);
+                const filtered = catRes.items.filter((item) => item.slug !== slug && item.chaptersLatest?.[0]?.chapter_name);
                 setRecommendStories(filtered.slice(0, 6));
               }
             } catch (e) { console.log(e); }
