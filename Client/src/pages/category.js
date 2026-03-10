@@ -69,20 +69,46 @@ const Category = () => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(
-          `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=${currentPage}`
-        );
-        setIsCategory(res.data.data);
+        let page = currentPage;
+        let data = null;
+        let maxPages = 1;
+        let collectedItems = [];
 
-        const pagination = res.data.data?.params?.pagination;
-        if (pagination) {
-          setTotalPages(Math.ceil(pagination.totalItems / (pagination.totalItemsPerPage || 24)));
-        } else {
-          setTotalPages(1);
+        // Lặp qua các trang để tìm truyện có chapter
+        while (page <= 500) { // giới hạn an toàn
+          const res = await axios.get(
+            `https://otruyenapi.com/v1/api/the-loai/${selectedCategory}?page=${page}`
+          );
+          data = res.data.data;
+
+          const pagination = data?.params?.pagination;
+          if (pagination) {
+            maxPages = Math.ceil(pagination.totalItems / (pagination.totalItemsPerPage || 24));
+          }
+
+          // Lọc truyện có chapter
+          const itemsWithChapter = (data?.items || []).filter(
+            (item) => item.chaptersLatest && item.chaptersLatest.length > 0
+          );
+
+          if (itemsWithChapter.length > 0) {
+            collectedItems = itemsWithChapter;
+            break;
+          }
+
+          // Trang này không có truyện có chapter, thử trang tiếp
+          page++;
+          if (page > maxPages) break;
+        }
+
+        // Cập nhật data với items đã lọc
+        if (data) {
+          setIsCategory({ ...data, items: collectedItems });
+          setTotalPages(maxPages);
         }
 
         // Fetch views batch
-        const slugs = res.data.data?.items?.map((item) => item.slug) || [];
+        const slugs = collectedItems.map((item) => item.slug);
         if (slugs.length > 0) {
           try {
             const apiURL = process.env.REACT_APP_API_URL;
@@ -187,7 +213,7 @@ const Category = () => {
             {/* LIST / GRID STORIES */}
             <div
               className={`grid mt-6 ${viewMode === "grid"
-                ? "grid-cols-2 gap-2 tablet:gap-4 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
+                ? "grid-cols-2 gap-2 tablet:gap-4 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-5"
                 : "grid-cols-1 gap-4"
                 }`}
             >
