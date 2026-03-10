@@ -125,9 +125,9 @@ const Category = () => {
   };
 
   const { title: seoTitle, desc: seoDesc } = getSeoContent();
-
+  console.log(isCategory);
   return (
-    <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"}`}>
+    <div className={`${darkMode ? "bg-bg_dark text-text_darkMode" : "bg-bg_light"} overflow-x-hidden`}>
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDesc} />
@@ -137,119 +137,116 @@ const Category = () => {
       </Helmet>
       <NavBar />
 
-      <div className="w-[95%] mt-6 m-auto flex">
-        <div className="w-[95%] mt-6 m-auto flex gap-6">
+      <div className="w-full px-3 tablet:w-[95%] tablet:px-0 mt-6 m-auto flex gap-6">
 
-          {/* ================= MAIN CONTENT ================= */}
-          <div className="flex-1">
-            <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} p-5 rounded-xl`}>
+        {/* ================= MAIN CONTENT ================= */}
+        <div className="flex-1 min-w-0">
+          <div className={`${darkMode ? "bg-bg_dark_light text-text_darkMode" : "bg-white"} p-3 tablet:p-5 rounded-xl`}>
 
-              {/* HEADER */}
-              <div className="py-2 h-12 flex items-center justify-between text-xl font-semibold border-b">
-                <p>
-                  <span className="font-bold">Thể loại:</span> {isCategory?.titlePage}
-                </p>
+            {/* HEADER */}
+            <div className="py-2 h-12 flex items-center justify-between text-xl font-semibold border-b">
+              <p>
+                <span className="font-bold">Thể loại:</span> {isCategory?.titlePage}
+              </p>
 
-                {/* Toggle view */}
-                <div className="flex gap-4 text-slate-500">
-                  <FontAwesomeIcon
-                    icon={faList}
-                    size="xl"
-                    onClick={() => setViewMode("list")}
-                    className={`cursor-pointer hover:text-primary-color ${viewMode === "list" && "text-primary-color"
-                      }`}
-                  />
-                  <FontAwesomeIcon
-                    icon={faTableCells}
-                    size="xl"
-                    onClick={() => setViewMode("grid")}
-                    className={`cursor-pointer hover:text-primary-color ${viewMode === "grid" && "text-primary-color"
-                      }`}
-                  />
-                </div>
-              </div>
-
-              {/* MOBILE SELECT GENRES */}
-              <select
-                className="phone:block tablet:hidden w-full bg-[#E6F4FF] rounded-xl p-2 my-5 text-primary-color"
-                value={selectedCategory}
-                onChange={(e) => {
-                  setSelectedCategory(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                {genres?.map((item) => (
-                  <option key={item.slug} value={item.slug}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-
-              {/* LIST / GRID STORIES */}
-              <div
-                className={`grid gap-4 mt-6 ${viewMode === "grid"
-                  ? "phone:grid-cols-2 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
-                  : "grid-cols-1"
-                  }`}
-              >
-                {loading && <Skeleton active />}
-
-                {isCategory?.items?.map((item) => {
-                  const trimmedTimeAgo = formatDistanceToNow(
-                    new Date(item.updatedAt),
-                    { addSuffix: true, locale: vi }
-                  ).replace(/^khoảng\s/, "");
-
-                  return (
-                    <CardStories
-                      key={item._id}
-                      slug={item.slug}
-                      title={item.name}
-                      img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
-                      time={trimmedTimeAgo}
-                      chapter={item.chaptersLatest?.[0]?.chapter_name}
-                      views={viewsMap[item.slug] || 0}
-                      viewMode={viewMode}
-                    />
-                  );
-                })}
-              </div>
-
-              {/* PAGINATION */}
-              <div className="mt-8 pb-4">
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  handlePageChange={handlePageChange}
+              {/* Toggle view */}
+              <div className="flex gap-4 text-slate-500">
+                <FontAwesomeIcon
+                  icon={faList}
+                  size="xl"
+                  onClick={() => setViewMode("list")}
+                  className={`cursor-pointer hover:text-primary-color ${viewMode === "list" && "text-primary-color"
+                    }`}
+                />
+                <FontAwesomeIcon
+                  icon={faTableCells}
+                  size="xl"
+                  onClick={() => setViewMode("grid")}
+                  className={`cursor-pointer hover:text-primary-color ${viewMode === "grid" && "text-primary-color"
+                    }`}
                 />
               </div>
             </div>
-          </div>
 
-          {/* ================= SIDEBAR GENRES ================= */}
-          <div className="w-[260px] phone:hidden tablet:block">
-            <div className={`${darkMode ? "bg-bg_dark_light" : "bg-white"} p-5 rounded-xl`}>
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4 text-primary-color">
-                Thể loại
-              </h3>
+            {/* MOBILE SELECT GENRES */}
+            <select
+              className="block tablet:hidden w-full bg-[#E6F4FF] rounded-xl p-2 my-5 text-primary-color"
+              value={selectedCategory}
+              onChange={(e) => {
+                setSelectedCategory(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              {genres?.map((item) => (
+                <option key={item.slug} value={item.slug}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
 
-              <div className="grid grid-cols-2 gap-2">
-                {genres?.map((item) => (
-                  <div
-                    key={item.slug}
-                    onClick={(e) => handleCategoryChange(e, item.slug)}
-                    className={`cursor-pointer text-sm p-2 rounded-lg transition ${selectedCategory === item.slug
-                      ? "bg-primary-color text-white"
-                      : "hover:bg-slate-100 dark:hover:bg-slate-700"
-                      }`}
-                  >
-                    {item.name}
-                  </div>
-                ))}
-              </div>
+            {/* LIST / GRID STORIES */}
+            <div
+              className={`grid mt-6 ${viewMode === "grid"
+                ? "grid-cols-2 gap-2 tablet:gap-4 tablet:grid-cols-3 laptop:grid-cols-6 desktop:grid-cols-4"
+                : "grid-cols-1 gap-4"
+                }`}
+            >
+              {loading && <Skeleton active />}
+
+              {isCategory?.items?.map((item) => {
+                const trimmedTimeAgo = formatDistanceToNow(
+                  new Date(item.updatedAt),
+                  { addSuffix: true, locale: vi }
+                ).replace(/^khoảng\s/, "");
+
+                return (
+                  <CardStories
+                    key={item._id}
+                    slug={item.slug}
+                    title={item.name}
+                    img={`https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`}
+                    time={trimmedTimeAgo}
+                    chapter={item.chaptersLatest?.[0]?.chapter_name}
+                    views={viewsMap[item.slug] || 0}
+                    viewMode={viewMode}
+                  />
+                );
+              })}
+            </div>
+
+            {/* PAGINATION */}
+            <div className="mt-8 pb-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+              />
             </div>
           </div>
+        </div>
 
+        {/* ================= SIDEBAR GENRES ================= */}
+        <div className="hidden tablet:block w-[260px] flex-shrink-0">
+          <div className={`${darkMode ? "bg-bg_dark_light" : "bg-white"} p-5 rounded-xl`}>
+            <h3 className="text-xl font-semibold border-b pb-2 mb-4 text-primary-color">
+              Thể loại
+            </h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              {genres?.map((item) => (
+                <div
+                  key={item.slug}
+                  onClick={(e) => handleCategoryChange(e, item.slug)}
+                  className={`cursor-pointer text-sm p-2 rounded-lg transition ${selectedCategory === item.slug
+                    ? "bg-primary-color text-white"
+                    : "hover:bg-slate-100 dark:hover:bg-slate-700"
+                    }`}
+                >
+                  {item.name}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>

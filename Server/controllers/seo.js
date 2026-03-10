@@ -43,14 +43,13 @@ exports.updateSeoConfig = async (req, res) => {
             seo.categoryDesc = categoryDesc || seo.categoryDesc;
             if (req.files && req.files.ogImage) {
                 seo.ogImage = req.files.ogImage[0].path;
-            } else if (ogImage !== undefined) {
-                // Có thể truyền string trống để xóa ảnh, hoặc truyền url để giữ
-                seo.ogImage = ogImage;
+            } else if (req.body.currentOgImage !== undefined) {
+                seo.ogImage = req.body.currentOgImage;
             }
             if (req.files && req.files.favicon) {
                 seo.favicon = req.files.favicon[0].path;
-            } else if (favicon !== undefined) {
-                seo.favicon = favicon;
+            } else if (req.body.currentFavicon !== undefined) {
+                seo.favicon = req.body.currentFavicon;
             }
             await seo.save();
         } else {

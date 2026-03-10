@@ -69,8 +69,8 @@ const CardStories = ({
 
   // ================= GRID MODE =================
   return (
-    <figure className="w-full cursor-pointer mb-4">
-      <div className="relative w-full overflow-hidden rounded-md" style={{ paddingBottom: "140%" }}>
+    <figure className="w-full cursor-pointer mb-1 tablet:mb-4">
+      <div className="relative w-full overflow-hidden rounded-md pb-[120%] tablet:pb-[145%]">
         <Link to={`/detail/${slug}`}>
           <img
             src={img}
@@ -81,34 +81,34 @@ const CardStories = ({
 
         {/* Time badge - top left */}
         {nomarl && time && (
-          <span className="absolute top-1.5 left-1.5 bg-primary-color text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
+          <span className="absolute top-1 left-1 bg-primary-color text-white text-[8px] tablet:text-[10px] px-1 tablet:px-1.5 py-0.5 rounded font-medium z-10">
             {time}
           </span>
         )}
 
         {/* Hot badge */}
         {hot && (
-          <span className="absolute top-1.5 right-1.5 bg-[#FF4500] text-white text-[10px] px-1.5 py-0.5 rounded font-medium uppercase z-10">
+          <span className="absolute top-1 right-1 bg-[#FF4500] text-white text-[8px] tablet:text-[10px] px-1 tablet:px-1.5 py-0.5 rounded font-medium uppercase z-10">
             Hot
           </span>
         )}
 
         {/* No chapter badge - below time badge */}
         {!chapter && !hot && (
-          <span className="absolute top-7 left-1.5 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium z-10">
+          <span className="absolute top-6 left-1 bg-amber-500 text-white text-[8px] tablet:text-[10px] px-1 tablet:px-1.5 py-0.5 rounded font-medium z-10">
             Chưa có chap
           </span>
         )}
 
         {/* View & Save counts - bottom overlay */}
-        <div className="absolute bottom-0 left-0 right-0 flex items-center px-2 py-1.5 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
-          <div className="flex items-center gap-3 text-white text-[11px] font-medium">
+        <div className="absolute bottom-0 left-0 right-0 flex items-center px-1 tablet:px-2 py-1 tablet:py-1.5 z-10" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)" }}>
+          <div className="flex items-center gap-1.5 tablet:gap-3 text-white text-[9px] tablet:text-[11px] font-medium">
             <span className="flex items-center gap-1">
-              <FontAwesomeIcon icon={faEye} className="text-[10px]" />
+              <FontAwesomeIcon icon={faEye} className="text-[8px] tablet:text-[10px]" />
               {views?.toLocaleString?.() || 0}
             </span>
             <span className="flex items-center gap-1">
-              <FontAwesomeIcon icon={faBookmark} className="text-[10px]" />
+              <FontAwesomeIcon icon={faBookmark} className="text-[8px] tablet:text-[10px]" />
               {saves?.toLocaleString?.() || 0}
             </span>
           </div>
@@ -116,16 +116,16 @@ const CardStories = ({
       </div>
 
       {/* Title */}
-      <div className="mt-1.5 px-0.5">
+      <div className="mt-1 tablet:mt-1.5 px-0.5">
         <Link to={`/detail/${slug}`}>
-          <h3 className={`line-clamp-1 text-[13px] ${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"} font-medium leading-tight`}>
+          <h3 className={`line-clamp-1 text-[11px] tablet:text-[13px] ${isDarkModeEnable ? "text-[#CCCCCC]" : "text-black"} font-medium leading-tight`}>
             {title}
           </h3>
         </Link>
         {chapter ? (
-          <p className="text-[12px] text-gray-500 mt-0.5">Chapter {chapter}</p>
+          <p className="text-[10px] tablet:text-[12px] text-gray-500 mt-0.5">Chapter {chapter}</p>
         ) : (
-          <p className="text-[12px] text-amber-500 font-medium mt-0.5">Chưa có chap</p>
+          <p className="text-[10px] tablet:text-[12px] text-amber-500 font-medium mt-0.5">Chưa có chap</p>
         )}
       </div>
     </figure>

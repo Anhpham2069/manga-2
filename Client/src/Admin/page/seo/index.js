@@ -75,13 +75,13 @@ const SeoSettings = () => {
         if (ogImageFile.length > 0) {
             formData.append("ogImage", ogImageFile[0].originFileObj);
         } else {
-            formData.append("ogImage", currentOgImage || "");
+            formData.append("currentOgImage", currentOgImage || "");
         }
 
         if (faviconFile.length > 0) {
             formData.append("favicon", faviconFile[0].originFileObj);
         } else {
-            formData.append("favicon", currentFavicon || "");
+            formData.append("currentFavicon", currentFavicon || "");
         }
 
         try {
