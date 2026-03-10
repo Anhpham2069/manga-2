@@ -4,6 +4,7 @@ const multer = require("multer");
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const seoController = require("../controllers/seo");
+const sitemapController = require("../controllers/sitemap");
 const verifyToken = require("../controllers/verifyToken");
 
 cloudinary.config({
@@ -22,6 +23,8 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({ storage: storage });
 
+router.get("/sitemap.xml", sitemapController.generateSitemap);
+router.get("/sitemap-index.xml", sitemapController.generateSitemapIndex);
 router.get("/", seoController.getSeoConfig);
 
 const uploadMiddleware = upload.fields([{ name: 'ogImage', maxCount: 1 }, { name: 'favicon', maxCount: 1 }]);

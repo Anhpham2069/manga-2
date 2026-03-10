@@ -1,3 +1,10 @@
 # https://www.robotstxt.org/robotstxt.html
 User-agent: *
-Disallow:
+Disallow: /admin
+Disallow: /user
+Disallow: /favorites
+Disallow: /history
+
+# Sitemap
+Sitemap: https://manga-2-client.vercel.app/sitemap.xml
+Sitemap: https://manga-2-server.vercel.app/api/seo/sitemap.xml

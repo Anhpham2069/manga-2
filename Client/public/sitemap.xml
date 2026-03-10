@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Trang chủ -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Tất cả truyện -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/all-stories</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- Bảng xếp hạng -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/ranking</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Lọc truyện -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/filter</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Liên hệ -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/contact</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Đăng nhập -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/login</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+
+  <!-- Đăng ký -->
+  <url>
+    <loc>https://manga-2-client.vercel.app/register</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+  </url>
+</urlset>
