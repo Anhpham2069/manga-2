@@ -40,6 +40,14 @@ const Category = () => {
     localStorage.setItem("viewMode", viewMode);
   }, [viewMode]);
 
+  // ====== CẬP NHẬT CATEGORY KHI ĐỔI URL ======
+  useEffect(() => {
+    if (initialSlug && initialSlug !== selectedCategory) {
+      setSelectedCategory(initialSlug);
+      setCurrentPage(1);
+    }
+  }, [initialSlug]);
+
   // ====== LẤY THỂ LOẠI ======
   useEffect(() => {
     const fetchDataGenres = async () => {
