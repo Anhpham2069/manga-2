@@ -105,7 +105,7 @@ const Featured = ({ dark }) => {
     fetchData();
   }, [slug]);
 
-  // Fetch upcoming
+  // Fetch upcoming (fallback nếu không có truyện chưa có chap từ grid)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -113,8 +113,11 @@ const Featured = ({ dark }) => {
         setStoriesFT(res.data);
       } catch (error) { console.log(error); }
     };
-    fetchData();
-  }, []);
+    // Chỉ fetch nếu grid chưa có data
+    if (!storiesData.items || storiesData.items.filter(i => !i.chaptersLatest?.[0]?.chapter_name).length === 0) {
+      fetchData();
+    }
+  }, [storiesData]);
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 mt-4 tablet:px-6 lg:px-14">
@@ -250,28 +253,39 @@ const Featured = ({ dark }) => {
             <FontAwesomeIcon icon={faCalendarDay} className="text-primary-color" />
             <span className="uppercase text-primary-color font-bold text-sm">Truyện sắp ra mắt</span>
           </div>
-          {storiesFT.items?.slice(0, 6).map((item, index) => {
-            const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
-            const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
-            return (
-              <Link to={`/detail/${item.slug}`} key={item._id}
-                className={`flex gap-2.5 px-3 py-2.5 border-b transition ${isDarkModeEnable ? "border-[#333] hover:bg-[#333]" : "border-gray-100 hover:bg-gray-50"}`}
-              >
-                <img
-                  src={`https://img.otruyenapi.com${storiesFT.seoOnPage?.og_image?.[index]}`}
-                  alt=""
-                  className="w-[50px] h-[65px] object-cover rounded shrink-0"
-                />
-                <div className="flex-1 min-w-0 flex flex-col justify-between">
-                  <p className="font-semibold text-[13px] line-clamp-1 leading-tight">{item.name}</p>
-                  <div className="flex justify-between items-center mt-1">
-                    <span className="text-xs text-gray-500">Ch. {item.chaptersLatest?.[0]?.chapter_name || ""}</span>
-                    <span className="text-[11px] text-gray-400 italic">{trimmedTimeAgo}</span>
+          {(() => {
+            // Lọc truyện chưa có chương từ grid chính
+            const noChapStories = storiesData.items?.filter(i => !i.chaptersLatest?.[0]?.chapter_name) || [];
+            const displayItems = noChapStories.length > 0 ? noChapStories.slice(0, 6) : (storiesFT.items?.slice(0, 6) || []);
+            const useOgImage = noChapStories.length === 0; // chỉ dùng og_image khi lấy từ storiesFT
+
+            return displayItems.map((item, index) => {
+              const timeAgo = formatDistanceToNow(new Date(item.updatedAt), { addSuffix: true, locale: vi });
+              const trimmedTimeAgo = timeAgo.replace(/^khoảng\s/, "");
+              return (
+                <Link to={`/detail/${item.slug}`} key={item._id}
+                  className={`flex gap-2.5 px-3 py-2.5 border-b transition ${isDarkModeEnable ? "border-[#333] hover:bg-[#333]" : "border-gray-100 hover:bg-gray-50"}`}
+                >
+                  <img
+                    src={
+                      useOgImage
+                        ? `https://img.otruyenapi.com${storiesFT.seoOnPage?.og_image?.[index]}`
+                        : `https://img.otruyenapi.com/uploads/comics/${item.thumb_url}`
+                    }
+                    alt=""
+                    className="w-[50px] h-[65px] object-cover rounded shrink-0"
+                  />
+                  <div className="flex-1 min-w-0 flex flex-col justify-between">
+                    <p className="font-semibold text-[13px] line-clamp-1 leading-tight">{item.name}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <span className="text-xs text-amber-500 font-medium">Sắp ra mắt</span>
+                      <span className="text-[11px] text-gray-400 italic">{trimmedTimeAgo}</span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            );
-          })}
+                </Link>
+              );
+            });
+          })()}
         </div>
       </div>
     </div>

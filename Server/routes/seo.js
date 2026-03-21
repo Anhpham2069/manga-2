@@ -25,6 +25,8 @@ const upload = multer({ storage: storage });
 
 router.get("/sitemap.xml", sitemapController.generateSitemap);
 router.get("/sitemap-index.xml", sitemapController.generateSitemapIndex);
+router.get("/sitemap-chapters-:page.xml", sitemapController.generateChapterSitemap);
+router.get("/sitemap-chapters-count", sitemapController.getChapterSitemapCount);
 router.get("/", seoController.getSeoConfig);
 
 const uploadMiddleware = upload.fields([{ name: 'ogImage', maxCount: 1 }, { name: 'favicon', maxCount: 1 }]);

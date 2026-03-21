@@ -871,7 +871,18 @@ const ReadStories = () => {
                     >
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"}`}>
+                          {cmt.userId?.avatar ? (
+                            <img
+                              src={cmt.userId.avatar}
+                              alt={cmt.username}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                            />
+                          ) : null}
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isDarkModeEnable ? "bg-[#3963C0]" : "bg-primary-color"}`}
+                            style={{ display: cmt.userId?.avatar ? 'none' : 'flex' }}
+                          >
                             {cmt.username?.charAt(0)?.toUpperCase()}
                           </div>
                           <span className="font-semibold text-sm">{cmt.username}</span>
@@ -923,7 +934,18 @@ const ReadStories = () => {
                             <div key={subCmt._id} className="pt-2">
                               <div className="flex items-center justify-between mb-1">
                                 <div className="flex items-center gap-2">
-                                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${isDarkModeEnable ? "bg-[#713f96]" : "bg-purple-500"}`}>
+                                  {subCmt.userId?.avatar ? (
+                                    <img
+                                      src={subCmt.userId.avatar}
+                                      alt={subCmt.username}
+                                      className="w-6 h-6 rounded-full object-cover"
+                                      onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }}
+                                    />
+                                  ) : null}
+                                  <div
+                                    className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold ${isDarkModeEnable ? "bg-[#713f96]" : "bg-purple-500"}`}
+                                    style={{ display: subCmt.userId?.avatar ? 'none' : 'flex' }}
+                                  >
                                     {subCmt.username?.charAt(0)?.toUpperCase()}
                                   </div>
                                   <span className="font-semibold text-xs">{subCmt.username}</span>

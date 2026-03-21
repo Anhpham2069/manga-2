@@ -1,51 +1,143 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Sitemap chính: trang tĩnh + thể loại + chi tiết truyện -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap chapters trang 1 -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-chapters-1.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap chapters trang 2 -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-chapters-2.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap chapters trang 3 -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-chapters-3.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap chapters trang 4 -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-chapters-4.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap chapters trang 5 -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-chapters-5.xml</loc>
+  </sitemap>
+
+  <!-- Sitemap index động (tự tính số trang chapters) -->
+  <sitemap>
+    <loc>https://manga-2-server.vercel.app/api/seo/sitemap-index.xml</loc>
+  </sitemap>
+  <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Trang chủ -->
+  <!-- ===== TRANG TĨNH ===== -->
   <url>
     <loc>https://manga-2-client.vercel.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-
-  <!-- Tất cả truyện -->
   <url>
     <loc>https://manga-2-client.vercel.app/all-stories</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-
-  <!-- Bảng xếp hạng -->
   <url>
     <loc>https://manga-2-client.vercel.app/ranking</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
-
-  <!-- Lọc truyện -->
   <url>
     <loc>https://manga-2-client.vercel.app/filter</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
-
-  <!-- Liên hệ -->
   <url>
     <loc>https://manga-2-client.vercel.app/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
-
-  <!-- Đăng nhập -->
   <url>
     <loc>https://manga-2-client.vercel.app/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
-
-  <!-- Đăng ký -->
   <url>
     <loc>https://manga-2-client.vercel.app/register</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
+  <url>
+    <loc>https://manga-2-client.vercel.app/history</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://manga-2-client.vercel.app/favorites</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- ===== THỂ LOẠI (56 thể loại từ OTruyen API) ===== -->
+  <url><loc>https://manga-2-client.vercel.app/category/action</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/adult</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/adventure</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/anime</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/chuyen-sinh</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/comedy</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/comic</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/cooking</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/co-dai</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/doujinshi</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/drama</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/dam-my</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/ecchi</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/fantasy</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/gender-bender</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/harem</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/historical</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/horror</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/josei</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/live-action</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/manga</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/manhua</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/manhwa</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/martial-arts</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/mature</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/mecha</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/mystery</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/ngon-tinh</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/one-shot</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/psychological</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/romance</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/school-life</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/sci-fi</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/seinen</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/shoujo</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/shoujo-ai</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/shounen</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/shounen-ai</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/slice-of-life</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/smut</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/soft-yaoi</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/soft-yuri</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/sports</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/supernatural</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/tap-chi-truyen-tranh</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/thieu-nhi</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/tragedy</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/trinh-tham</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/truyen-scan</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/truyen-mau</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/viet-nam</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/webtoon</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/xuyen-khong</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://manga-2-client.vercel.app/category/16</loc><changefreq>daily</changefreq><priority>0.7</priority></url>
 </urlset>
+
+</sitemapindex>

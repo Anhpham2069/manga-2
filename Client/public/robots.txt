@@ -7,4 +7,4 @@ Disallow: /history
 
 # Sitemap
 Sitemap: https://manga-2-client.vercel.app/sitemap.xml
-Sitemap: https://manga-2-server.vercel.app/api/seo/sitemap.xml
+Sitemap: https://manga-2-server.vercel.app/api/seo/sitemap-index.xml
