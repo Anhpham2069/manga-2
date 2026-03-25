@@ -17,7 +17,8 @@ const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'seo_assets',
-        allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'ico', 'gif']
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp', 'gif', 'svg'],
+        resource_type: 'auto'
     },
 });
 

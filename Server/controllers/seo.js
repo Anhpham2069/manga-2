@@ -68,7 +68,8 @@ exports.updateSeoConfig = async (req, res) => {
 
         res.status(200).json(seo);
     } catch (error) {
-        console.error("Lỗi cập nhật cấu hình SEO:", error);
-        res.status(500).json({ message: "Lỗi lưu cấu hình" });
+        console.error("Lỗi cập nhật cấu hình SEO:", error.message || error);
+        console.error("Stack:", error.stack);
+        res.status(500).json({ message: "Lỗi lưu cấu hình", error: error.message || "Unknown error" });
     }
 };
